@@ -61,6 +61,22 @@
             border-bottom: 3px solid #00a884;
         }
 
+        .typing-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: currentColor; opacity: 0.6;
+            animation: typingBounce 1.2s infinite ease-in-out;
+            display: inline-block;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        .voice-bar { width: 3px; background: rgba(255,255,255,0.35); border-radius: 2px; min-height: 3px; transition: background 0.1s; }
+        .voice-bar.played { background: rgba(255,255,255,0.9); }
+
         /* توهج خلفية متحرك يتغيّر لونه حسب وقت اليوم — يعطي إحساس "حي" بدون ما يزعج القراءة */
         @keyframes ambientDrift {
             0%, 100% { transform: translate(-8%, -8%) scale(1); }
@@ -145,8 +161,8 @@
             </div>
 
             <div class="space-y-2 font-medium">
-                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-key text-[#00a884]"></i> الحساب (اسم المستخدم، رقم الهاتف)</span>
+                <div id="openMyProfileBtn" class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-key text-[#00a884]"></i> الحساب (الاسم، النبذة، رابط المشاركة)</span>
                     <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
                 </div>
                 <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
@@ -267,6 +283,54 @@
         </div>
     </div>
 
+    <!-- 4.8 ملفي الشخصي: تعديل الاسم والنبذة، ورابط مشاركة لإضافتك كصديق مباشرة -->
+    <div id="myProfileModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-4 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeMyProfileBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <h2 class="font-bold text-base text-white">ملفي الشخصي</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+            <div class="flex flex-col items-center gap-2 py-2">
+                <img id="myProfileAvatar" class="w-24 h-24 rounded-full object-cover" src="https://via.placeholder.com/96">
+                <p class="text-xs text-gray-500">@<span id="myProfileUsername"></span></p>
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 mb-1 block">الاسم</label>
+                <input id="myProfileNameInput" class="w-full app-bg-input text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none border border-white/5">
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 mb-1 block">نبذة</label>
+                <textarea id="myProfileBioInput" rows="2" class="w-full app-bg-input text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none border border-white/5 resize-none"></textarea>
+            </div>
+            <button id="saveMyProfileBtn" class="w-full bg-[#00a884] text-black font-bold py-3 rounded-xl text-sm">حفظ</button>
+
+            <div class="pt-4 border-t border-white/10">
+                <p class="text-xs text-gray-400 mb-2">شارك رابطك — يفتح عند من يضغطه صفحة إضافتك صديق مباشرة</p>
+                <div class="flex items-center gap-2">
+                    <input id="myShareLinkInput" readonly class="flex-1 app-bg-input text-gray-300 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                    <button id="copyShareLinkBtn" class="bg-[#00a884] text-black px-3.5 py-2.5 rounded-xl text-xs font-bold shrink-0"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4.9 إنشاء استطلاع رأي -->
+    <div id="pollModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="app-bg-dark rounded-3xl p-6 max-w-sm w-full border border-white/10 shadow-2xl">
+            <h2 class="font-bold text-white text-lg mb-4 flex items-center gap-2"><i class="fas fa-square-poll-vertical text-[#00a884]"></i> استطلاع رأي</h2>
+            <input id="pollQuestionInput" placeholder="اكتب سؤالك..." class="w-full app-bg-input text-white rounded-xl px-4 py-2.5 text-sm mb-3 focus:outline-none border border-white/5">
+            <div id="pollOptionsContainer" class="space-y-2 mb-3">
+                <input class="poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5" placeholder="خيار 1">
+                <input class="poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5" placeholder="خيار 2">
+            </div>
+            <button id="addPollOptionBtn" class="text-[#00a884] text-xs font-bold mb-5"><i class="fas fa-plus"></i> إضافة خيار</button>
+            <div class="flex gap-2">
+                <button id="cancelPollBtn" class="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-xl text-sm">إلغاء</button>
+                <button id="sendPollBtn" class="flex-1 bg-[#00a884] hover:bg-[#008f70] text-black font-bold py-2.5 rounded-xl text-sm">إرسال</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 5. الواجهة الرئيسية الكاملة للتطبيق -->
     <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl app-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
         
@@ -362,6 +426,7 @@
                 <input type="file" id="docInput" class="hidden">
                 <div id="attachLocationBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-emerald-400"><i class="fas fa-location-dot text-xl mb-1"></i><br>الموقع</div>
                 <div id="attachContactBtn" class="coming-soon-btn p-3 hover:bg-white/5 rounded-xl cursor-pointer text-amber-400 opacity-50" title="قريبًا"><i class="fas fa-address-card text-xl mb-1"></i><br>جهة اتصال</div>
+                <div id="attachPollBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-teal-400"><i class="fas fa-square-poll-vertical text-xl mb-1"></i><br>استطلاع</div>
             </div>
 
             <!-- شريط الكتابة والتفاعل السريع -->
@@ -369,6 +434,13 @@
                 <div id="recordingBanner" style="display:none;" class="items-center justify-between px-2 pb-2 text-xs text-rose-400 max-w-5xl mx-auto">
                     <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span id="recordingTimer">0:00</span> جاري التسجيل بالمايك...</span>
                     <button id="cancelRecordingBtn" class="text-gray-400 hover:text-white font-semibold">إلغاء</button>
+                </div>
+                <div id="replyBanner" style="display:none;" class="items-center justify-between px-3 py-2 mb-2 rounded-xl bg-black/20 border-r-2 border-[#00a884] max-w-5xl mx-auto">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-bold text-[#00a884]">الرد على</p>
+                        <p id="replyBannerText" class="text-xs text-gray-300 truncate"></p>
+                    </div>
+                    <button id="cancelReplyBtn" class="text-gray-400 hover:text-white shrink-0 px-2"><i class="fas fa-xmark"></i></button>
                 </div>
                 <div class="flex items-center gap-2 max-w-5xl mx-auto">
                     
@@ -391,10 +463,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const IMGBB_API_KEY = "d0e78a427404c26f247b3e644e8b3cbe";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDsdSew4trEXkeKnecguN2uZWIq9XtNGhI",
@@ -471,6 +541,24 @@
         const moreOptionsMenu = document.getElementById('moreOptionsMenu');
         const clearChatBtn = document.getElementById('clearChatBtn');
         const attachLocationBtn = document.getElementById('attachLocationBtn');
+        const attachPollBtn = document.getElementById('attachPollBtn');
+        const pollModal = document.getElementById('pollModal');
+        const pollQuestionInput = document.getElementById('pollQuestionInput');
+        const pollOptionsContainer = document.getElementById('pollOptionsContainer');
+        const addPollOptionBtn = document.getElementById('addPollOptionBtn');
+        const cancelPollBtn = document.getElementById('cancelPollBtn');
+        const sendPollBtn = document.getElementById('sendPollBtn');
+
+        const openMyProfileBtn = document.getElementById('openMyProfileBtn');
+        const myProfileModal = document.getElementById('myProfileModal');
+        const closeMyProfileBtn = document.getElementById('closeMyProfileBtn');
+        const myProfileAvatar = document.getElementById('myProfileAvatar');
+        const myProfileUsername = document.getElementById('myProfileUsername');
+        const myProfileNameInput = document.getElementById('myProfileNameInput');
+        const myProfileBioInput = document.getElementById('myProfileBioInput');
+        const saveMyProfileBtn = document.getElementById('saveMyProfileBtn');
+        const myShareLinkInput = document.getElementById('myShareLinkInput');
+        const copyShareLinkBtn = document.getElementById('copyShareLinkBtn');
         const attachCameraBtn = document.getElementById('attachCameraBtn');
         const attachGalleryBtn = document.getElementById('attachGalleryBtn');
         const attachDocsBtn = document.getElementById('attachDocsBtn');
@@ -491,9 +579,15 @@
         const recordingTimer = document.getElementById('recordingTimer');
         const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
 
+        const replyBanner = document.getElementById('replyBanner');
+        const replyBannerText = document.getElementById('replyBannerText');
+        const cancelReplyBtn = document.getElementById('cancelReplyBtn');
+        let activeReply = null; // { text, senderUid }
+
         let selectedMessageId = null;
         let selectedMessageSenderUid = null;
         let selectedMessageText = '';
+        let selectedMessageType = 'text';
 
         const pinModal = document.getElementById('pinModal');
         const pinModalTitle = document.getElementById('pinModalTitle');
@@ -545,6 +639,12 @@
                 /(https?:\/\/[^\s<]+)/g,
                 '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline text-blue-300 break-all">$1</a>'
             );
+        }
+
+        // وقت حقيقي للرسالة بدل النص الثابت "11:42 م" اللي كان بكل الرسائل بلا استثناء
+        function formatMsgTime(timestamp) {
+            if (!timestamp || !timestamp.toDate) return '';
+            return timestamp.toDate().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
         }
 
         // ===== هوية لونية لكل جهة اتصال: هاش بسيط على الـ uid يعطي درجة لون ثابتة =====
@@ -607,8 +707,29 @@
         function updateChatHeaderStatus() {
             if (!selectedUser || !sharedKey) return;
             chatHeaderStatus.textContent = friendIsTyping ? "يكتب الآن..." : formatLastSeen(friendLastSeenMillis);
+            updateTypingBubble();
         }
         setInterval(updateChatHeaderStatus, 15000);
+
+        // فقاعة "يكتب الآن" متحركة داخل المحادثة نفسها، مو بس نص بالهيدر
+        function updateTypingBubble() {
+            const existing = document.getElementById('typingBubbleEl');
+            if (friendIsTyping && selectedUser && sharedKey) {
+                if (!existing) {
+                    const wrapper = document.createElement('div');
+                    wrapper.id = 'typingBubbleEl';
+                    wrapper.className = 'flex w-full justify-start message-pop';
+                    wrapper.innerHTML = `
+                        <div class="rounded-2xl rounded-bl-xs mr-auto p-3 shadow-md flex items-center gap-1.5" style="background-color: hsl(${contactHue(selectedUser.uid)} 32% 19%);">
+                            <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+                        </div>`;
+                    chatMessages.appendChild(wrapper);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } else if (existing) {
+                existing.remove();
+            }
+        }
 
         // ===== رسائل مؤقتة (تختفي تلقائيًا) — إعداد مشترك بين الطرفين لكل محادثة =====
         const VANISH_OPTIONS = [0, 86400, 604800]; // متوقفة، 24 ساعة، 7 أيام (بالثواني)
@@ -642,6 +763,83 @@
         function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
 
         function base64ToBlob(b64, mime) { return new Blob([b64ToBuf(b64)], { type: mime }); }
+
+        // ===== موجة صوتية حقيقية بدل مشغّل الصوت الافتراضي بالمتصفح =====
+        function formatDuration(totalSec) {
+            const s = Math.max(0, Math.round(totalSec || 0));
+            return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+        }
+
+        async function computeWaveformBars(arrayBuffer, barCount = 28) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                const audioCtx = new AudioCtx();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+                const raw = audioBuffer.getChannelData(0);
+                const blockSize = Math.max(1, Math.floor(raw.length / barCount));
+                const bars = [];
+                for (let i = 0; i < barCount; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < blockSize; j++) sum += Math.abs(raw[i * blockSize + j] || 0);
+                    bars.push(sum / blockSize);
+                }
+                audioCtx.close();
+                const max = Math.max(...bars, 0.001);
+                return bars.map(b => Math.max(0.15, b / max));
+            } catch (e) {
+                return Array.from({ length: barCount }, () => 0.35 + Math.random() * 0.35);
+            }
+        }
+
+        function buildVoicePlayerHtml(audioUrl, bars, durationSec) {
+            const barsHtml = bars.map((h, i) => `<span class="voice-bar" data-idx="${i}" style="height:${Math.round(h * 100)}%"></span>`).join('');
+            return `
+                <div class="voice-player flex items-center gap-2" style="width:210px;">
+                    <button class="voice-play-btn w-8 h-8 rounded-full bg-black/25 flex items-center justify-center shrink-0"><i class="fas fa-play" style="font-size:11px;"></i></button>
+                    <div class="voice-bars flex items-end gap-[2px] h-8 flex-1 cursor-pointer">${barsHtml}</div>
+                    <span class="voice-time text-[10px] opacity-70 shrink-0">${formatDuration(durationSec)}</span>
+                    <audio class="voice-audio-el hidden" src="${audioUrl}" preload="metadata"></audio>
+                </div>`;
+        }
+
+        function wireVoicePlayer(bubble, durationSec) {
+            const playerEl = bubble.querySelector('.voice-player');
+            if (!playerEl) return;
+            const audioEl = playerEl.querySelector('.voice-audio-el');
+            const playBtn = playerEl.querySelector('.voice-play-btn');
+            const barsEls = playerEl.querySelectorAll('.voice-bar');
+            const timeEl = playerEl.querySelector('.voice-time');
+
+            playBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.voice-audio-el').forEach(a => { if (a !== audioEl) a.pause(); });
+                if (audioEl.paused) {
+                    audioEl.play();
+                    playBtn.innerHTML = '<i class="fas fa-pause" style="font-size:11px;"></i>';
+                } else {
+                    audioEl.pause();
+                    playBtn.innerHTML = '<i class="fas fa-play" style="font-size:11px;"></i>';
+                }
+            });
+            audioEl.addEventListener('play', () => { playBtn.innerHTML = '<i class="fas fa-pause" style="font-size:11px;"></i>'; });
+            audioEl.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fas fa-play" style="font-size:11px;"></i>'; });
+            audioEl.addEventListener('timeupdate', () => {
+                const pct = audioEl.duration ? audioEl.currentTime / audioEl.duration : 0;
+                const activeCount = Math.floor(pct * barsEls.length);
+                barsEls.forEach((b, i) => b.classList.toggle('played', i < activeCount));
+                timeEl.textContent = formatDuration(audioEl.duration - audioEl.currentTime);
+            });
+            audioEl.addEventListener('ended', () => {
+                barsEls.forEach(b => b.classList.remove('played'));
+                timeEl.textContent = formatDuration(durationSec);
+            });
+            playerEl.querySelector('.voice-bars').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pct = (e.clientX - rect.left) / rect.width;
+                if (audioEl.duration) audioEl.currentTime = pct * audioEl.duration;
+            });
+        }
         function blobToBase64(blob) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -851,6 +1049,41 @@
 
                 startPresenceHeartbeat();
                 loadFriendsList();
+
+                // فتح التطبيق برابط مشاركة (?u=username) يبحث عن الشخص ويفتح شاشة الإضافة تلقائيًا
+                const sharedUsername = new URLSearchParams(location.search).get('u');
+                if (sharedUsername) {
+                    newChatUsernameInput.value = sharedUsername;
+                    newChatModal.classList.remove('hidden');
+                    searchUserByUsername();
+                    history.replaceState({}, '', location.pathname);
+                }
+            } else {
+                // تسجيل الخروج: نرجّع كل شي لحالته الأولى ونوقف كل الاستماعات المرتبطة بالجلسة القديمة
+                if (heartbeatInterval) clearInterval(heartbeatInterval);
+                if (unsubscribeMessages) unsubscribeMessages();
+                if (unsubscribeFriendStatus) unsubscribeFriendStatus();
+                if (unsubscribeTyping) unsubscribeTyping();
+                Object.values(lastMessageUnsubs).forEach(unsub => unsub());
+                lastMessageUnsubs = {};
+                lastMessageCache = {};
+                currentUser = null;
+                currentUserProfile = null;
+                selectedUser = null;
+                currentChatId = null;
+                myPrivateKey = null;
+                sharedKey = null;
+                cachedFriends = [];
+                usersList.innerHTML = '';
+                chatMessages.innerHTML = '';
+                chatHeaderName.textContent = 'اختر محادثة';
+                chatPanel.classList.add('hidden');
+                chatPanel.classList.remove('flex');
+                sidebarPanel.classList.remove('hidden');
+                inputContainer.classList.add('hidden');
+                settingsModal.classList.add('hidden');
+                mainApp.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
             }
         });
 
@@ -879,6 +1112,41 @@
 
         openMenuBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
         closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+        // ===== ملفي الشخصي: تعديل الاسم/النبذة + رابط مشاركة يفتح إضافة صديق مباشرة =====
+        openMyProfileBtn.addEventListener('click', () => {
+            myProfileAvatar.src = safePhotoUrl(currentUserProfile.photoURL);
+            myProfileUsername.textContent = currentUserProfile.username || '';
+            myProfileNameInput.value = currentUserProfile.name || '';
+            myProfileBioInput.value = currentUserProfile.bio || '';
+            myShareLinkInput.value = `${location.origin}${location.pathname}?u=${encodeURIComponent(currentUserProfile.username || '')}`;
+            settingsModal.classList.add('hidden');
+            myProfileModal.classList.remove('hidden');
+        });
+        closeMyProfileBtn.addEventListener('click', () => myProfileModal.classList.add('hidden'));
+
+        saveMyProfileBtn.addEventListener('click', async () => {
+            const name = myProfileNameInput.value.trim();
+            const bio = myProfileBioInput.value.trim();
+            if (!name) { alert('لازم اسم'); return; }
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), { name, bio }, { merge: true });
+                currentUserProfile.name = name;
+                currentUserProfile.bio = bio;
+                settingsName.textContent = name;
+                myProfileModal.classList.add('hidden');
+            } catch (e) {
+                alert('ما قدرت أحفظ — تأكد من صلاحيات Firestore');
+            }
+        });
+
+        copyShareLinkBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(myShareLinkInput.value);
+                copyShareLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => { copyShareLinkBtn.innerHTML = '<i class="fas fa-copy"></i>'; }, 1500);
+            } catch (e) { /* ignore */ }
+        });
 
         toggleAttachmentBtn.addEventListener('click', () => attachmentMenu.classList.toggle('hidden'));
 
@@ -935,7 +1203,39 @@
                 await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
                     senderUid: currentUser.uid, iv, ciphertext, timestamp: serverTimestamp()
                 }));
+                updateLastMessagePreview('📍 موقع');
             }, () => alert("ما قدرت أوصل للموقع — تأكد من إعطاء المتصفح الإذن"));
+        });
+
+        // ===== استطلاعات رأي: سؤال وخيارات مشفّرة، والأصوات نفسها بحقل عادي (زي التفاعلات بالضبط) =====
+        attachPollBtn.addEventListener('click', () => {
+            attachmentMenu.classList.add('hidden');
+            pollQuestionInput.value = '';
+            pollOptionsContainer.innerHTML = `
+                <input class="poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5" placeholder="خيار 1">
+                <input class="poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5" placeholder="خيار 2">
+            `;
+            pollModal.classList.remove('hidden');
+        });
+        cancelPollBtn.addEventListener('click', () => pollModal.classList.add('hidden'));
+        addPollOptionBtn.addEventListener('click', () => {
+            if (pollOptionsContainer.querySelectorAll('.poll-option-input').length >= 5) return;
+            const input = document.createElement('input');
+            input.className = 'poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5';
+            input.placeholder = `خيار ${pollOptionsContainer.children.length + 1}`;
+            pollOptionsContainer.appendChild(input);
+        });
+        sendPollBtn.addEventListener('click', async () => {
+            if (!sharedKey || !currentChatId) return;
+            const question = pollQuestionInput.value.trim();
+            const options = [...pollOptionsContainer.querySelectorAll('.poll-option-input')].map(i => i.value.trim()).filter(Boolean);
+            if (!question || options.length < 2) { alert('لازم سؤال وخيارين على الأقل'); return; }
+            const { iv, ciphertext } = await encryptMessage(sharedKey, JSON.stringify({ question, options }));
+            await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                senderUid: currentUser.uid, type: 'poll', iv, ciphertext, votes: {}, timestamp: serverTimestamp()
+            }));
+            updateLastMessagePreview(`📊 ${question}`);
+            pollModal.classList.add('hidden');
         });
 
         // أي زر ثاني لسا ما بنيناه — على الأقل يرد بدل ما يكون ميت بالكامل
@@ -944,6 +1244,16 @@
                 e.stopPropagation();
                 alert('هذي الميزة لسا ما بنيت — قريبًا إن شاء الله');
             });
+        });
+
+        // إغلاق القوائم المنسدلة عند الضغط خارجها
+        document.addEventListener('click', (e) => {
+            if (!attachmentMenu.classList.contains('hidden') && !attachmentMenu.contains(e.target) && !toggleAttachmentBtn.contains(e.target)) {
+                attachmentMenu.classList.add('hidden');
+            }
+            if (!moreOptionsMenu.classList.contains('hidden') && !moreOptionsMenu.contains(e.target) && !moreOptionsBtn.contains(e.target)) {
+                moreOptionsMenu.classList.add('hidden');
+            }
         });
         closeContextBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
 
@@ -973,8 +1283,25 @@
             messageContextMenu.classList.add('hidden');
         });
 
-        // الرد المقتبس وإعادة التوجيه لسا ما جهزوا — نسكر القائمة بدل ما تكون معلّقة بدون رد
-        replyMsgBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
+        const REPLY_TYPE_LABELS = { audio: '🎤 رسالة صوتية', image: '📷 صورة', file: '📄 ملف', poll: '📊 استطلاع' };
+        replyMsgBtn.addEventListener('click', () => {
+            if (selectedMessageId) {
+                const text = selectedMessageType === 'text' || selectedMessageType === undefined
+                    ? (selectedMessageText || 'رسالة')
+                    : (REPLY_TYPE_LABELS[selectedMessageType] || 'رسالة');
+                activeReply = { text, senderUid: selectedMessageSenderUid };
+                replyBannerText.textContent = (activeReply.senderUid === currentUser.uid ? 'أنت: ' : '') + activeReply.text;
+                replyBanner.style.display = 'flex';
+                messageInput.focus();
+            }
+            messageContextMenu.classList.add('hidden');
+        });
+        cancelReplyBtn.addEventListener('click', () => {
+            activeReply = null;
+            replyBanner.style.display = 'none';
+        });
+
+        // إعادة التوجيه لسا ما جهزت — نسكر القائمة بدل ما تكون معلّقة بدون رد
         forwardMsgBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
 
         backToUsersBtn.addEventListener('click', (e) => {
@@ -1044,13 +1371,21 @@
             const alreadyFriend = (currentUserProfile.friends || []).includes(userData.uid);
             if (!alreadyFriend) {
                 try {
-                    // نضيفه بقائمتي وأضيف نفسي بقائمته — عشان المحادثة تظهر عند الطرفين فورًا
                     await updateDoc(doc(db, "users", currentUser.uid), { friends: arrayUnion(userData.uid) });
-                    await updateDoc(doc(db, "users", userData.uid), { friends: arrayUnion(currentUser.uid) });
-                    currentUserProfile.friends = [...(currentUserProfile.friends || []), userData.uid];
                 } catch (e) {
                     newChatModal.classList.remove('hidden');
                     newChatError.textContent = "ما قدرت أبدأ المحادثة — تأكد من صلاحيات Firestore (Security Rules)";
+                    newChatError.classList.remove('hidden');
+                    return;
+                }
+                try {
+                    await updateDoc(doc(db, "users", userData.uid), { friends: arrayUnion(currentUser.uid) });
+                    currentUserProfile.friends = [...(currentUserProfile.friends || []), userData.uid];
+                } catch (e) {
+                    // فشل تحديث حساب الطرف الثاني — نرجع نلغي الإضافة عندي حتى ما تصير صداقة باتجاه واحد بس
+                    try { await updateDoc(doc(db, "users", currentUser.uid), { friends: arrayRemove(userData.uid) }); } catch (e2) { /* ignore */ }
+                    newChatModal.classList.remove('hidden');
+                    newChatError.textContent = "ما قدرت أبدأ المحادثة من طرف الآخر — تأكد من صلاحيات Firestore (Security Rules)";
                     newChatError.classList.remove('hidden');
                     return;
                 }
@@ -1061,6 +1396,28 @@
 
         let cachedFriends = [];
         let activeSidebarTab = 'all';
+        let lastMessageCache = {};   // chatId -> { text, senderUid, millis }
+        let lastMessageUnsubs = {};  // chatId -> unsubscribe fn
+
+        function subscribeLastMessage(friend) {
+            if (!friend.publicKeyJwk) return;
+            const chatId = [currentUser.uid, friend.uid].sort().join("_");
+            if (lastMessageUnsubs[chatId]) return; // مشترك فيه أصلًا
+            lastMessageUnsubs[chatId] = onSnapshot(doc(db, "chats", chatId), async (snap) => {
+                const data = snap.data();
+                if (!data?.lastMessage) return;
+                try {
+                    const key = await deriveSharedKey(myPrivateKey, friend.publicKeyJwk);
+                    const text = await decryptMessage(key, data.lastMessage.iv, data.lastMessage.ciphertext);
+                    lastMessageCache[chatId] = {
+                        text: text === "[تعذّر فك التشفير]" ? '' : text,
+                        senderUid: data.lastMessage.senderUid,
+                        millis: data.lastMessage.timestamp?.toMillis ? data.lastMessage.timestamp.toMillis() : Date.now()
+                    };
+                    renderFriendsList();
+                } catch (e) { /* ignore */ }
+            });
+        }
 
         function loadFriendsList() {
             onSnapshot(doc(db, "users", currentUser.uid), async (userSnap) => {
@@ -1074,6 +1431,7 @@
                     if (friendDoc.exists()) friends.push({ uid: friendUid, ...friendDoc.data() });
                 }
                 cachedFriends = friends;
+                friends.forEach(subscribeLastMessage);
                 renderFriendsList();
             });
         }
@@ -1094,6 +1452,14 @@
                 list = cachedFriends.filter(f => favs.includes(f.uid));
             }
 
+            // ترتيب حسب آخر نشاط (الأحدث فوق) — نفس منطق أي تطبيق محادثات حقيقي
+            const chatIdOf = (f) => [currentUser.uid, f.uid].sort().join("_");
+            list = [...list].sort((a, b) => {
+                const am = lastMessageCache[chatIdOf(a)]?.millis || 0;
+                const bm = lastMessageCache[chatIdOf(b)]?.millis || 0;
+                return bm - am;
+            });
+
             usersList.innerHTML = '';
             if (list.length === 0) {
                 usersList.innerHTML = activeSidebarTab === 'favorites'
@@ -1105,6 +1471,14 @@
             list.forEach(userData => {
                 const hue = contactHue(userData.uid);
                 const isFav = (currentUserProfile.favorites || []).includes(userData.uid);
+                const chatId = chatIdOf(userData);
+                const preview = lastMessageCache[chatId];
+                const previewLine = preview
+                    ? `${preview.senderUid === currentUser.uid ? 'أنت: ' : ''}${escapeHtml(preview.text)}`
+                    : `@${escapeHtml(userData.username || '')}`;
+                const timeLabel = preview
+                    ? new Date(preview.millis).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+                    : '';
                 const userEl = document.createElement('div');
                 userEl.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5";
                 userEl.innerHTML = `
@@ -1112,11 +1486,9 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between mb-1">
                             <h3 class="font-bold text-sm truncate" style="color: hsl(${hue} 70% 72%);">${escapeHtml(userData.name)}</h3>
-                            <span class="text-[10px] text-gray-400">11:42 م</span>
+                            ${timeLabel ? `<span class="text-[10px] text-gray-500 shrink-0">${timeLabel}</span>` : ''}
                         </div>
-                        <p class="text-xs text-gray-400 truncate flex items-center gap-1">
-                            <span class="text-blue-400 font-bold">✓✓</span> تمام، أشوفك بكرة
-                        </p>
+                        <p class="text-xs text-gray-400 truncate">${previewLine}</p>
                     </div>
                     <button class="fav-star-btn text-base ${isFav ? 'text-amber-400' : 'text-gray-600'} shrink-0 px-1" title="${isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}">
                         <i class="fas fa-star"></i>
@@ -1222,6 +1594,8 @@
             friendLastSeenMillis = null;
             currentVanishDuration = 0;
             updateVanishButton();
+            activeReply = null;
+            replyBanner.style.display = 'none';
 
             if (window.innerWidth < 768) { sidebarPanel.classList.add('hidden'); }
             chatPanel.classList.remove('hidden');
@@ -1335,6 +1709,19 @@
             return payload;
         }
 
+        // ===== معاينة آخر رسالة بالقائمة الجانبية — نص قصير مشفّر بنفس مفتاح المحادثة =====
+        // نخزّنه بمستند chats/{chatId} نفسه (جنب typing/vanishDuration) عشان القائمة
+        // الجانبية تقدر تفك تشفيره بدون ما تفتح المحادثة كاملة
+        async function updateLastMessagePreview(previewText) {
+            if (!sharedKey || !currentChatId) return;
+            try {
+                const { iv, ciphertext } = await encryptMessage(sharedKey, previewText.slice(0, 80));
+                await setDoc(doc(db, "chats", currentChatId), {
+                    lastMessage: { iv, ciphertext, senderUid: currentUser.uid, timestamp: serverTimestamp() }
+                }, { merge: true });
+            } catch (e) { /* لا نوقف الإرسال إذا فشل تحديث المعاينة فقط */ }
+        }
+
         // ===== صور مشفّرة: نفس فكرة الرسائل الصوتية بالضبط — بس نضغطها أول عشان تدخل حد Firestore (1MB) =====
         function resizeAndCompressImage(file, maxDim = 1280, startQuality = 0.7) {
             return new Promise((resolve, reject) => {
@@ -1384,6 +1771,7 @@
                     iv, ciphertext,
                     timestamp: serverTimestamp()
                 }));
+                updateLastMessagePreview('📷 صورة');
             } catch (e) {
                 alert(e.message || "ما قدرت أرسل الصورة");
             }
@@ -1426,6 +1814,7 @@
                     iv, ciphertext,
                     timestamp: serverTimestamp()
                 }));
+                updateLastMessagePreview(`📄 ${file.name}`);
             } catch (e) {
                 alert("ما قدرت أرسل الملف");
             }
@@ -1445,6 +1834,7 @@
                 iv, ciphertext,
                 timestamp: serverTimestamp()
             }));
+            updateLastMessagePreview('🎤 رسالة صوتية');
         }
 
         async function sendMessage() {
@@ -1455,24 +1845,38 @@
             actionIcon.className = "fas fa-microphone text-sm";
 
             const { iv, ciphertext } = await encryptMessage(sharedKey, text);
-
-            await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+            const payload = withVanish({
                 senderUid: currentUser.uid,
                 iv,
                 ciphertext,
                 timestamp: serverTimestamp()
-            }));
+            });
+
+            if (activeReply) {
+                const replyEnc = await encryptMessage(sharedKey, activeReply.text.slice(0, 80));
+                payload.replyPreview = { iv: replyEnc.iv, ciphertext: replyEnc.ciphertext, senderUid: activeReply.senderUid };
+                activeReply = null;
+                replyBanner.style.display = 'none';
+            }
+
+            await addDoc(collection(db, "chats", currentChatId, "messages"), payload);
+            updateLastMessagePreview(text);
         }
 
         let activeBlobUrls = [];
         let vanishTimeouts = [];
 
+        const MESSAGES_LIMIT = 60;
+
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
 
+            // نجيب أحدث 60 رسالة (الأجدد أول) بدل كل التاريخ، حتى ما نعيد فك تشفير محادثة كاملة
+            // كل ما يصير تغيير بسيط (تفاعل، رسالة جديدة). نعكس الترتيب بعدين للعرض الطبيعي.
             const q = query(
                 collection(db, "chats", currentChatId, "messages"),
-                orderBy("timestamp", "asc")
+                orderBy("timestamp", "desc"),
+                limit(MESSAGES_LIMIT)
             );
 
             unsubscribeMessages = onSnapshot(q, async (snapshot) => {
@@ -1482,7 +1886,8 @@
                 vanishTimeouts = [];
                 chatMessages.innerHTML = '';
 
-                for (const docSnap of snapshot.docs) {
+                const orderedDocs = [...snapshot.docs].reverse();
+                for (const docSnap of orderedDocs) {
                     const msg = docSnap.data();
 
                     // رسالة مؤقتة تجاوزت وقتها — تُحذف بدل ما تُعرض
@@ -1509,9 +1914,11 @@
                         if (base64Audio === "[تعذّر فك التشفير]") {
                             contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الرسالة الصوتية]</p>`;
                         } else {
-                            const audioUrl = URL.createObjectURL(base64ToBlob(base64Audio, msg.audioMime || 'audio/webm'));
+                            const audioBlob = base64ToBlob(base64Audio, msg.audioMime || 'audio/webm');
+                            const audioUrl = URL.createObjectURL(audioBlob);
                             activeBlobUrls.push(audioUrl);
-                            contentHtml = `<audio controls preload="metadata" src="${audioUrl}" class="max-w-[220px] h-10"></audio>`;
+                            const bars = await computeWaveformBars(await audioBlob.arrayBuffer());
+                            contentHtml = buildVoicePlayerHtml(audioUrl, bars, msg.durationSec || 0);
                         }
                     } else if (msg.type === 'image') {
                         const base64Image = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
@@ -1544,10 +1951,50 @@
                                 contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[ملف تالف]</p>`;
                             }
                         }
+                    } else if (msg.type === 'poll') {
+                        const decryptedJson = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                        if (decryptedJson === "[تعذّر فك التشفير]") {
+                            contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الاستطلاع]</p>`;
+                        } else {
+                            try {
+                                const { question, options } = JSON.parse(decryptedJson);
+                                const votes = msg.votes || {};
+                                const totalVotes = Object.keys(votes).length;
+                                const myVote = votes[currentUser.uid];
+                                const optionsHtml = options.map((opt, idx) => {
+                                    const count = Object.values(votes).filter(v => v === idx).length;
+                                    const pct = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
+                                    const isMyChoice = myVote === idx;
+                                    return `
+                                        <div class="poll-option-row cursor-pointer rounded-lg p-2 mb-1.5 relative overflow-hidden ${isMyChoice ? 'ring-1 ring-[#00a884]' : ''}" data-msg-id="${docSnap.id}" data-option-idx="${idx}" style="background: rgba(255,255,255,0.08);">
+                                            <div class="absolute inset-y-0 right-0 bg-[#00a884]/25" style="width:${pct}%;"></div>
+                                            <div class="relative flex items-center justify-between text-xs gap-2">
+                                                <span class="truncate">${isMyChoice ? '✓ ' : ''}${escapeHtml(opt)}</span>
+                                                <span class="opacity-70 shrink-0">${pct}%</span>
+                                            </div>
+                                        </div>`;
+                                }).join('');
+                                contentHtml = `
+                                    <div style="min-width:200px;">
+                                        <p class="text-sm font-bold mb-2 flex items-center gap-1.5"><i class="fas fa-square-poll-vertical"></i> ${escapeHtml(question)}</p>
+                                        ${optionsHtml}
+                                        <p class="text-[10px] opacity-60 mt-1">${totalVotes} صوت</p>
+                                    </div>`;
+                            } catch (e) {
+                                contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[استطلاع تالف]</p>`;
+                            }
+                        }
                     } else {
                         const decryptedText = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
                         plainTextForCopy = decryptedText;
                         contentHtml = `<p class="text-sm leading-relaxed">${linkify(escapeHtml(decryptedText))}</p>`;
+                    }
+
+                    let replyHtml = '';
+                    if (msg.replyPreview) {
+                        const replyText = await decryptMessage(sharedKey, msg.replyPreview.iv, msg.replyPreview.ciphertext);
+                        const isReplyMine = msg.replyPreview.senderUid === currentUser.uid;
+                        replyHtml = `<div class="mb-1.5 pr-2 border-r-2 border-white/30 text-[11px] opacity-80 truncate">${isReplyMine ? 'أنت: ' : ''}${escapeHtml(replyText)}</div>`;
                     }
 
                     const reactionEmojis = msg.reactions ? [...new Set(Object.values(msg.reactions))].join('') : '';
@@ -1556,11 +2003,12 @@
                         : '';
 
                     bubble.innerHTML = `
+                        ${replyHtml}
                         ${contentHtml}
                         <div class="flex items-center justify-end gap-1 text-[10px] opacity-75 mt-1">
                             ${msg.expiresAt ? '<i class="fas fa-clock opacity-70" style="font-size:9px;"></i>' : ''}
-                            <span>11:42 م</span>
-                            ${isMine ? '<span class="text-blue-300 font-bold">✓✓</span>' : ''}
+                            <span>${formatMsgTime(msg.timestamp)}</span>
+                            ${isMine ? '<span class="text-gray-300">✓</span>' : ''}
                         </div>
                         ${reactionBadge}
                     `;
@@ -1569,6 +2017,20 @@
                     if (imgEl) {
                         imgEl.addEventListener('click', (e) => { e.stopPropagation(); window.open(imgEl.src, '_blank'); });
                     }
+                    wireVoicePlayer(bubble, msg.durationSec || 0);
+
+                    bubble.querySelectorAll('.poll-option-row').forEach(row => {
+                        row.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const msgId = row.dataset.msgId;
+                            const idx = parseInt(row.dataset.optionIdx, 10);
+                            try {
+                                await updateDoc(doc(db, "chats", currentChatId, "messages", msgId), {
+                                    [`votes.${currentUser.uid}`]: idx
+                                });
+                            } catch (err) { /* ignore */ }
+                        });
+                    });
 
                     // جدولة حذف تلقائي للرسائل المؤقتة — بمجرد ما تنتهي مدتها تُحذف من Firestore
                     // وهذا نفسه يعيد تشغيل onSnapshot فيعيد رسم القائمة بدون الرسالة المنتهية
@@ -1584,8 +2046,9 @@
                         selectedMessageId = docSnap.id;
                         selectedMessageSenderUid = msg.senderUid;
                         selectedMessageText = plainTextForCopy;
+                        selectedMessageType = msg.type || 'text';
                         deleteMsgBtn.style.display = (msg.senderUid === currentUser.uid) ? 'flex' : 'none';
-                        copyMsgBtn.style.display = (msg.type === 'audio' || msg.type === 'image' || msg.type === 'file') ? 'none' : 'flex';
+                        copyMsgBtn.style.display = (msg.type === 'audio' || msg.type === 'image' || msg.type === 'file' || msg.type === 'poll') ? 'none' : 'flex';
                         highlightedMessageBubble.innerHTML = bubble.outerHTML;
                         messageContextMenu.classList.remove('hidden');
                     };
@@ -1597,6 +2060,7 @@
                     containerWrapper.appendChild(bubble);
                     chatMessages.appendChild(containerWrapper);
                 }
+                updateTypingBubble();
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
         }
