@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com https://apis.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ping Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -189,6 +190,22 @@
         </div>
     </div>
 
+    <!-- 4.6 محادثة جديدة: بحث عن مستخدم بالـ username لبدء محادثة معه -->
+    <div id="newChatModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-3 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeNewChatBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <div class="flex-1 relative flex items-center">
+                <span class="absolute right-3 text-gray-500 text-sm pointer-events-none">@</span>
+                <input id="newChatUsernameInput" type="text" placeholder="ابحث باسم المستخدم" autocomplete="off" class="w-full bg-transparent text-white focus:outline-none text-sm pr-7">
+            </div>
+            <button id="newChatSearchBtn" class="text-[#00a884] font-bold text-sm px-2 shrink-0">بحث</button>
+        </div>
+        <p id="newChatError" class="text-rose-400 text-xs text-center mt-4 px-4 hidden"></p>
+        <div id="newChatResults" class="flex-1 overflow-y-auto p-2 space-y-1">
+            <p class="text-xs text-gray-500 text-center py-8">اكتب اسم المستخدم بالضبط واضغط بحث</p>
+        </div>
+    </div>
+
     <!-- 5. الواجهة الرئيسية الكاملة للتطبيق -->
     <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl app-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
         
@@ -199,6 +216,7 @@
             <div class="p-3.5 app-bg-header flex items-center justify-between safe-top">
                 <h1 class="font-bold text-lg text-white tracking-wide">Ping Messenger</h1>
                 <div class="flex items-center gap-3 text-gray-300">
+                    <button id="openNewChatBtn" title="محادثة جديدة" class="hover:text-white"><i class="fas fa-user-plus text-lg"></i></button>
                     <button id="openSearchBtn" title="بحث" class="hover:text-white"><i class="fas fa-magnifying-glass text-lg"></i></button>
                     <button id="openMenuBtn" title="القائمة" class="hover:text-white"><i class="fas fa-ellipsis-vertical text-lg"></i></button>
                 </div>
@@ -339,6 +357,14 @@
         const searchModal = document.getElementById('searchModal');
         const openSearchBtn = document.getElementById('openSearchBtn');
         const closeSearchBtn = document.getElementById('closeSearchBtn');
+
+        const newChatModal = document.getElementById('newChatModal');
+        const openNewChatBtn = document.getElementById('openNewChatBtn');
+        const closeNewChatBtn = document.getElementById('closeNewChatBtn');
+        const newChatUsernameInput = document.getElementById('newChatUsernameInput');
+        const newChatSearchBtn = document.getElementById('newChatSearchBtn');
+        const newChatError = document.getElementById('newChatError');
+        const newChatResults = document.getElementById('newChatResults');
 
         const settingsModal = document.getElementById('settingsModal');
         const openMenuBtn = document.getElementById('openMenuBtn');
@@ -609,6 +635,17 @@
         openSearchBtn.addEventListener('click', () => searchModal.classList.remove('hidden'));
         closeSearchBtn.addEventListener('click', () => searchModal.classList.add('hidden'));
 
+        openNewChatBtn.addEventListener('click', () => {
+            newChatUsernameInput.value = '';
+            newChatError.classList.add('hidden');
+            newChatResults.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">اكتب اسم المستخدم بالضبط واضغط بحث</p>`;
+            newChatModal.classList.remove('hidden');
+            newChatUsernameInput.focus();
+        });
+        closeNewChatBtn.addEventListener('click', () => newChatModal.classList.add('hidden'));
+        newChatSearchBtn.addEventListener('click', searchUserByUsername);
+        newChatUsernameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchUserByUsername(); });
+
         openMenuBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
         closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
 
@@ -629,6 +666,68 @@
             }
         });
 
+        async function searchUserByUsername() {
+            const term = newChatUsernameInput.value.trim().replace(/^@/, '');
+            newChatError.classList.add('hidden');
+            if (!term) return;
+            newChatResults.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">جاري البحث...</p>`;
+
+            try {
+                const q = query(collection(db, "users"), where("username", "==", term));
+                const snap = await getDocs(q);
+
+                const matches = [];
+                snap.forEach(docSnap => {
+                    if (docSnap.id !== currentUser.uid) matches.push({ uid: docSnap.id, ...docSnap.data() });
+                });
+
+                if (matches.length === 0) {
+                    newChatResults.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">ما فيه مستخدم بهذا الاسم</p>`;
+                    return;
+                }
+
+                newChatResults.innerHTML = '';
+                matches.forEach(userData => {
+                    const el = document.createElement('div');
+                    el.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition rounded-xl";
+                    el.innerHTML = `
+                        <img src="${safePhotoUrl(userData.photoURL)}" class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-sm text-white truncate">${escapeHtml(userData.name)}</h3>
+                            <p class="text-xs text-[#00a884] font-mono">@${escapeHtml(userData.username)}</p>
+                        </div>
+                    `;
+                    el.addEventListener('click', () => startChatWith(userData));
+                    newChatResults.appendChild(el);
+                });
+            } catch (e) {
+                newChatResults.innerHTML = '';
+                newChatError.textContent = "صار خطأ بالبحث، حاول مرة ثانية";
+                newChatError.classList.remove('hidden');
+            }
+        }
+
+        async function startChatWith(userData) {
+            newChatModal.classList.add('hidden');
+
+            const alreadyFriend = (currentUserProfile.friends || []).includes(userData.uid);
+            if (!alreadyFriend) {
+                try {
+                    // نضيفه بقائمتي وأضيف نفسي بقائمته — عشان المحادثة تظهر عند الطرفين فورًا
+                    await updateDoc(doc(db, "users", currentUser.uid), { friends: arrayUnion(userData.uid) });
+                    await updateDoc(doc(db, "users", userData.uid), { friends: arrayUnion(currentUser.uid) });
+                    currentUserProfile.friends = [...(currentUserProfile.friends || []), userData.uid];
+                } catch (e) {
+                    newChatModal.classList.remove('hidden');
+                    newChatError.textContent = "ما قدرت أبدأ المحادثة — تأكد من صلاحيات Firestore (Security Rules)";
+                    newChatError.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            openChat(userData);
+        }
+
         function loadFriendsList() {
             onSnapshot(doc(db, "users", currentUser.uid), async (userSnap) => {
                 if (!userSnap.exists()) return;
@@ -636,7 +735,7 @@
 
                 usersList.innerHTML = '';
                 if (friendsArray.length === 0) {
-                    usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">لا توجد محادثات نشطة</p>`;
+                    usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">لا توجد محادثات نشطة<br>اضغط <i class="fas fa-user-plus"></i> لبدء محادثة جديدة</p>`;
                     return;
                 }
 
