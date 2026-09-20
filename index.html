@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ping Secure - تطبيق المراسلة المشفرة والخصوصية التامة</title>
+    <title>Ping Secure - شبكة المراسلة الخاصة والمشفرة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -26,15 +26,10 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
 
         .btn-glow {
             box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
             transition: all 0.3s ease;
-        }
-        .btn-glow:hover {
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
-            transform: translateY(-1px);
         }
 
         .message-pop {
@@ -54,10 +49,8 @@
             <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-3xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg btn-glow">
                 <i class="fas fa-shield-halved"></i>
             </div>
-            
             <h2 class="text-3xl font-extrabold text-white mb-2">Ping Secure</h2>
-            <p class="text-gray-400 mb-8 text-sm">تواصل آمن بتشفير تام (E2EE) وخصوصية مطلقة لبياناتك</p>
-            
+            <p class="text-gray-400 mb-8 text-sm">محادثات خاصة بتشفير تام (E2EE) ودعوات متبادلة فقط</p>
             <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold py-4 px-6 rounded-2xl transition duration-300 flex items-center justify-center gap-3 btn-glow">
                 <i class="fab fa-google text-xl"></i>
                 <span class="text-base">تسجيل الدخول بواسطة Google</span>
@@ -65,24 +58,37 @@
         </div>
     </div>
 
-    <!-- 2. نافذة تعديل البروفايل والشخصية -->
+    <!-- 2. نافذة تعديل البروفايل -->
     <div id="profileModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl">
         <div class="glass-panel rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
-                    <i class="fas fa-user-gear text-blue-400"></i> تعديل الملف الشخصي
+                    <i class="fas fa-user-gear text-blue-400"></i> الملف الشخصي والخصوصية
                 </h3>
                 <button id="closeProfileBtn" class="text-gray-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
 
             <div class="space-y-4">
+                <div class="flex flex-col items-center justify-center mb-2">
+                    <div class="relative group cursor-pointer" id="avatarUploadContainer">
+                        <img id="editAvatarPreview" class="w-20 h-20 rounded-full object-cover ring-4 ring-blue-500/40 shadow-xl" src="https://via.placeholder.com/80">
+                        <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+                            <i class="fas fa-camera text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <label for="profileAvatarInput" class="mt-2 text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer flex items-center gap-1">
+                        <i class="fas fa-upload"></i> اختر صورة من جهازك
+                    </label>
+                    <input type="file" id="profileAvatarInput" accept="image/*" class="hidden">
+                </div>
+
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 mb-1">الاسم المستعار (Display Name)</label>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">الاسم المستعار</label>
                     <input id="editDisplayName" type="text" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 mb-1">اسم المستخدم (Username @)</label>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">اسم المستخدم الخاص بك (@Username)</label>
                     <div class="flex items-center bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5">
                         <span class="text-gray-500 text-sm ml-1">@</span>
                         <input id="editUsername" type="text" placeholder="username" class="w-full bg-transparent text-sm text-white focus:outline-none">
@@ -91,51 +97,62 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-400 mb-1">الحالة الشخصية (Bio)</label>
-                    <input id="editBio" type="text" placeholder="متصل الآن..." class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input id="editBio" type="text" placeholder="متصل عبر Ping..." class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 mb-1">رابط صورة البروفايل (URL)</label>
-                    <input id="editPhotoURL" type="text" placeholder="https://..." class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-
-                <button id="saveProfileBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition mt-4 btn-glow">
-                    حفظ التغييرات
+                <button id="saveProfileBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition mt-4 btn-glow flex items-center justify-center gap-2">
+                    <span id="saveProfileBtnText">حفظ البيانات</span>
+                    <i id="saveProfileSpinner" class="fas fa-spinner fa-spin hidden"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 3. نافذة إضافة شخص عبر اسم المستخدم -->
+    <!-- 3. نافذة طلبات الصداقة والإضافة -->
+    <div id="requestsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl">
+        <div class="glass-panel rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                    <i class="fas fa-user-clock text-amber-400"></i> طلبات المحادثة المنسدلة
+                </h3>
+                <button id="closeRequestsBtn" class="text-gray-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            </div>
+
+            <div id="requestsListContainer" class="space-y-3 max-h-60 overflow-y-auto my-4">
+                <!-- طلبات الصداقة المعلقة -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. نافذة إرسال طلب إضافة عبر اليوزر -->
     <div id="addUserModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl">
         <div class="glass-panel rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
-                    <i class="fas fa-user-plus text-emerald-400"></i> إضافة جهة اتصال
+                    <i class="fas fa-paper-plane text-emerald-400"></i> إرسال طلب محادثة
                 </h3>
                 <button id="closeAddUserBtn" class="text-gray-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
 
-            <p class="text-xs text-gray-400 mb-4">أدخل اسم المستخدم (Username) للشخص الذي تريد بدء محادثة سرية معه:</p>
+            <p class="text-xs text-gray-400 mb-4">أدخل اسم المستخدم (@Username) لإرسال طلب محادثة آمن:</p>
 
             <div class="flex items-center bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 mb-4">
                 <span class="text-gray-500 text-sm ml-1">@</span>
                 <input id="searchUsernameInput" type="text" placeholder="username" class="w-full bg-transparent text-sm text-white focus:outline-none">
             </div>
 
-            <button id="findUserBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition">
-                بحث وبدء المحادثة
+            <button id="sendFriendRequestBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition">
+                إرسال طلب الإضافة
             </button>
         </div>
     </div>
 
-    <!-- 4. واجهة التطبيق الرئيسية -->
+    <!-- 5. واجهة التطبيق الرئيسية -->
     <div id="mainApp" class="hidden w-full h-full max-w-7xl h-[100vh] md:h-[95vh] glass-panel md:rounded-3xl shadow-2xl flex overflow-hidden border border-white/10">
         
         <!-- القائمة الجانبية -->
         <div class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full bg-slate-900/60 backdrop-blur-md">
             
-            <!-- الهيدر الشخصي -->
             <div class="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
                 <div class="flex items-center gap-3 cursor-pointer" id="openProfileBtn">
                     <div class="relative">
@@ -149,7 +166,11 @@
                 </div>
 
                 <div class="flex items-center gap-1">
-                    <button id="copyInviteBtn" title="نسخ رابط الدعوة الخاص بك" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 transition flex items-center justify-center">
+                    <button id="openRequestsBtn" title="طلبات الإضافة" class="relative w-9 h-9 rounded-xl bg-white/5 hover:bg-amber-500/20 text-gray-400 hover:text-amber-400 transition flex items-center justify-center">
+                        <i class="fas fa-bell"></i>
+                        <span id="requestsBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+                    </button>
+                    <button id="copyInviteBtn" title="نسخ رابط الدعوة" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 transition flex items-center justify-center">
                         <i class="fas fa-link"></i>
                     </button>
                     <button id="logoutBtn" title="تسجيل الخروج" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-gray-400 hover:text-rose-400 transition flex items-center justify-center">
@@ -158,22 +179,19 @@
                 </div>
             </div>
 
-            <!-- إضافة جهة اتصال جديدة -->
             <div class="p-3 border-b border-white/5">
                 <button id="openAddUserModalBtn" class="w-full bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 border border-white/5">
-                    <i class="fas fa-user-plus text-emerald-400"></i> إضافة شخص بإسم المستخدم
+                    <i class="fas fa-user-plus text-emerald-400"></i> إرسال طلب محادثة جديد
                 </button>
             </div>
 
-            <!-- عنوان جهات الاتصال -->
             <div class="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center justify-between">
-                <span>المحادثات النشطة</span>
-                <span class="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full text-[10px]">E2EE</span>
+                <span>الأصدقاء المعتمدون</span>
+                <span class="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full text-[10px]">محادثات خاصة</span>
             </div>
 
-            <!-- قائمة المحادثات -->
             <div id="usersList" class="flex-1 overflow-y-auto px-2 space-y-1">
-                <!-- ملء جهات الاتصال -->
+                <!-- الأصدقاء فقط -->
             </div>
         </div>
 
@@ -186,35 +204,49 @@
                         <i class="fas fa-comments text-lg"></i>
                     </div>
                     <div>
-                        <h2 id="chatHeaderName" class="font-bold text-white text-sm">اختر جهة اتصال للبدء</h2>
-                        <p id="chatHeaderBio" class="text-xs text-gray-400">جميع المحادثات مشفرة ومحمية</p>
+                        <h2 id="chatHeaderName" class="font-bold text-white text-sm">اختر صديقاً لبدء المحادثة</h2>
+                        <p id="chatHeaderBio" class="text-xs text-gray-400">المحادثات مشفرة وتأخذ الخصوصية التامة</p>
                     </div>
+                </div>
+
+                <!-- زر الخيارات والحظر -->
+                <div id="chatHeaderMenu" class="hidden flex items-center gap-2">
+                    <button id="blockUserBtn" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+                        <i class="fas fa-ban"></i> حظر المستخدم
+                    </button>
                 </div>
             </div>
 
-            <!-- شاشة الرسائل -->
             <div id="chatMessages" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-4">
                 <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3">
                     <div class="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center text-2xl text-blue-500/50">
-                        <i class="fas fa-shield-cat"></i>
+                        <i class="fas fa-user-lock"></i>
                     </div>
-                    <p>اختر شخصاً لبدء المحادثة المشفرة 🔐</p>
+                    <p>قائمة المحادثات فارغة. استخدم رابط الدعوة أو اسم المستخدم لإضافة صديق 🔐</p>
                 </div>
             </div>
 
-            <!-- حقل كتابة المرفقات والإرسال -->
+            <!-- شريط الكتابة والتسجيل الصوتي -->
             <div id="inputContainer" class="p-4 bg-slate-900/60 backdrop-blur-md border-t border-white/10 hidden">
-                <div class="flex items-center gap-3 max-w-5xl mx-auto">
-                    <label for="imageInput" id="uploadLabel" class="cursor-pointer bg-white/5 hover:bg-white/10 text-blue-400 hover:text-blue-300 w-12 h-12 rounded-2xl transition duration-200 flex items-center justify-center border border-white/10 shrink-0" title="إرفاق صورة مشفرة">
+                <div class="flex items-center gap-2 max-w-5xl mx-auto">
+                    <!-- إرفاق صورة -->
+                    <label for="imageInput" id="uploadLabel" class="cursor-pointer bg-white/5 hover:bg-white/10 text-blue-400 hover:text-blue-300 w-11 h-11 rounded-2xl transition flex items-center justify-center border border-white/10 shrink-0" title="إرفاق صورة">
                         <i class="fas fa-paperclip text-lg" id="uploadIcon"></i>
                     </label>
                     <input type="file" id="imageInput" accept="image/*" class="hidden">
 
+                    <!-- التسجيل الصوتي -->
+                    <button id="recordAudioBtn" class="bg-white/5 hover:bg-rose-500/20 text-rose-400 w-11 h-11 rounded-2xl transition flex items-center justify-center border border-white/10 shrink-0" title="تسجيل صوت">
+                        <i class="fas fa-microphone text-lg" id="recordIcon"></i>
+                    </button>
+
+                    <!-- حقل النص -->
                     <div class="flex-1 relative">
-                        <input id="messageInput" type="text" placeholder="اكتب رسالة مشفرة..." class="w-full bg-slate-900/90 text-white placeholder-gray-500 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 border border-white/10 transition duration-200">
+                        <input id="messageInput" type="text" placeholder="اكتب رسالة مشفرة..." class="w-full bg-slate-900/90 text-white placeholder-gray-500 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 border border-white/10">
                     </div>
                     
-                    <button id="sendBtn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white w-12 h-12 rounded-2xl transition duration-200 flex items-center justify-center shrink-0 btn-glow">
+                    <!-- زر الإرسال -->
+                    <button id="sendBtn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white w-11 h-11 rounded-2xl transition flex items-center justify-center shrink-0 btn-glow">
                         <i class="fas fa-paper-plane text-base -rotate-45 translate-x-0.5"></i>
                     </button>
                 </div>
@@ -226,7 +258,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, onSnapshot, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const IMGBB_API_KEY = "d0e78a427404c26f247b3e644e8b3cbe";
@@ -257,26 +289,40 @@
         const chatHeaderAvatarContainer = document.getElementById('chatHeaderAvatarContainer');
         const chatHeaderName = document.getElementById('chatHeaderName');
         const chatHeaderBio = document.getElementById('chatHeaderBio');
+        const chatHeaderMenu = document.getElementById('chatHeaderMenu');
+        const blockUserBtn = document.getElementById('blockUserBtn');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const inputContainer = document.getElementById('inputContainer');
         const imageInput = document.getElementById('imageInput');
         const uploadIcon = document.getElementById('uploadIcon');
+        const recordAudioBtn = document.getElementById('recordAudioBtn');
+        const recordIcon = document.getElementById('recordIcon');
 
         const profileModal = document.getElementById('profileModal');
         const openProfileBtn = document.getElementById('openProfileBtn');
         const closeProfileBtn = document.getElementById('closeProfileBtn');
         const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const saveProfileBtnText = document.getElementById('saveProfileBtnText');
+        const saveProfileSpinner = document.getElementById('saveProfileSpinner');
         const editDisplayName = document.getElementById('editDisplayName');
         const editUsername = document.getElementById('editUsername');
         const editBio = document.getElementById('editBio');
-        const editPhotoURL = document.getElementById('editPhotoURL');
+        const editAvatarPreview = document.getElementById('editAvatarPreview');
+        const profileAvatarInput = document.getElementById('profileAvatarInput');
+        const avatarUploadContainer = document.getElementById('avatarUploadContainer');
+
+        const requestsModal = document.getElementById('requestsModal');
+        const openRequestsBtn = document.getElementById('openRequestsBtn');
+        const closeRequestsBtn = document.getElementById('closeRequestsBtn');
+        const requestsListContainer = document.getElementById('requestsListContainer');
+        const requestsBadge = document.getElementById('requestsBadge');
 
         const addUserModal = document.getElementById('addUserModal');
         const openAddUserModalBtn = document.getElementById('openAddUserModalBtn');
         const closeAddUserBtn = document.getElementById('closeAddUserBtn');
-        const findUserBtn = document.getElementById('findUserBtn');
+        const sendFriendRequestBtn = document.getElementById('sendFriendRequestBtn');
         const searchUsernameInput = document.getElementById('searchUsernameInput');
         const copyInviteBtn = document.getElementById('copyInviteBtn');
 
@@ -286,6 +332,21 @@
         let currentChatId = null;
         let secretEncryptionKey = null;
         let unsubscribeMessages = null;
+        let tempAvatarURL = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // طلب إذن الإشعارات الفورية
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+
+        function sendPushNotification(title, body) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { body: body, icon: '/favicon.ico' });
+            }
+        }
 
         function encryptData(text, key) {
             if (!text) return "";
@@ -298,7 +359,7 @@
                 const bytes = CryptoJS.AES.decrypt(ciphertext, key);
                 return bytes.toString(CryptoJS.enc.Utf8);
             } catch (e) {
-                return "[خطأ في فك التشفير]";
+                return "[رسالة مشفرة]";
             }
         }
 
@@ -318,23 +379,23 @@
                         username: defaultUsername,
                         bio: "متصل عبر Ping Secure 🔒",
                         photoURL: user.photoURL || 'https://via.placeholder.com/40',
+                        friends: [],
+                        blocked: [],
                         lastSeen: serverTimestamp()
                     };
                     await setDoc(userRef, currentUserProfile);
                 } else {
                     currentUserProfile = userSnap.data();
-                    if (!currentUserProfile.username) {
-                        currentUserProfile.username = defaultUsername;
-                        await setDoc(userRef, { username: defaultUsername }, { merge: true });
-                    }
+                    if (!currentUserProfile.friends) currentUserProfile.friends = [];
+                    if (!currentUserProfile.blocked) currentUserProfile.blocked = [];
                 }
 
                 updateProfileUI();
-
                 loginScreen.classList.add('hidden');
                 mainApp.classList.remove('hidden');
 
-                loadUsers();
+                listenToFriendRequests();
+                loadFriendsList();
                 checkInviteURL();
             } else {
                 currentUser = null;
@@ -345,13 +406,14 @@
 
         function updateProfileUI() {
             myAvatar.src = currentUserProfile.photoURL || 'https://via.placeholder.com/40';
+            editAvatarPreview.src = currentUserProfile.photoURL || 'https://via.placeholder.com/80';
             myName.textContent = currentUserProfile.name;
             myUserHandle.textContent = `@${currentUserProfile.username}`;
 
             editDisplayName.value = currentUserProfile.name || "";
             editUsername.value = currentUserProfile.username || "";
             editBio.value = currentUserProfile.bio || "";
-            editPhotoURL.value = currentUserProfile.photoURL || "";
+            tempAvatarURL = currentUserProfile.photoURL;
         }
 
         loginBtn.addEventListener('click', () => signInWithPopup(auth, provider));
@@ -359,148 +421,14 @@
 
         openProfileBtn.addEventListener('click', () => profileModal.classList.remove('hidden'));
         closeProfileBtn.addEventListener('click', () => profileModal.classList.add('hidden'));
+        avatarUploadContainer.addEventListener('click', () => profileAvatarInput.click());
 
-        saveProfileBtn.addEventListener('click', async () => {
-            const newName = editDisplayName.value.trim();
-            const newUsername = editUsername.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-            const newBio = editBio.value.trim();
-            const newPhotoURL = editPhotoURL.value.trim();
-
-            if (!newName || !newUsername) {
-                alert("الرجاء إدخال الاسم واسم المستخدم بشكل صحيح.");
-                return;
-            }
-
-            const q = query(collection(db, "users"), where("username", "==", newUsername));
-            const snap = await getDocs(q);
-            let exists = false;
-            snap.forEach(d => {
-                if (d.id !== currentUser.uid) exists = true;
-            });
-
-            if (exists) {
-                alert("اسم المستخدم هذا مأخوذ بالفعل، اختر اسم أخر.");
-                return;
-            }
-
-            currentUserProfile.name = newName;
-            currentUserProfile.username = newUsername;
-            currentUserProfile.bio = newBio;
-            if (newPhotoURL) currentUserProfile.photoURL = newPhotoURL;
-
-            await setDoc(doc(db, "users", currentUser.uid), currentUserProfile, { merge: true });
-            updateProfileUI();
-            profileModal.classList.add('hidden');
-            alert("تم حفظ إعدادات البروفايل والخصوصية بنجاح!");
-        });
-
-        openAddUserModalBtn.addEventListener('click', () => addUserModal.classList.remove('hidden'));
-        closeAddUserBtn.addEventListener('click', () => addUserModal.classList.add('hidden'));
-
-        findUserBtn.addEventListener('click', async () => {
-            const targetHandle = searchUsernameInput.value.trim().toLowerCase().replace('@', '');
-            if (!targetHandle) return;
-
-            const q = query(collection(db, "users"), where("username", "==", targetHandle));
-            const snap = await getDocs(q);
-
-            if (snap.empty) {
-                alert("لم يتم العثور على مستخدم بهذا الاسم.");
-                return;
-            }
-
-            let foundUser = null;
-            snap.forEach(d => foundUser = d.data());
-
-            if (foundUser.uid === currentUser.uid) {
-                alert("لا يمكنك إضافة نفسك.");
-                return;
-            }
-
-            addUserModal.classList.add('hidden');
-            searchUsernameInput.value = '';
-            openChat(foundUser);
-        });
-
-        copyInviteBtn.addEventListener('click', () => {
-            const inviteURL = `${window.location.origin}/?user=${currentUserProfile.username}`;
-            navigator.clipboard.writeText(inviteURL);
-            alert(`تم نسخ رابط الدعوة الخاص بك:\n${inviteURL}`);
-        });
-
-        async function checkInviteURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetUsername = urlParams.get('user');
-            if (targetUsername) {
-                const q = query(collection(db, "users"), where("username", "==", targetUsername.toLowerCase()));
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    snap.forEach(d => openChat(d.data()));
-                }
-            }
-        }
-
-        function loadUsers() {
-            onSnapshot(collection(db, "users"), (snapshot) => {
-                usersList.innerHTML = '';
-                snapshot.forEach((docSnap) => {
-                    const userData = docSnap.data();
-                    if (userData.uid === currentUser.uid) return;
-
-                    const userEl = document.createElement('div');
-                    userEl.className = "p-3 rounded-2xl flex items-center gap-3 hover:bg-white/10 cursor-pointer transition duration-200 border border-transparent hover:border-white/5 my-1";
-                    userEl.innerHTML = `
-                        <div class="relative">
-                            <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-11 h-11 rounded-2xl object-cover">
-                            <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-sm text-white truncate">${userData.name}</h3>
-                            <p class="text-xs text-blue-400 font-mono truncate">@${userData.username || 'user'}</p>
-                        </div>
-                    `;
-
-                    userEl.addEventListener('click', () => openChat(userData));
-                    usersList.appendChild(userEl);
-                });
-            });
-        }
-
-        function openChat(targetUser) {
-            selectedUser = targetUser;
-            inputContainer.classList.remove('hidden');
-            
-            currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
-            secretEncryptionKey = `PingSecret_${currentChatId}_2026`;
-
-            chatHeaderAvatarContainer.innerHTML = `<img src="${targetUser.photoURL || 'https://via.placeholder.com/40'}" class="w-11 h-11 rounded-2xl object-cover">`;
-            chatHeaderName.textContent = targetUser.name;
-            chatHeaderBio.textContent = targetUser.bio || `@${targetUser.username} • مشفر (E2EE)`;
-
-            loadMessages();
-        }
-
-        async function sendMessage(encryptedImageUrl = null) {
-            const text = messageInput.value.trim();
-            if (!text && !encryptedImageUrl) return;
-
-            messageInput.value = '';
-
-            const encryptedText = text ? encryptData(text, secretEncryptionKey) : "";
-
-            await addDoc(collection(db, "chats", currentChatId, "messages"), {
-                senderUid: currentUser.uid,
-                text: encryptedText,
-                imageUrl: encryptedImageUrl || "",
-                timestamp: serverTimestamp()
-            });
-        }
-
-        imageInput.addEventListener('change', async (e) => {
+        profileAvatarInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (!file || !currentChatId) return;
+            if (!file) return;
 
-            uploadIcon.className = "fas fa-spinner fa-spin text-lg text-blue-400";
+            saveProfileBtnText.textContent = "جاري رفع الصورة...";
+            saveProfileSpinner.classList.remove('hidden');
 
             const formData = new FormData();
             formData.append("image", file);
@@ -513,13 +441,315 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    const encryptedUrl = encryptData(result.data.url, secretEncryptionKey);
-                    await sendMessage(encryptedUrl);
-                } else {
-                    alert("تعذر رفع الصورة. حاول مرة أخرى.");
+                    tempAvatarURL = result.data.url;
+                    editAvatarPreview.src = tempAvatarURL;
                 }
             } catch (error) {
-                console.error("خطأ:", error);
+                console.error(error);
+            } finally {
+                saveProfileBtnText.textContent = "حفظ البيانات";
+                saveProfileSpinner.classList.add('hidden');
+            }
+        });
+
+        saveProfileBtn.addEventListener('click', async () => {
+            const newName = editDisplayName.value.trim();
+            const newUsername = editUsername.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+            const newBio = editBio.value.trim();
+
+            if (!newName || !newUsername) return;
+
+            currentUserProfile.name = newName;
+            currentUserProfile.username = newUsername;
+            currentUserProfile.bio = newBio;
+            if (tempAvatarURL) currentUserProfile.photoURL = tempAvatarURL;
+
+            await setDoc(doc(db, "users", currentUser.uid), currentUserProfile, { merge: true });
+            updateProfileUI();
+            profileModal.classList.add('hidden');
+        });
+
+        // طلبات الصداقة والإشعارات المتبادلة
+        openRequestsBtn.addEventListener('click', () => requestsModal.classList.remove('hidden'));
+        closeRequestsBtn.addEventListener('click', () => requestsModal.classList.add('hidden'));
+        openAddUserModalBtn.addEventListener('click', () => addUserModal.classList.remove('hidden'));
+        closeAddUserBtn.addEventListener('click', () => addUserModal.classList.add('hidden'));
+
+        sendFriendRequestBtn.addEventListener('click', async () => {
+            const targetHandle = searchUsernameInput.value.trim().toLowerCase().replace('@', '');
+            if (!targetHandle) return;
+
+            const q = query(collection(db, "users"), where("username", "==", targetHandle));
+            const snap = await getDocs(q);
+
+            if (snap.empty) {
+                alert("لم يتم العثور على هذا المستخدم.");
+                return;
+            }
+
+            let foundUser = null;
+            snap.forEach(d => foundUser = d.data());
+
+            if (foundUser.uid === currentUser.uid) {
+                alert("لا يمكنك إرسال طلب لنفسك.");
+                return;
+            }
+
+            await addDoc(collection(db, "requests"), {
+                fromUid: currentUser.uid,
+                fromName: currentUserProfile.name,
+                fromUsername: currentUserProfile.username,
+                fromPhoto: currentUserProfile.photoURL,
+                toUid: foundUser.uid,
+                status: "pending",
+                timestamp: serverTimestamp()
+            });
+
+            addUserModal.classList.add('hidden');
+            searchUsernameInput.value = '';
+            alert("تم إرسال طلب المحادثة بنجاح!");
+        });
+
+        function listenToFriendRequests() {
+            const q = query(collection(db, "requests"), where("toUid", "==", currentUser.uid), where("status", "==", "pending"));
+            onSnapshot(q, (snapshot) => {
+                requestsListContainer.innerHTML = '';
+                if (snapshot.empty) {
+                    requestsBadge.classList.add('hidden');
+                    requestsListContainer.innerHTML = `<p class="text-xs text-gray-500 text-center py-4">لا توجد طلبات إضافة جديدة</p>`;
+                    return;
+                }
+
+                requestsBadge.textContent = snapshot.size;
+                requestsBadge.classList.remove('hidden');
+
+                snapshot.forEach((docSnap) => {
+                    const req = docSnap.data();
+                    const reqId = docSnap.id;
+
+                    const item = document.createElement('div');
+                    item.className = "p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between";
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <img src="${req.fromPhoto}" class="w-10 h-10 rounded-xl object-cover">
+                            <div>
+                                <h4 class="font-bold text-xs text-white">${req.fromName}</h4>
+                                <p class="text-[10px] text-blue-400 font-mono">@${req.fromUsername}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="accept-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition">قبول</button>
+                            <button class="reject-btn bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition">رفض</button>
+                        </div>
+                    `;
+
+                    item.querySelector('.accept-btn').addEventListener('click', async () => {
+                        await updateDoc(doc(db, "requests", reqId), { status: "accepted" });
+                        
+                        // إضافة إلى الأصدقاء المتبادلين
+                        await setDoc(doc(db, "users", currentUser.uid), {
+                            friends: [...currentUserProfile.friends, req.fromUid]
+                        }, { merge: true });
+
+                        const otherRef = doc(db, "users", req.fromUid);
+                        const otherSnap = await getDoc(otherRef);
+                        if (otherSnap.exists()) {
+                            const otherFriends = otherSnap.data().friends || [];
+                            await setDoc(otherRef, { friends: [...otherFriends, currentUser.uid] }, { merge: true });
+                        }
+
+                        requestsModal.classList.add('hidden');
+                    });
+
+                    item.querySelector('.reject-btn').addEventListener('click', async () => {
+                        await updateDoc(doc(db, "requests", reqId), { status: "rejected" });
+                        setTimeout(async () => {
+                            await deleteDoc(doc(db, "requests", reqId));
+                        }, 1000);
+                    });
+
+                    requestsListContainer.appendChild(item);
+                });
+            });
+
+            // الاستماع لتلقي إشعار رفض الطلب لمرسله
+            const rejectQuery = query(collection(db, "requests"), where("fromUid", "==", currentUser.uid), where("status", "==", "rejected"));
+            onSnapshot(rejectQuery, (snapshot) => {
+                snapshot.forEach(async (docSnap) => {
+                    sendPushNotification("تم رفض الطلب", "قام المستخدم بطلب رفض المحادثة الخاصة.");
+                    await deleteDoc(doc(db, "requests", docSnap.id));
+                });
+            });
+        }
+
+        copyInviteBtn.addEventListener('click', () => {
+            const inviteURL = `${window.location.origin}/?user=${currentUserProfile.username}`;
+            navigator.clipboard.writeText(inviteURL);
+            alert(`تم نسخ رابط الدعوة المباشر:\n${inviteURL}`);
+        });
+
+        async function checkInviteURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetUsername = urlParams.get('user');
+            if (targetUsername) {
+                const q = query(collection(db, "users"), where("username", "==", targetUsername.toLowerCase()));
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                    snap.forEach(d => {
+                        const targetUser = d.data();
+                        if (confirm(`هل تريد إرسال طلب محادثة إلى ${targetUser.name} (@${targetUser.username})؟`)) {
+                            addDoc(collection(db, "requests"), {
+                                fromUid: currentUser.uid,
+                                fromName: currentUserProfile.name,
+                                fromUsername: currentUserProfile.username,
+                                fromPhoto: currentUserProfile.photoURL,
+                                toUid: targetUser.uid,
+                                status: "pending",
+                                timestamp: serverTimestamp()
+                            });
+                        }
+                    });
+                }
+            }
+        }
+
+        function loadFriendsList() {
+            onSnapshot(doc(db, "users", currentUser.uid), async (userSnap) => {
+                if (!userSnap.exists()) return;
+                const myData = userSnap.data();
+                currentUserProfile.friends = myData.friends || [];
+                currentUserProfile.blocked = myData.blocked || [];
+
+                usersList.innerHTML = '';
+                
+                if (currentUserProfile.friends.length === 0) {
+                    usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">لا يوجد أصدقاء معتمدون بعد.<br>أرسل رابط دعوة لبدء محادثة!</p>`;
+                    return;
+                }
+
+                for (let friendUid of currentUserProfile.friends) {
+                    const friendDoc = await getDoc(doc(db, "users", friendUid));
+                    if (friendDoc.exists()) {
+                        const userData = friendDoc.data();
+                        const userEl = document.createElement('div');
+                        userEl.className = "p-3 rounded-2xl flex items-center gap-3 hover:bg-white/10 cursor-pointer transition border border-transparent my-1";
+                        userEl.innerHTML = `
+                            <div class="relative">
+                                <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-11 h-11 rounded-2xl object-cover">
+                                <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-bold text-sm text-white truncate">${userData.name}</h3>
+                                <p class="text-xs text-blue-400 font-mono truncate">@${userData.username}</p>
+                            </div>
+                        `;
+
+                        userEl.addEventListener('click', () => openChat(userData));
+                        usersList.appendChild(userEl);
+                    }
+                }
+            });
+        }
+
+        function openChat(targetUser) {
+            selectedUser = targetUser;
+            inputContainer.classList.remove('hidden');
+            chatHeaderMenu.classList.remove('hidden');
+            
+            currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
+            secretEncryptionKey = `PingSecret_${currentChatId}_2026`;
+
+            chatHeaderAvatarContainer.innerHTML = `<img src="${targetUser.photoURL || 'https://via.placeholder.com/40'}" class="w-11 h-11 rounded-2xl object-cover">`;
+            chatHeaderName.textContent = targetUser.name;
+            chatHeaderBio.textContent = targetUser.bio || `@${targetUser.username} • مشفر (E2EE)`;
+
+            loadMessages();
+        }
+
+        // الحظر
+        blockUserBtn.addEventListener('click', async () => {
+            if (!selectedUser) return;
+            if (confirm(`هل أنت تأكد من حظر ${selectedUser.name}؟`)) {
+                await setDoc(doc(db, "users", currentUser.uid), {
+                    blocked: [...currentUserProfile.blocked, selectedUser.uid]
+                }, { merge: true });
+                alert("تم حظر المستخدم بنجاح.");
+                inputContainer.classList.add('hidden');
+            }
+        });
+
+        // التسجيل الصوتي
+        recordAudioBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = async () => {
+                            const base64Audio = reader.result;
+                            const encryptedAudio = encryptData(base64Audio, secretEncryptionKey);
+                            await sendMessage(null, encryptedAudio);
+                        };
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordIcon.className = "fas fa-stop text-lg text-rose-500 animate-pulse";
+                } catch (e) {
+                    alert("تعذر الوصول إلى الميكروفون.");
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordIcon.className = "fas fa-microphone text-lg";
+            }
+        });
+
+        async function sendMessage(encryptedImageUrl = null, encryptedAudioUrl = null) {
+            if (currentUserProfile.blocked.includes(selectedUser.uid)) {
+                alert("لا يمكنك إرسال رسائل لمستخدم محظور.");
+                return;
+            }
+
+            const text = messageInput.value.trim();
+            if (!text && !encryptedImageUrl && !encryptedAudioUrl) return;
+
+            messageInput.value = '';
+            const encryptedText = text ? encryptData(text, secretEncryptionKey) : "";
+
+            await addDoc(collection(db, "chats", currentChatId, "messages"), {
+                senderUid: currentUser.uid,
+                text: encryptedText,
+                imageUrl: encryptedImageUrl || "",
+                audioUrl: encryptedAudioUrl || "",
+                deleted: false,
+                timestamp: serverTimestamp()
+            });
+        }
+
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || !currentChatId) return;
+
+            uploadIcon.className = "fas fa-spinner fa-spin text-lg text-blue-400";
+            const formData = new FormData();
+            formData.append("image", file);
+
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    const encryptedUrl = encryptData(result.data.url, secretEncryptionKey);
+                    await sendMessage(encryptedUrl);
+                }
+            } catch (error) {
+                console.error(error);
             } finally {
                 uploadIcon.className = "fas fa-paperclip text-lg";
                 imageInput.value = '';
@@ -538,26 +768,54 @@
                 chatMessages.innerHTML = '';
                 snapshot.forEach((docSnap) => {
                     const msg = docSnap.data();
+                    const msgId = docSnap.id;
                     const isMine = msg.senderUid === currentUser.uid;
 
-                    const decryptedText = msg.text ? decryptData(msg.text, secretEncryptionKey) : "";
-                    const decryptedImageUrl = msg.imageUrl ? decryptData(msg.imageUrl, secretEncryptionKey) : "";
+                    if (!isMine && snapshot.docChanges().some(c => c.type === "added")) {
+                        sendPushNotification(selectedUser.name, "رسالة جديدة مشفرة وصلت");
+                    }
 
                     const containerWrapper = document.createElement('div');
-                    containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} message-pop`;
+                    containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} message-pop group`;
                     
                     let content = '';
-                    if (decryptedImageUrl) {
-                        content += `<img src="${decryptedImageUrl}" class="rounded-xl max-w-xs mb-2 max-h-60 object-cover cursor-pointer hover:opacity-90 transition border border-white/10 shadow-md" onclick="window.open('${decryptedImageUrl}', '_blank')">`;
-                    }
-                    if (decryptedText) {
-                        content += `<p class="text-sm leading-relaxed">${decryptedText}</p>`;
+
+                    if (msg.deleted) {
+                        content = `<p class="text-xs italic text-gray-400"><i class="fas fa-ban ml-1"></i> تم حذف هذه الرسالة</p>`;
+                    } else {
+                        const decryptedText = msg.text ? decryptData(msg.text, secretEncryptionKey) : "";
+                        const decryptedImageUrl = msg.imageUrl ? decryptData(msg.imageUrl, secretEncryptionKey) : "";
+                        const decryptedAudioUrl = msg.audioUrl ? decryptData(msg.audioUrl, secretEncryptionKey) : "";
+
+                        if (decryptedImageUrl) {
+                            content += `<img src="${decryptedImageUrl}" class="rounded-xl max-w-xs mb-2 max-h-60 object-cover cursor-pointer hover:opacity-90 transition border border-white/10" onclick="window.open('${decryptedImageUrl}', '_blank')">`;
+                        }
+                        if (decryptedAudioUrl) {
+                            content += `<audio controls class="w-60 mb-1"><source src="${decryptedAudioUrl}" type="audio/webm"></audio>`;
+                        }
+                        if (decryptedText) {
+                            content += `<p class="text-sm leading-relaxed">${decryptedText}</p>`;
+                        }
                     }
 
                     const bubble = document.createElement('div');
                     bubble.setAttribute('dir', 'rtl');
-                    bubble.className = `${isMine ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-br-xs shadow-lg ml-auto' : 'bg-slate-800/90 text-gray-100 border border-white/10 rounded-2xl rounded-bl-xs backdrop-blur-md mr-auto'} max-w-xs md:max-w-md p-3.5 shadow-md`;
+                    bubble.className = `${isMine ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-br-xs ml-auto' : 'bg-slate-800/90 text-gray-100 border border-white/10 rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3.5 shadow-md relative`;
                     bubble.innerHTML = content;
+
+                    // زر الحذف للجميع
+                    if (isMine && !msg.deleted) {
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = "hidden group-hover:block absolute -top-2 -left-2 bg-rose-600 text-white w-6 h-6 rounded-full text-[10px] shadow-md transition";
+                        deleteBtn.innerHTML = `<i class="fas fa-trash"></i>`;
+                        deleteBtn.title = "حذف للجميع";
+                        deleteBtn.addEventListener('click', async () => {
+                            if (confirm("هل تريد حذف هذه الرسالة لدى الجميع؟")) {
+                                await updateDoc(doc(db, "chats", currentChatId, "messages", msgId), { deleted: true });
+                            }
+                        });
+                        bubble.appendChild(deleteBtn);
+                    }
 
                     containerWrapper.appendChild(bubble);
                     chatMessages.appendChild(containerWrapper);
