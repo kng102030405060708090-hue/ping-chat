@@ -3,95 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ping - تطبيق مراسلة مشفر آمناً (E2EE)</title>
+    <title>Ping Secure - تطبيق المراسلة المشفرة</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- مكتبة CryptoJS للتشفير التام محلياً -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Readex+Pro:wght@300;400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Readex Pro', 'Plus Jakarta Sans', sans-serif;
+            background: #0b0f19;
+            color: #f3f4f6;
+        }
+
+        /* خلفية زجاجية مشوشة */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* تخصيص شريط التمرير */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* توهج النيون للأزرار */
+        .btn-glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
+            transition: all 0.3s ease;
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+            transform: translateY(-1px);
+        }
+
+        /* أنيميشن ناعم لفقاعات الرسائل */
+        .message-pop {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
     </style>
 </head>
-<body class="bg-gray-100 h-screen overflow-hidden">
+<body class="h-screen overflow-hidden flex items-center justify-center p-0 md:p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-purple-950 to-slate-950">
 
-    <!-- 1. شاشة تسجيل الدخول -->
-    <div id="loginScreen" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50 p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
-            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg">
-                🔒
+    <!-- 1. شاشة تسجيل الدخول المبتكرة -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl">
+        <div class="glass-panel rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative overflow-hidden border border-white/10">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/30 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-600/30 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-3xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg btn-glow rotate-3 hover:rotate-0 transition duration-300">
+                <i class="fas fa-shield-halved"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Ping Secure</h2>
-            <p class="text-gray-500 mb-6 text-sm">محادثات خاصة بتشفير تام (E2EE)</p>
-            <button id="loginBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
-                <i class="fab font-normal fa-google text-lg"></i>
-                <span>تسجيل الدخول بواسطة Google</span>
+            
+            <h2 class="text-3xl font-extrabold text-white mb-2 tracking-wide">Ping Secure</h2>
+            <p class="text-gray-400 mb-8 text-sm leading-relaxed">تواصل خاص ومستقبل مشفر بتشفير تام (E2EE) بدون تنازلات عن الخصوصية</p>
+            
+            <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-6 rounded-2xl transition duration-300 flex items-center justify-center gap-3 btn-glow group">
+                <i class="fab fa-google text-xl group-hover:scale-110 transition duration-300"></i>
+                <span class="text-base">تسجيل الدخول الآمن بواسطة Google</span>
             </button>
         </div>
     </div>
 
-    <!-- 2. واجهة التطبيق الرئيسية -->
-    <div id="mainApp" class="hidden flex h-screen bg-white">
+    <!-- 2. واجهة التطبيق الرئيسية (شاشة المحادثات) -->
+    <div id="mainApp" class="hidden w-full h-full max-w-7xl h-[100vh] md:h-[95vh] glass-panel md:rounded-3xl shadow-2xl flex overflow-hidden border border-white/10">
         
-        <!-- القائمة الجانبية -->
-        <div class="w-full md:w-80 border-l border-gray-200 flex flex-col h-full bg-gray-50">
-            <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
+        <!-- القائمة الجانبية (المستخدمين) -->
+        <div class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full bg-slate-900/60 backdrop-blur-md">
+            <!-- الهيدر الشخصي -->
+            <div class="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
                 <div class="flex items-center gap-3">
-                    <img id="myAvatar" class="w-10 h-10 rounded-full object-cover border border-gray-200" src="https://via.placeholder.com/40" alt="صورة المستخدم">
+                    <div class="relative">
+                        <img id="myAvatar" class="w-11 h-11 rounded-2xl object-cover ring-2 ring-blue-500/50 shadow-md" src="https://via.placeholder.com/40" alt="صورة المستخدم">
+                        <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+                    </div>
                     <div>
-                        <h1 id="myName" class="font-bold text-sm text-gray-800">جاري التحميل...</h1>
-                        <span class="text-xs text-green-500 flex items-center gap-1">
-                            <span class="w-2 h-2 bg-green-500 rounded-full"></span> آمن ومشفر 🔒
+                        <h1 id="myName" class="font-bold text-sm text-white truncate max-w-[140px]">جاري التحميل...</h1>
+                        <span class="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                            <i class="fas fa-lock text-[9px]"></i> مشفر وآمن
                         </span>
                     </div>
                 </div>
-                <button id="logoutBtn" title="تسجيل الخروج" class="text-gray-400 hover:text-red-500 transition p-2">
-                    <i class="fas fa-sign-out-alt"></i>
+                <button id="logoutBtn" title="تسجيل الخروج" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-gray-400 hover:text-rose-400 transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-arrow-right-from-bracket"></i>
                 </button>
             </div>
 
-            <div class="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50">
-                المستخدمين النشطين
+            <!-- عنوان قائمة المستخدمين -->
+            <div class="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                <span>جهات الاتصال المتاحة</span>
+                <span class="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full text-[10px]">E2EE</span>
             </div>
 
-            <div id="usersList" class="flex-1 overflow-y-auto divide-y divide-gray-100">
-                <!-- قائمة المستخدمين -->
+            <!-- قائمة المستخدمين -->
+            <div id="usersList" class="flex-1 overflow-y-auto px-2 space-y-1">
+                <!-- ملء القائمة ديناميكياً -->
             </div>
         </div>
 
         <!-- منطقة المحادثة الرئيسية -->
-        <div class="hidden md:flex flex-1 flex-col h-full bg-slate-50">
-            <div id="chatHeader" class="p-4 border-b border-gray-200 bg-white flex items-center gap-3 shadow-sm">
-                <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 font-bold">
-                    🔒
+        <div class="hidden md:flex flex-1 flex-col h-full bg-slate-950/40 relative">
+            
+            <!-- هيدر المحادثة النشطة -->
+            <div id="chatHeader" class="p-4 border-b border-white/10 bg-slate-900/40 backdrop-blur-md flex items-center gap-3 shadow-sm z-10">
+                <div class="w-11 h-11 bg-white/5 rounded-2xl flex items-center justify-center text-blue-400 font-bold border border-white/10">
+                    <i class="fas fa-comments text-lg"></i>
                 </div>
                 <div>
-                    <h2 class="font-bold text-gray-800 text-sm">اختر جهة اتصال للبدء</h2>
-                    <p class="text-xs text-gray-400">التشفير التام مفعّل من الطرفين</p>
+                    <h2 class="font-bold text-white text-sm">اختر جهة اتصال للبدء</h2>
+                    <p class="text-xs text-gray-400">جميع المحادثات تشفر وتفك محلياً فقط</p>
                 </div>
             </div>
 
-            <!-- شاشة الرسائل -->
-            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3">
-                <div class="flex h-full items-center justify-center text-gray-400 text-sm">
-                    اختر شخصاً لبدء محادثة سرية ومشفرة بالكامل 🔐
+            <!-- شاشة عرض الرسائل (dir="ltr" لضبط ترتيب واتساب) -->
+            <div id="chatMessages" dir="ltr" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-4">
+                <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3">
+                    <div class="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center text-2xl text-blue-500/50">
+                        <i class="fas fa-shield-cat"></i>
+                    </div>
+                    <p>اختر شخصاً من القائمة لبدء المحادثة المشفرة 🔐</p>
                 </div>
             </div>
 
-            <!-- حقل إرسال المرفقات والرسائل -->
-            <div id="inputContainer" class="p-4 bg-white border-t border-gray-200 hidden">
-                <div class="flex items-center gap-2">
-                    <label for="imageInput" id="uploadLabel" class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-600 p-3 rounded-xl transition duration-200 flex items-center justify-center w-11 h-11" title="إرفاق صورة مشفرة">
-                        <i class="fas fa-lock text-lg" id="uploadIcon"></i>
+            <!-- حقل كتابة المرفقات وإرسال الرسائل -->
+            <div id="inputContainer" class="p-4 bg-slate-900/60 backdrop-blur-md border-t border-white/10 hidden">
+                <div class="flex items-center gap-3 max-w-5xl mx-auto">
+                    <!-- زر رفع الصور -->
+                    <label for="imageInput" id="uploadLabel" class="cursor-pointer bg-white/5 hover:bg-white/10 text-blue-400 hover:text-blue-300 w-12 h-12 rounded-2xl transition duration-200 flex items-center justify-center border border-white/10 shrink-0" title="إرفاق صورة مشفرة">
+                        <i class="fas fa-paperclip text-lg" id="uploadIcon"></i>
                     </label>
                     <input type="file" id="imageInput" accept="image/*" class="hidden">
 
-                    <input id="messageInput" type="text" placeholder="اكتب رسالتك المشفرة..." class="flex-1 bg-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent">
+                    <!-- حقل إدخال النص -->
+                    <div class="flex-1 relative">
+                        <input id="messageInput" type="text" placeholder="اكتب رسالة مشفرة..." class="w-full bg-slate-900/90 text-white placeholder-gray-500 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 border border-white/10 transition duration-200">
+                    </div>
                     
-                    <button id="sendBtn" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-xl transition duration-200 flex items-center justify-center w-11 h-11 shadow-md">
-                        <i class="fas fa-paper-plane"></i>
+                    <!-- زر الإرسال -->
+                    <button id="sendBtn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white w-12 h-12 rounded-2xl transition duration-200 flex items-center justify-center shrink-0 btn-glow">
+                        <i class="fas fa-paper-plane text-base -rotate-45 translate-x-0.5"></i>
                     </button>
                 </div>
             </div>
+
         </div>
 
     </div>
@@ -102,7 +178,7 @@
         import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // مفتاح ImgBB المجاني
+        // مفتاح ImgBB المجاني الخاص بك
         const IMGBB_API_KEY = "d0e78a427404c26f247b3e644e8b3cbe";
 
         const firebaseConfig = {
@@ -137,16 +213,14 @@
         let currentUser = null;
         let selectedUser = null;
         let currentChatId = null;
-        let secretEncryptionKey = null; // مفتاح التشفير السري بين الشخصين
+        let secretEncryptionKey = null;
         let unsubscribeMessages = null;
 
-        // دالة تشفير النصوص محلياً
         function encryptData(text, key) {
             if (!text) return "";
             return CryptoJS.AES.encrypt(text, key).toString();
         }
 
-        // دالة فك تشفير النصوص محلياً
         function decryptData(ciphertext, key) {
             if (!ciphertext) return "";
             try {
@@ -193,11 +267,14 @@
                     if (userData.uid === currentUser.uid) return;
 
                     const userEl = document.createElement('div');
-                    userEl.className = "p-3 flex items-center gap-3 hover:bg-gray-100 cursor-pointer transition border-b border-gray-50";
+                    userEl.className = "p-3 rounded-2xl flex items-center gap-3 hover:bg-white/10 cursor-pointer transition duration-200 border border-transparent hover:border-white/5 my-1";
                     userEl.innerHTML = `
-                        <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover">
+                        <div class="relative">
+                            <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-12 h-12 rounded-2xl object-cover">
+                            <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+                        </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-sm text-gray-800 truncate">${userData.name}</h3>
+                            <h3 class="font-bold text-sm text-white truncate">${userData.name}</h3>
                             <p class="text-xs text-gray-400 truncate">${userData.email}</p>
                         </div>
                     `;
@@ -212,18 +289,17 @@
             selectedUser = targetUser;
             inputContainer.classList.remove('hidden');
             
-            // معرف الغرفة الفريد
             currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
-            
-            // مولد مفتاح التشفير المشترك بين الطرفين فقط (Secret Shared Key)
             secretEncryptionKey = `PingSecret_${currentChatId}_2026`;
 
             chatHeader.innerHTML = `
-                <img src="${targetUser.photoURL}" class="w-10 h-10 rounded-full object-cover border border-gray-200">
+                <div class="relative">
+                    <img src="${targetUser.photoURL}" class="w-11 h-11 rounded-2xl object-cover ring-2 ring-blue-500/30">
+                </div>
                 <div>
-                    <h2 class="font-bold text-gray-800 text-sm">${targetUser.name}</h2>
-                    <p class="text-xs text-green-600 font-semibold flex items-center gap-1">
-                        <i class="fas fa-shield-alt"></i> مشفر بتشفير تام (E2EE)
+                    <h2 class="font-bold text-white text-sm">${targetUser.name}</h2>
+                    <p class="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                        <i class="fas fa-shield-halved text-[10px]"></i> محادثة خاصة مشفرة (E2EE)
                     </p>
                 </div>
             `;
@@ -237,7 +313,6 @@
 
             messageInput.value = '';
 
-            // تشفير النص قبل إرساله إلى قاعدة البيانات
             const encryptedText = text ? encryptData(text, secretEncryptionKey) : "";
 
             await addDoc(collection(db, "chats", currentChatId, "messages"), {
@@ -248,12 +323,11 @@
             });
         }
 
-        // تشفير الصورة قبل إرسال رابطها
         imageInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file || !currentChatId) return;
 
-            uploadIcon.className = "fas fa-spinner fa-spin text-lg text-blue-500";
+            uploadIcon.className = "fas fa-spinner fa-spin text-lg text-blue-400";
 
             const formData = new FormData();
             formData.append("image", file);
@@ -266,16 +340,15 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // تشفير رابط الصورة أيضاً لضمان عدم قراءته في قاعدة البيانات
                     const encryptedUrl = encryptData(result.data.url, secretEncryptionKey);
                     await sendMessage(encryptedUrl);
                 } else {
-                    alert("تأكد من إدخال مفتاح API ImgBB بشكل صحيح.");
+                    alert("تعذر رفع الصورة. حاول مرة أخرى.");
                 }
             } catch (error) {
                 console.error("خطأ:", error);
             } finally {
-                uploadIcon.className = "fas fa-lock text-lg";
+                uploadIcon.className = "fas fa-paperclip text-lg";
                 imageInput.value = '';
             }
         });
@@ -294,23 +367,22 @@
                     const msg = docSnap.data();
                     const isMine = msg.senderUid === currentUser.uid;
 
-                    // فك تشفير الرسالة والصورة محلياً في المتصفح فقط
                     const decryptedText = msg.text ? decryptData(msg.text, secretEncryptionKey) : "";
                     const decryptedImageUrl = msg.imageUrl ? decryptData(msg.imageUrl, secretEncryptionKey) : "";
 
                     const msgDiv = document.createElement('div');
-                    msgDiv.className = `flex ${isMine ? 'justify-end' : 'justify-start'}`;
+                    msgDiv.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} message-pop`;
                     
                     let content = '';
                     if (decryptedImageUrl) {
-                        content += `<img src="${decryptedImageUrl}" class="rounded-xl max-w-xs mb-1 max-h-60 object-cover cursor-pointer hover:opacity-90 transition" onclick="window.open('${decryptedImageUrl}', '_blank')">`;
+                        content += `<img src="${decryptedImageUrl}" class="rounded-xl max-w-xs mb-2 max-h-60 object-cover cursor-pointer hover:opacity-90 transition border border-white/10 shadow-md" onclick="window.open('${decryptedImageUrl}', '_blank')">`;
                     }
                     if (decryptedText) {
-                        content += `<p class="text-sm">${decryptedText}</p>`;
+                        content += `<p class="text-sm leading-relaxed">${decryptedText}</p>`;
                     }
 
                     msgDiv.innerHTML = `
-                        <div class="${isMine ? 'bg-blue-500 text-white' : 'bg-white text-gray-800 border border-gray-200'} max-w-xs md:max-w-md rounded-2xl p-3 shadow-sm">
+                        <div dir="rtl" class="${isMine ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-br-xs shadow-lg' : 'bg-slate-800/80 text-gray-100 border border-white/10 rounded-2xl rounded-bl-xs backdrop-blur-md'} max-w-xs md:max-w-md p-3.5 shadow-md">
                             ${content}
                         </div>
                     `;
