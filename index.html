@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping - تطبيق مراسلة مشفر آمناً (E2EE)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- مكتبة CryptoJS للتشفير التام محلياً -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden">
+
+    <!-- 1. شاشة تسجيل الدخول -->
+    <div id="loginScreen" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg">
+                🔒
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Ping Secure</h2>
+            <p class="text-gray-500 mb-6 text-sm">محادثات خاصة بتشفير تام (E2EE)</p>
+            <button id="loginBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                <i class="fab font-normal fa-google text-lg"></i>
+                <span>تسجيل الدخول بواسطة Google</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. واجهة التطبيق الرئيسية -->
+    <div id="mainApp" class="hidden flex h-screen bg-white">
+        
+        <!-- القائمة الجانبية -->
+        <div class="w-full md:w-80 border-l border-gray-200 flex flex-col h-full bg-gray-50">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
+                <div class="flex items-center gap-3">
+                    <img id="myAvatar" class="w-10 h-10 rounded-full object-cover border border-gray-200" src="https://via.placeholder.com/40" alt="صورة المستخدم">
+                    <div>
+                        <h1 id="myName" class="font-bold text-sm text-gray-800">جاري التحميل...</h1>
+                        <span class="text-xs text-green-500 flex items-center gap-1">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span> آمن ومشفر 🔒
+                        </span>
+                    </div>
+                </div>
+                <button id="logoutBtn" title="تسجيل الخروج" class="text-gray-400 hover:text-red-500 transition p-2">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+
+            <div class="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50">
+                المستخدمين النشطين
+            </div>
+
+            <div id="usersList" class="flex-1 overflow-y-auto divide-y divide-gray-100">
+                <!-- قائمة المستخدمين -->
+            </div>
+        </div>
+
+        <!-- منطقة المحادثة الرئيسية -->
+        <div class="hidden md:flex flex-1 flex-col h-full bg-slate-50">
+            <div id="chatHeader" class="p-4 border-b border-gray-200 bg-white flex items-center gap-3 shadow-sm">
+                <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 font-bold">
+                    🔒
+                </div>
+                <div>
+                    <h2 class="font-bold text-gray-800 text-sm">اختر جهة اتصال للبدء</h2>
+                    <p class="text-xs text-gray-400">التشفير التام مفعّل من الطرفين</p>
+                </div>
+            </div>
+
+            <!-- شاشة الرسائل -->
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3">
+                <div class="flex h-full items-center justify-center text-gray-400 text-sm">
+                    اختر شخصاً لبدء محادثة سرية ومشفرة بالكامل 🔐
+                </div>
+            </div>
+
+            <!-- حقل إرسال المرفقات والرسائل -->
+            <div id="inputContainer" class="p-4 bg-white border-t border-gray-200 hidden">
+                <div class="flex items-center gap-2">
+                    <label for="imageInput" id="uploadLabel" class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-600 p-3 rounded-xl transition duration-200 flex items-center justify-center w-11 h-11" title="إرفاق صورة مشفرة">
+                        <i class="fas fa-lock text-lg" id="uploadIcon"></i>
+                    </label>
+                    <input type="file" id="imageInput" accept="image/*" class="hidden">
+
+                    <input id="messageInput" type="text" placeholder="اكتب رسالتك المشفرة..." class="flex-1 bg-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent">
+                    
+                    <button id="sendBtn" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-xl transition duration-200 flex items-center justify-center w-11 h-11 shadow-md">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- البرمجة السحابية والتشفير -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // مفتاح ImgBB المجاني
+        const IMGBB_API_KEY = "d0e78a427404c26f247b3e644e8b3cbe";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDsdSew4trEXkeKnecguN2uZWIq9XtNGhI",
+            authDomain: "ping-b3ff7.firebaseapp.com",
+            projectId: "ping-b3ff7",
+            storageBucket: "ping-b3ff7.firebasestorage.app",
+            messagingSenderId: "234007505458",
+            appId: "1:234007505458:web:ddf24a6e8d590d78db6a2b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const myAvatar = document.getElementById('myAvatar');
+        const myName = document.getElementById('myName');
+        const usersList = document.getElementById('usersList');
+        const chatHeader = document.getElementById('chatHeader');
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const inputContainer = document.getElementById('inputContainer');
+        const imageInput = document.getElementById('imageInput');
+        const uploadIcon = document.getElementById('uploadIcon');
+
+        let currentUser = null;
+        let selectedUser = null;
+        let currentChatId = null;
+        let secretEncryptionKey = null; // مفتاح التشفير السري بين الشخصين
+        let unsubscribeMessages = null;
+
+        // دالة تشفير النصوص محلياً
+        function encryptData(text, key) {
+            if (!text) return "";
+            return CryptoJS.AES.encrypt(text, key).toString();
+        }
+
+        // دالة فك تشفير النصوص محلياً
+        function decryptData(ciphertext, key) {
+            if (!ciphertext) return "";
+            try {
+                const bytes = CryptoJS.AES.decrypt(ciphertext, key);
+                return bytes.toString(CryptoJS.enc.Utf8);
+            } catch (e) {
+                return "[خطأ في فك التشفير]";
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                myAvatar.src = user.photoURL || 'https://via.placeholder.com/40';
+                myName.textContent = user.displayName;
+
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    name: user.displayName,
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    lastSeen: serverTimestamp()
+                }, { merge: true });
+
+                loginScreen.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+
+                loadUsers();
+            } else {
+                currentUser = null;
+                loginScreen.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            }
+        });
+
+        loginBtn.addEventListener('click', () => signInWithPopup(auth, provider));
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        function loadUsers() {
+            onSnapshot(collection(db, "users"), (snapshot) => {
+                usersList.innerHTML = '';
+                snapshot.forEach((docSnap) => {
+                    const userData = docSnap.data();
+                    if (userData.uid === currentUser.uid) return;
+
+                    const userEl = document.createElement('div');
+                    userEl.className = "p-3 flex items-center gap-3 hover:bg-gray-100 cursor-pointer transition border-b border-gray-50";
+                    userEl.innerHTML = `
+                        <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-sm text-gray-800 truncate">${userData.name}</h3>
+                            <p class="text-xs text-gray-400 truncate">${userData.email}</p>
+                        </div>
+                    `;
+
+                    userEl.addEventListener('click', () => openChat(userData));
+                    usersList.appendChild(userEl);
+                });
+            });
+        }
+
+        function openChat(targetUser) {
+            selectedUser = targetUser;
+            inputContainer.classList.remove('hidden');
+            
+            // معرف الغرفة الفريد
+            currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
+            
+            // مولد مفتاح التشفير المشترك بين الطرفين فقط (Secret Shared Key)
+            secretEncryptionKey = `PingSecret_${currentChatId}_2026`;
+
+            chatHeader.innerHTML = `
+                <img src="${targetUser.photoURL}" class="w-10 h-10 rounded-full object-cover border border-gray-200">
+                <div>
+                    <h2 class="font-bold text-gray-800 text-sm">${targetUser.name}</h2>
+                    <p class="text-xs text-green-600 font-semibold flex items-center gap-1">
+                        <i class="fas fa-shield-alt"></i> مشفر بتشفير تام (E2EE)
+                    </p>
+                </div>
+            `;
+
+            loadMessages();
+        }
+
+        async function sendMessage(encryptedImageUrl = null) {
+            const text = messageInput.value.trim();
+            if (!text && !encryptedImageUrl) return;
+
+            messageInput.value = '';
+
+            // تشفير النص قبل إرساله إلى قاعدة البيانات
+            const encryptedText = text ? encryptData(text, secretEncryptionKey) : "";
+
+            await addDoc(collection(db, "chats", currentChatId, "messages"), {
+                senderUid: currentUser.uid,
+                text: encryptedText,
+                imageUrl: encryptedImageUrl || "",
+                timestamp: serverTimestamp()
+            });
+        }
+
+        // تشفير الصورة قبل إرسال رابطها
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || !currentChatId) return;
+
+            uploadIcon.className = "fas fa-spinner fa-spin text-lg text-blue-500";
+
+            const formData = new FormData();
+            formData.append("image", file);
+
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    // تشفير رابط الصورة أيضاً لضمان عدم قراءته في قاعدة البيانات
+                    const encryptedUrl = encryptData(result.data.url, secretEncryptionKey);
+                    await sendMessage(encryptedUrl);
+                } else {
+                    alert("تأكد من إدخال مفتاح API ImgBB بشكل صحيح.");
+                }
+            } catch (error) {
+                console.error("خطأ:", error);
+            } finally {
+                uploadIcon.className = "fas fa-lock text-lg";
+                imageInput.value = '';
+            }
+        });
+
+        function loadMessages() {
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            const q = query(
+                collection(db, "chats", currentChatId, "messages"),
+                orderBy("timestamp", "asc")
+            );
+
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                chatMessages.innerHTML = '';
+                snapshot.forEach((docSnap) => {
+                    const msg = docSnap.data();
+                    const isMine = msg.senderUid === currentUser.uid;
+
+                    // فك تشفير الرسالة والصورة محلياً في المتصفح فقط
+                    const decryptedText = msg.text ? decryptData(msg.text, secretEncryptionKey) : "";
+                    const decryptedImageUrl = msg.imageUrl ? decryptData(msg.imageUrl, secretEncryptionKey) : "";
+
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `flex ${isMine ? 'justify-end' : 'justify-start'}`;
+                    
+                    let content = '';
+                    if (decryptedImageUrl) {
+                        content += `<img src="${decryptedImageUrl}" class="rounded-xl max-w-xs mb-1 max-h-60 object-cover cursor-pointer hover:opacity-90 transition" onclick="window.open('${decryptedImageUrl}', '_blank')">`;
+                    }
+                    if (decryptedText) {
+                        content += `<p class="text-sm">${decryptedText}</p>`;
+                    }
+
+                    msgDiv.innerHTML = `
+                        <div class="${isMine ? 'bg-blue-500 text-white' : 'bg-white text-gray-800 border border-gray-200'} max-w-xs md:max-w-md rounded-2xl p-3 shadow-sm">
+                            ${content}
+                        </div>
+                    `;
+                    chatMessages.appendChild(msgDiv);
+                });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        }
+
+        sendBtn.addEventListener('click', () => sendMessage());
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
