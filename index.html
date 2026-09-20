@@ -35,7 +35,11 @@
         .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
 
         .app-bg-dark { background-color: #111b21; }
-        .app-bg-header { background-color: #202c33; }
+        .app-bg-header {
+            background-color: rgba(32, 44, 51, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
         .app-bg-chat { background-color: #0b141a; }
         .app-bg-input { background-color: #2a3942; }
 
@@ -56,12 +60,45 @@
             color: #00a884;
             border-bottom: 3px solid #00a884;
         }
+
+        /* توهج خلفية متحرك يتغيّر لونه حسب وقت اليوم — يعطي إحساس "حي" بدون ما يزعج القراءة */
+        @keyframes ambientDrift {
+            0%, 100% { transform: translate(-8%, -8%) scale(1); }
+            50% { transform: translate(8%, 8%) scale(1.2); }
+        }
+        .ambient-glow {
+            position: absolute;
+            inset: -25%;
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(70px);
+            opacity: 0.16;
+            border-radius: 9999px;
+            animation: ambientDrift 24s ease-in-out infinite;
+        }
+
+        /* خلفية أورورا متحركة بألوان العلامة، خلف شاشة الدخول */
+        @keyframes auroraFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(6%, -6%) rotate(15deg); }
+        }
+        .aurora-bg {
+            position: absolute;
+            inset: -30%;
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(90px);
+            opacity: 0.35;
+            background: conic-gradient(from 0deg, #00a884, #005c4b, #0b141a, #00a884);
+            animation: auroraFloat 18s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="h-[100dvh] w-screen overflow-hidden flex items-center justify-center p-0 bg-[#0b141a]">
 
     <!-- 1. شاشة تسجيل الدخول -->
     <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b141a]/95 backdrop-blur-xl safe-top safe-bottom">
+        <div class="aurora-bg"></div>
         <div class="app-bg-dark rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative border border-white/10">
             <div class="w-20 h-20 bg-[#00a884] rounded-full flex items-center justify-center text-white text-4xl mx-auto mb-6 shadow-xl">
                 <i class="fas fa-comments"></i>
@@ -254,7 +291,8 @@
 
         <!-- منطقة المحادثة المفتوحة -->
         <div id="chatPanel" class="hidden md:flex flex-1 flex-col h-full app-bg-chat relative">
-            
+            <div id="ambientGlow" class="ambient-glow"></div>
+
             <!-- هيدر الدردشة العلوية -->
             <div id="chatHeader" class="p-3 app-bg-header flex items-center justify-between shadow-sm z-10 border-b border-white/10 safe-top">
                 <div class="flex items-center gap-3">
@@ -276,7 +314,7 @@
             </div>
 
             <!-- منطقة الرسائل -->
-            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 app-bg-chat">
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 relative z-[1]">
                 <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3">
                     <div class="w-16 h-16 rounded-full app-bg-header flex items-center justify-center text-3xl text-[#00a884]">
                         <i class="fas fa-lock"></i>
@@ -440,6 +478,32 @@
         function safePhotoUrl(url) {
             return (typeof url === 'string' && /^https:\/\//i.test(url)) ? url : 'https://via.placeholder.com/40';
         }
+
+        // ===== هوية لونية لكل جهة اتصال: هاش بسيط على الـ uid يعطي درجة لون ثابتة =====
+        // نفس الشخص ياخذ نفس اللون دايمًا (بالأفتار، اسمه، وخلفية فقاعاته) بدون تخزين أي شي إضافي
+        function contactHue(uid) {
+            let hash = 0;
+            const s = String(uid || '');
+            for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+            return hash % 360;
+        }
+
+        // ===== توهج خلفية يتغيّر حسب وقت اليوم — لمسة تصميم حية بدون إزعاج =====
+        function timeOfDayHue() {
+            const h = new Date().getHours();
+            if (h >= 5 && h < 8) return 30;   // شروق دافئ
+            if (h >= 8 && h < 17) return 190; // نهار هادئ
+            if (h >= 17 && h < 20) return 20; // غروب
+            return 255;                       // ليل
+        }
+        function applyAmbientTheme() {
+            const glow = document.getElementById('ambientGlow');
+            if (!glow) return;
+            const hue = timeOfDayHue();
+            glow.style.background = `radial-gradient(circle, hsl(${hue} 70% 55%), transparent 70%)`;
+        }
+        applyAmbientTheme();
+        setInterval(applyAmbientTheme, 30 * 60 * 1000);
 
         function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
         function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
@@ -800,13 +864,14 @@
                     const friendDoc = await getDoc(doc(db, "users", friendUid));
                     if (friendDoc.exists()) {
                         const userData = friendDoc.data();
+                        const hue = contactHue(friendUid);
                         const userEl = document.createElement('div');
                         userEl.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5";
                         userEl.innerHTML = `
-                            <img src="${safePhotoUrl(userData.photoURL)}" class="w-12 h-12 rounded-full object-cover">
+                            <img src="${safePhotoUrl(userData.photoURL)}" class="w-12 h-12 rounded-full object-cover" style="box-shadow: 0 0 0 2px hsl(${hue} 70% 55%);">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between mb-1">
-                                    <h3 class="font-bold text-sm text-white truncate">${escapeHtml(userData.name)}</h3>
+                                    <h3 class="font-bold text-sm truncate" style="color: hsl(${hue} 70% 72%);">${escapeHtml(userData.name)}</h3>
                                     <span class="text-[10px] text-gray-400">11:42 م</span>
                                 </div>
                                 <p class="text-xs text-gray-400 truncate flex items-center gap-1">
@@ -831,8 +896,9 @@
             currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
             sharedKey = null;
 
-            chatHeaderAvatarContainer.innerHTML = `<img src="${safePhotoUrl(targetUser.photoURL)}" class="w-10 h-10 rounded-full object-cover">`;
+            chatHeaderAvatarContainer.innerHTML = `<img src="${safePhotoUrl(targetUser.photoURL)}" class="w-10 h-10 rounded-full object-cover" style="box-shadow: 0 0 0 2px hsl(${contactHue(targetUser.uid)} 70% 55%);">`;
             chatHeaderName.textContent = targetUser.name;
+            chatHeaderName.style.color = `hsl(${contactHue(targetUser.uid)} 70% 78%)`;
 
             if (!targetUser.publicKeyJwk) {
                 // الطرف الآخر ما دخل التطبيق بعد بالنسخة الجديدة، فما عنده مفتاح عام منشور
@@ -970,6 +1036,7 @@
                     const bubble = document.createElement('div');
                     bubble.setAttribute('dir', 'rtl');
                     bubble.className = `${isMine ? 'bubble-mine rounded-2xl rounded-br-xs ml-auto' : 'bubble-other rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3 shadow-md relative cursor-pointer`;
+                    if (!isMine) bubble.style.backgroundColor = `hsl(${contactHue(msg.senderUid)} 32% 19%)`;
 
                     let contentHtml;
                     let plainTextForCopy = '';
