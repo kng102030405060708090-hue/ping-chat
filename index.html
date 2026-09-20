@@ -113,18 +113,18 @@
         <div class="glass-panel rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
-                    <i class="fas fa-user-clock text-amber-400"></i> طلبات المحادثة المنسدلة
+                    <i class="fas fa-user-clock text-amber-400"></i> طلبات المحادثة المعلقة
                 </h3>
                 <button id="closeRequestsBtn" class="text-gray-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
 
             <div id="requestsListContainer" class="space-y-3 max-h-60 overflow-y-auto my-4">
-                <!-- طلبات الصداقة المعلقة -->
+                <!-- طلبات الصداقة -->
             </div>
         </div>
     </div>
 
-    <!-- 4. نافذة إرسال طلب إضافة عبر اليوزر -->
+    <!-- 4. نافذة إرسال طلب إضافة -->
     <div id="addUserModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl">
         <div class="glass-panel rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
             <div class="flex items-center justify-between mb-4">
@@ -150,8 +150,8 @@
     <!-- 5. واجهة التطبيق الرئيسية -->
     <div id="mainApp" class="hidden w-full h-full max-w-7xl h-[100vh] md:h-[95vh] glass-panel md:rounded-3xl shadow-2xl flex overflow-hidden border border-white/10">
         
-        <!-- القائمة الجانبية -->
-        <div class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full bg-slate-900/60 backdrop-blur-md">
+        <!-- القائمة الجانبية (شاشة قائمة الأصدقاء) -->
+        <div id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full bg-slate-900/60 backdrop-blur-md">
             
             <div class="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
                 <div class="flex items-center gap-3 cursor-pointer" id="openProfileBtn">
@@ -191,15 +191,20 @@
             </div>
 
             <div id="usersList" class="flex-1 overflow-y-auto px-2 space-y-1">
-                <!-- الأصدقاء فقط -->
+                <!-- الأصدقاء -->
             </div>
         </div>
 
-        <!-- منطقة المحادثة الرئيسية -->
-        <div class="hidden md:flex flex-1 flex-col h-full bg-slate-950/40 relative">
+        <!-- منطقة المحادثة الرئيسية (تحتوي على زر الرجوع على الجوال) -->
+        <div id="chatPanel" class="hidden md:flex flex-1 flex-col h-full bg-slate-950/40 relative">
             
             <div id="chatHeader" class="p-4 border-b border-white/10 bg-slate-900/40 backdrop-blur-md flex items-center justify-between shadow-sm z-10">
                 <div class="flex items-center gap-3">
+                    <!-- زر الرجوع لقائمة الأصدقاء مثل واتساب -->
+                    <button id="backToUsersBtn" class="md:hidden w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition ml-1" title="رجوع">
+                        <i class="fas fa-arrow-right text-base"></i>
+                    </button>
+
                     <div id="chatHeaderAvatarContainer" class="w-11 h-11 bg-white/5 rounded-2xl flex items-center justify-center text-blue-400 font-bold border border-white/10">
                         <i class="fas fa-comments text-lg"></i>
                     </div>
@@ -209,43 +214,40 @@
                     </div>
                 </div>
 
-                <!-- زر الخيارات والحظر -->
+                <!-- خيارات المحادثة -->
                 <div id="chatHeaderMenu" class="hidden flex items-center gap-2">
                     <button id="blockUserBtn" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-                        <i class="fas fa-ban"></i> حظر المستخدم
+                        <i class="fas fa-ban"></i> حظر
                     </button>
                 </div>
             </div>
 
+            <!-- شاشة عرض الرسائل -->
             <div id="chatMessages" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-4">
                 <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3">
                     <div class="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center text-2xl text-blue-500/50">
                         <i class="fas fa-user-lock"></i>
                     </div>
-                    <p>قائمة المحادثات فارغة. استخدم رابط الدعوة أو اسم المستخدم لإضافة صديق 🔐</p>
+                    <p>اختر صديقاً لبدء المحادثة المشفرة 🔐</p>
                 </div>
             </div>
 
-            <!-- شريط الكتابة والتسجيل الصوتي -->
+            <!-- شريط الكتابة والتسجيل -->
             <div id="inputContainer" class="p-4 bg-slate-900/60 backdrop-blur-md border-t border-white/10 hidden">
                 <div class="flex items-center gap-2 max-w-5xl mx-auto">
-                    <!-- إرفاق صورة -->
                     <label for="imageInput" id="uploadLabel" class="cursor-pointer bg-white/5 hover:bg-white/10 text-blue-400 hover:text-blue-300 w-11 h-11 rounded-2xl transition flex items-center justify-center border border-white/10 shrink-0" title="إرفاق صورة">
                         <i class="fas fa-paperclip text-lg" id="uploadIcon"></i>
                     </label>
                     <input type="file" id="imageInput" accept="image/*" class="hidden">
 
-                    <!-- التسجيل الصوتي -->
                     <button id="recordAudioBtn" class="bg-white/5 hover:bg-rose-500/20 text-rose-400 w-11 h-11 rounded-2xl transition flex items-center justify-center border border-white/10 shrink-0" title="تسجيل صوت">
                         <i class="fas fa-microphone text-lg" id="recordIcon"></i>
                     </button>
 
-                    <!-- حقل النص -->
                     <div class="flex-1 relative">
                         <input id="messageInput" type="text" placeholder="اكتب رسالة مشفرة..." class="w-full bg-slate-900/90 text-white placeholder-gray-500 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 border border-white/10">
                     </div>
                     
-                    <!-- زر الإرسال -->
                     <button id="sendBtn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white w-11 h-11 rounded-2xl transition flex items-center justify-center shrink-0 btn-glow">
                         <i class="fas fa-paper-plane text-base -rotate-45 translate-x-0.5"></i>
                     </button>
@@ -281,6 +283,10 @@
         const mainApp = document.getElementById('mainApp');
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
+        const sidebarPanel = document.getElementById('sidebarPanel');
+        const chatPanel = document.getElementById('chatPanel');
+        const backToUsersBtn = document.getElementById('backToUsersBtn');
+
         const myAvatar = document.getElementById('myAvatar');
         const myName = document.getElementById('myName');
         const myUserHandle = document.getElementById('myUserHandle');
@@ -337,7 +343,6 @@
         let audioChunks = [];
         let isRecording = false;
 
-        // طلب إذن الإشعارات الفورية
         if ("Notification" in window && Notification.permission !== "granted") {
             Notification.requestPermission();
         }
@@ -419,6 +424,13 @@
         loginBtn.addEventListener('click', () => signInWithPopup(auth, provider));
         logoutBtn.addEventListener('click', () => signOut(auth));
 
+        // فتح صفحة الشات بالكامل عند اختيار صديق وميزات الرجوع
+        backToUsersBtn.addEventListener('click', () => {
+            chatPanel.classList.add('hidden');
+            chatPanel.classList.remove('flex');
+            sidebarPanel.classList.remove('hidden');
+        });
+
         openProfileBtn.addEventListener('click', () => profileModal.classList.remove('hidden'));
         closeProfileBtn.addEventListener('click', () => profileModal.classList.add('hidden'));
         avatarUploadContainer.addEventListener('click', () => profileAvatarInput.click());
@@ -434,12 +446,8 @@
             formData.append("image", file);
 
             try {
-                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                    method: "POST",
-                    body: formData
-                });
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
                 const result = await response.json();
-
                 if (result.success) {
                     tempAvatarURL = result.data.url;
                     editAvatarPreview.src = tempAvatarURL;
@@ -469,7 +477,6 @@
             profileModal.classList.add('hidden');
         });
 
-        // طلبات الصداقة والإشعارات المتبادلة
         openRequestsBtn.addEventListener('click', () => requestsModal.classList.remove('hidden'));
         closeRequestsBtn.addEventListener('click', () => requestsModal.classList.add('hidden'));
         openAddUserModalBtn.addEventListener('click', () => addUserModal.classList.remove('hidden'));
@@ -546,7 +553,6 @@
                     item.querySelector('.accept-btn').addEventListener('click', async () => {
                         await updateDoc(doc(db, "requests", reqId), { status: "accepted" });
                         
-                        // إضافة إلى الأصدقاء المتبادلين
                         await setDoc(doc(db, "users", currentUser.uid), {
                             friends: [...currentUserProfile.friends, req.fromUid]
                         }, { merge: true });
@@ -572,7 +578,6 @@
                 });
             });
 
-            // الاستماع لتلقي إشعار رفض الطلب لمرسله
             const rejectQuery = query(collection(db, "requests"), where("fromUid", "==", currentUser.uid), where("status", "==", "rejected"));
             onSnapshot(rejectQuery, (snapshot) => {
                 snapshot.forEach(async (docSnap) => {
@@ -655,6 +660,13 @@
             selectedUser = targetUser;
             inputContainer.classList.remove('hidden');
             chatHeaderMenu.classList.remove('hidden');
+
+            // التحكم بالشاشات لفتح صفحة الدردشة بالكامل مثل واتساب
+            if (window.innerWidth < 768) {
+                sidebarPanel.classList.add('hidden');
+            }
+            chatPanel.classList.remove('hidden');
+            chatPanel.classList.add('flex');
             
             currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
             secretEncryptionKey = `PingSecret_${currentChatId}_2026`;
@@ -666,7 +678,6 @@
             loadMessages();
         }
 
-        // الحظر
         blockUserBtn.addEventListener('click', async () => {
             if (!selectedUser) return;
             if (confirm(`هل أنت تأكد من حظر ${selectedUser.name}؟`)) {
@@ -678,7 +689,6 @@
             }
         });
 
-        // التسجيل الصوتي
         recordAudioBtn.addEventListener('click', async () => {
             if (!isRecording) {
                 try {
@@ -803,7 +813,6 @@
                     bubble.className = `${isMine ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-br-xs ml-auto' : 'bg-slate-800/90 text-gray-100 border border-white/10 rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3.5 shadow-md relative`;
                     bubble.innerHTML = content;
 
-                    // زر الحذف للجميع
                     if (isMine && !msg.deleted) {
                         const deleteBtn = document.createElement('button');
                         deleteBtn.className = "hidden group-hover:block absolute -top-2 -left-2 bg-rose-600 text-white w-6 h-6 rounded-full text-[10px] shadow-md transition";
