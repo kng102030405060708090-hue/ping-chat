@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ping Secure - WhatsApp & Telegram Style</title>
+    <title>Ping Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -19,7 +19,7 @@
 
         html, body { 
             font-family: 'Readex Pro', 'Plus Jakarta Sans', sans-serif;
-            background: #0c1317;
+            background: #0b141a;
             color: #e9edef;
             touch-action: manipulation;
             -webkit-text-size-adjust: 100%;
@@ -31,16 +31,16 @@
             margin: 0; padding: 0;
         }
 
-        .safe-header { padding-top: max(16px, env(safe-area-inset-top)); }
+        .safe-top { padding-top: max(12px, env(safe-area-inset-top)); }
         .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
 
-        .wa-bg-dark { background-color: #111b21; }
-        .wa-bg-header { background-color: #202c33; }
-        .wa-bg-chat { background-color: #0b141a; }
-        .wa-bg-input { background-color: #202c33; }
+        .app-bg-dark { background-color: #111b21; }
+        .app-bg-header { background-color: #202c33; }
+        .app-bg-chat { background-color: #0b141a; }
+        .app-bg-input { background-color: #2a3942; }
 
-        .wa-bubble-mine { background-color: #005c4b; color: #e9edef; }
-        .wa-bubble-other { background-color: #202c33; color: #e9edef; }
+        .bubble-mine { background-color: #005c4b; color: #e9edef; }
+        .bubble-other { background-color: #202c33; color: #e9edef; }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -52,257 +52,224 @@
             100% { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* أنيميشن السحب والإغلاق بشفافية */
-        .swipe-transition {
-            transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease;
+        .tab-active {
+            color: #00a884;
+            border-bottom: 3px solid #00a884;
         }
     </style>
 </head>
-<body class="h-[100dvh] w-screen overflow-hidden flex items-center justify-center p-0 bg-[#0c1317]">
+<body class="h-[100dvh] w-screen overflow-hidden flex items-center justify-center p-0 bg-[#0b141a]">
 
     <!-- 1. شاشة تسجيل الدخول -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0c1317]/95 backdrop-blur-xl safe-header safe-bottom">
-        <div class="wa-bg-dark rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative border border-white/10">
-            <div class="w-20 h-20 bg-[#25d366] rounded-full flex items-center justify-center text-white text-4xl mx-auto mb-6 shadow-xl">
-                <i class="fab fa-whatsapp"></i>
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b141a]/95 backdrop-blur-xl safe-top safe-bottom">
+        <div class="app-bg-dark rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative border border-white/10">
+            <div class="w-20 h-20 bg-[#00a884] rounded-full flex items-center justify-center text-white text-4xl mx-auto mb-6 shadow-xl">
+                <i class="fas fa-comments"></i>
             </div>
-            <h2 class="text-3xl font-extrabold text-white mb-2">Ping WhatsApp</h2>
-            <p class="text-gray-400 mb-8 text-sm">محادثات آمنة بتشفير تام (E2EE)</p>
-            <button id="loginBtn" class="w-full bg-[#25d366] hover:bg-[#20bd5a] text-black font-bold py-3.5 px-6 rounded-2xl transition duration-300 flex items-center justify-center gap-3 shadow-lg">
+            <h2 class="text-3xl font-extrabold text-white mb-2">Ping Messenger</h2>
+            <p class="text-gray-400 mb-8 text-sm">محادثات خاصة بتشفير تام (E2EE) وتصميم حديث</p>
+            <button id="loginBtn" class="w-full bg-[#00a884] hover:bg-[#008f70] text-black font-bold py-3.5 px-6 rounded-2xl transition duration-300 flex items-center justify-center gap-3 shadow-lg">
                 <i class="fab fa-google text-xl"></i>
                 <span class="text-base">تسجيل الدخول بواسطة Google</span>
             </button>
         </div>
     </div>
 
-    <!-- 2. نافذة الإعدادات العامة -->
-    <div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-header safe-bottom">
-        <div class="wa-bg-dark rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
-            <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-3">
-                <h3 class="font-bold text-lg text-white flex items-center gap-2">
-                    <i class="fas fa-gear text-[#00a884]"></i> الإعدادات العامة
-                </h3>
-                <button id="closeSettingsBtn" class="text-gray-400 hover:text-white p-2"><i class="fas fa-times text-lg"></i></button>
-            </div>
-            <div class="space-y-4 text-sm">
-                <div class="flex items-center justify-between p-3 wa-bg-header rounded-xl">
-                    <span>الإشعارات الفورية</span>
-                    <input type="checkbox" id="notificationToggle" checked class="w-5 h-5 accent-[#00a884]">
-                </div>
-                <div class="flex items-center justify-between p-3 wa-bg-header rounded-xl">
-                    <span>مؤشر قراءة الرسائل (✓✓)</span>
-                    <input type="checkbox" checked class="w-5 h-5 accent-[#00a884]">
-                </div>
-                <button id="logoutBtnModal" class="w-full bg-rose-600/20 text-rose-400 font-bold py-3 rounded-xl border border-rose-500/20">
-                    تسجيل الخروج
-                </button>
-            </div>
+    <!-- 2. نافذة البحث المتقدم -->
+    <div id="searchModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-3 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeSearchBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <input id="searchInput" type="text" placeholder="بحث عن رسالة، شخص، صور، أو روابط..." class="flex-1 bg-transparent text-white focus:outline-none text-sm">
+        </div>
+        <div class="p-4 flex gap-2 overflow-x-auto text-xs font-semibold text-gray-400 border-b border-white/5">
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer">الصور 🖼️</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer">الفيديوهات 🎥</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer">المستندات 📄</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer">الروابط 🔗</span>
+        </div>
+        <div id="searchResultsList" class="flex-1 overflow-y-auto p-4 space-y-2 text-xs text-gray-500 text-center">
+            أدخل كلمة البحث للبدء...
         </div>
     </div>
 
-    <!-- 3. نافذة تفاصيل الملف الشخصي والوسائط والخيارات -->
-    <div id="chatDetailsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-header safe-bottom">
-        <div class="wa-bg-dark rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-                <h3 class="font-bold text-base text-white">تفاصيل المحادثة</h3>
-                <button id="closeChatDetailsBtn" class="text-gray-400 hover:text-white p-1"><i class="fas fa-times text-lg"></i></button>
-            </div>
-
-            <div class="flex flex-col items-center text-center my-4">
-                <img id="detailsAvatar" class="w-24 h-20 rounded-full object-cover ring-2 ring-[#00a884] shadow-lg mb-3" src="https://via.placeholder.com/80">
-                <h2 id="detailsName" class="font-bold text-lg text-white">اسم المستخدم</h2>
-                <p id="detailsHandle" class="text-xs text-[#00a884] font-mono mb-1">@username</p>
-                <p id="detailsBio" class="text-xs text-gray-400">الحالة الشخصية...</p>
-            </div>
-
-            <!-- الوسائط المشتركة -->
-            <div class="my-4">
-                <h4 class="text-xs font-bold text-gray-400 mb-2 uppercase">الوسائط المشتركة بينكم</h4>
-                <div id="sharedMediaGrid" class="grid grid-cols-3 gap-2 max-h-36 overflow-y-auto wa-bg-header p-2 rounded-xl">
-                    <p class="col-span-3 text-xs text-gray-500 text-center py-4">لا توجد وسائط متبادلة بعد</p>
+    <!-- 3. قائمة الإعدادات الشاملة (حساب، خصوصية، دردشات، إشعارات، تخزين) -->
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-4 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeSettingsBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <h2 class="font-bold text-base text-white">الإعدادات</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+            <div class="flex items-center gap-4 p-3 app-bg-dark rounded-2xl border border-white/5">
+                <img id="settingsAvatar" class="w-16 h-16 rounded-full object-cover" src="https://via.placeholder.com/60">
+                <div>
+                    <h3 id="settingsName" class="font-bold text-white text-base">اسم المستخدم</h3>
+                    <p id="settingsHandle" class="text-xs text-[#00a884] font-mono">@username</p>
                 </div>
             </div>
 
-            <!-- الخيارات المتاحة -->
-            <div class="space-y-2 text-xs font-semibold">
-                <button id="changeThemeBtn" class="w-full wa-bg-header hover:bg-white/10 text-white p-3 rounded-xl flex items-center justify-between">
-                    <span><i class="fas fa-palette text-amber-400 ml-2"></i> تغيير سمة الدردشة</span>
-                    <i class="fas fa-chevron-left text-gray-500"></i>
-                </button>
-                <button id="createGroupBtn" class="w-full wa-bg-header hover:bg-white/10 text-white p-3 rounded-xl flex items-center justify-between">
-                    <span><i class="fas fa-users text-blue-400 ml-2"></i> إنشاء مجموعة تضم هذا الشخص</span>
-                    <i class="fas fa-chevron-left text-gray-500"></i>
-                </button>
-                <button id="blockContactBtn" class="w-full wa-bg-header hover:bg-rose-500/20 text-rose-400 p-3 rounded-xl flex items-center justify-between border border-rose-500/20">
-                    <span><i class="fas fa-ban ml-2"></i> حظر جهة الاتصال</span>
-                </button>
-                <button id="deleteAllChatBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white p-3 rounded-xl flex items-center justify-center font-bold shadow-md mt-2">
-                    <i class="fas fa-trash-can ml-2"></i> حذف المحادثة بالكامل لدى الطرفين
-                </button>
+            <div class="space-y-2 font-medium">
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-key text-[#00a884]"></i> الحساب (اسم المستخدم، رقم الهاتف)</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-lock text-[#00a884]"></i> الخصوصية والأمان (آخر ظهور، المحظورون)</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-palette text-[#00a884]"></i> الدردشات (خلفية الشاشة، حجم الخط)</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-bell text-[#00a884]"></i> الإشعارات والأصوات</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-[#00a884] fa-database text-[#00a884]"></i> البيانات والتخزين</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
             </div>
+
+            <button id="logoutBtnModal" class="w-full bg-rose-600/20 text-rose-400 font-bold py-3.5 rounded-xl border border-rose-500/20 transition hover:bg-rose-600/30 mt-6">
+                تسجيل الخروج
+            </button>
         </div>
     </div>
 
-    <!-- 4. القائمة المنسدلة للضغط المطول على الرسالة مع التعتيم البصري -->
-    <div id="messageContextMenu" class="fixed inset-0 z-50 hidden flex flex-col justify-end md:justify-center items-center p-4 bg-black/75 backdrop-blur-md">
-        <div id="highlightedMessageBubble" class="w-full max-w-sm mb-4">
-            <!-- سيتم نسخ الرسالة المختارة هنا -->
+    <!-- 4. قائمة التفاعل بالضغط المطول على الرسالة -->
+    <div id="messageContextMenu" class="fixed inset-0 z-50 hidden flex flex-col justify-end md:justify-center items-center p-4 bg-black/80 backdrop-blur-md">
+        <div id="highlightedMessageBubble" class="w-full max-w-sm mb-3"></div>
+        
+        <!-- شريط التفاعلات ❤️ -->
+        <div class="flex items-center justify-around w-full max-w-sm app-bg-header p-2.5 rounded-full mb-3 text-xl border border-white/10 shadow-lg">
+            <span class="cursor-pointer hover:scale-125 transition">❤️</span>
+            <span class="cursor-pointer hover:scale-125 transition">👍</span>
+            <span class="cursor-pointer hover:scale-125 transition">😂</span>
+            <span class="cursor-pointer hover:scale-125 transition">😮</span>
+            <span class="cursor-pointer hover:scale-125 transition">😢</span>
+            <span class="cursor-pointer hover:scale-125 transition">🙏</span>
         </div>
-        <div class="wa-bg-dark border border-white/10 rounded-2xl p-2 w-full max-w-sm space-y-1 text-sm font-semibold shadow-2xl">
+
+        <div class="app-bg-dark border border-white/10 rounded-2xl p-2 w-full max-w-sm space-y-1 text-xs font-semibold shadow-2xl">
             <button id="replyMsgBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center gap-3">
-                <i class="fas fa-reply text-[#00a884]"></i> الرد على الرسالة
+                <i class="fas fa-reply text-[#00a884]"></i> رد
+            </button>
+            <button id="copyMsgBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center gap-3">
+                <i class="fas fa-copy text-blue-400"></i> نسخ
             </button>
             <button id="forwardMsgBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center gap-3">
-                <i class="fas fa-share text-blue-400"></i> إعادة توجيه
+                <i class="fas fa-share text-amber-400"></i> إعادة توجيه
             </button>
-            <button id="downloadMediaBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center gap-3 hidden">
-                <i class="fas fa-download text-amber-400"></i> حفظ في الاستوديو
-            </button>
+
             <button id="deleteMsgBtn" class="w-full hover:bg-rose-500/20 text-rose-400 p-3 rounded-xl text-right flex items-center gap-3 border-t border-white/5">
                 <i class="fas fa-trash-can"></i> حذف لدى الجميع
             </button>
-            <button id="closeContextBtn" class="w-full bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-center text-xs text-gray-400 mt-2">
+            <button id="closeContextBtn" class="w-full bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-center text-gray-400 mt-2">
                 إلغاء
             </button>
         </div>
     </div>
 
-    <!-- 5. نافذة طلبات المحادثة ورسائل الإضافة -->
-    <div id="requestsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-header safe-bottom">
-        <div class="wa-bg-dark rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
-            <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
-                <h3 class="font-bold text-lg text-white flex items-center gap-2">
-                    <i class="fas fa-bell text-amber-400"></i> طلبات المراسلة المعلقة
-                </h3>
-                <button id="closeRequestsBtn" class="text-gray-400 hover:text-white p-2"><i class="fas fa-times text-lg"></i></button>
-            </div>
-            <div id="requestsListContainer" class="space-y-3 max-h-60 overflow-y-auto my-4">
-                <!-- طلبات الصداقة -->
-            </div>
-        </div>
-    </div>
-
-    <!-- 6. نافذة إضافة شخص بـ Username -->
-    <div id="addUserModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-header safe-bottom">
-        <div class="wa-bg-dark rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
-            <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
-                <h3 class="font-bold text-lg text-white flex items-center gap-2">
-                    <i class="fas fa-user-plus text-[#00a884]"></i> إرسال طلب محادثة
-                </h3>
-                <button id="closeAddUserBtn" class="text-gray-400 hover:text-white p-2"><i class="fas fa-times text-lg"></i></button>
-            </div>
-            <div class="flex items-center wa-bg-header border border-white/10 rounded-xl px-3 py-2.5 mb-4">
-                <span class="text-gray-500 text-sm ml-1">@</span>
-                <input id="searchUsernameInput" type="text" placeholder="username" class="w-full bg-transparent text-sm text-white focus:outline-none">
-            </div>
-            <button id="sendFriendRequestBtn" class="w-full bg-[#00a884] hover:bg-[#008f70] text-black font-bold py-3 rounded-xl transition">
-                إرسال الطلب
-            </button>
-        </div>
-    </div>
-
-    <!-- 7. واجهة التطبيق الرئيسية الشاملة -->
-    <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl wa-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
+    <!-- 5. الواجهة الرئيسية الكاملة للتطبيق -->
+    <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl app-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
         
-        <!-- القائمة الجانبية (الأصدقاء) -->
-        <div id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full wa-bg-dark">
+        <!-- القائمة الجانبية للشاشات والدردشات -->
+        <div id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full app-bg-dark">
             
-            <div class="p-3 wa-bg-header flex items-center justify-between safe-header">
-                <div class="flex items-center gap-3 cursor-pointer" id="openProfileBtn">
-                    <img id="myAvatar" class="w-10 h-10 rounded-full object-cover ring-1 ring-white/20">
-                    <div>
-                        <h1 id="myName" class="font-bold text-sm text-white truncate max-w-[120px]">جاري التحميل...</h1>
-                        <p id="myUserHandle" class="text-[11px] text-[#00a884] font-mono">@user</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-1.5">
-                    <button id="openSettingsBtn" title="الإعدادات" class="w-8 h-8 rounded-full hover:bg-white/10 text-gray-300 transition flex items-center justify-center">
-                        <i class="fas fa-gear text-sm"></i>
-                    </button>
-                    <button id="openRequestsBtn" title="طلبات المحادثة" class="relative w-8 h-8 rounded-full hover:bg-white/10 text-gray-300 transition flex items-center justify-center">
-                        <i class="fas fa-bell text-sm"></i>
-                        <span id="requestsBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
-                    </button>
-                    <button id="copyInviteBtn" title="نسخ رابط الدعوة" class="w-8 h-8 rounded-full hover:bg-white/10 text-gray-300 transition flex items-center justify-center">
-                        <i class="fas fa-link text-sm"></i>
-                    </button>
+            <!-- الهيدر العلوي الرئيسي -->
+            <div class="p-3.5 app-bg-header flex items-center justify-between safe-top">
+                <h1 class="font-bold text-lg text-white tracking-wide">Ping Messenger</h1>
+                <div class="flex items-center gap-3 text-gray-300">
+                    <button id="openSearchBtn" title="بحث" class="hover:text-white"><i class="fas fa-magnifying-glass text-lg"></i></button>
+                    <button id="openMenuBtn" title="القائمة" class="hover:text-white"><i class="fas fa-ellipsis-vertical text-lg"></i></button>
                 </div>
             </div>
 
-            <div class="p-2 border-b border-white/5 wa-bg-dark">
-                <button id="openAddUserModalBtn" class="w-full wa-bg-header hover:bg-white/10 text-gray-300 text-xs font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2">
-                    <i class="fas fa-user-plus text-[#00a884]"></i> إرسال طلب محادثة جديد
+            <!-- تبويبات التصفية السريعة -->
+            <div class="flex items-center justify-around text-xs font-bold border-b border-white/5 app-bg-dark py-2 px-2 text-gray-400">
+                <span class="tab-active py-1 px-3 cursor-pointer">الكل</span>
+                <span class="py-1 px-3 hover:text-white cursor-pointer">غير مقروءة</span>
+                <span class="py-1 px-3 hover:text-white cursor-pointer">المفضلة</span>
+                <span class="py-1 px-3 hover:text-white cursor-pointer">المجموعات</span>
+            </div>
+
+            <!-- قائمة الرسائل والمحادثات -->
+            <div id="usersList" class="flex-1 overflow-y-auto divide-y divide-white/5">
+                <!-- ملء المحادثات -->
+            </div>
+
+            <!-- الشريط السفلي الثابت (الدردشات | الحالات | المكالمات) -->
+            <div class="p-2 app-bg-header border-t border-white/10 flex items-center justify-around text-xs font-semibold text-gray-400 safe-bottom">
+                <button class="flex flex-col items-center gap-1 text-[#00a884]">
+                    <i class="fas fa-comment-dots text-lg"></i>
+                    <span>الدردشات</span>
+                </button>
+                <button class="flex flex-col items-center gap-1 hover:text-white">
+                    <i class="fas fa-circle-notch text-lg"></i>
+                    <span>الحالات</span>
+                </button>
+                <button class="flex flex-col items-center gap-1 hover:text-white">
+                    <i class="fas fa-phone text-lg"></i>
+                    <span>المكالمات</span>
                 </button>
             </div>
-
-            <div class="px-4 py-2.5 text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between border-b border-white/5">
-                <span>المحادثات المتاحة</span>
-                <span class="bg-[#00a884]/20 text-[#00a884] px-2 py-0.5 rounded-full text-[10px]">E2EE</span>
-            </div>
-
-            <div id="usersList" class="flex-1 overflow-y-auto divide-y divide-white/5">
-                <!-- قائمة الأصدقاء -->
-            </div>
         </div>
 
-        <!-- منطقة المحادثة الرئيسية (يدعم السحب والإغلاق) -->
-        <div id="chatPanel" class="hidden md:flex flex-1 flex-col h-full wa-bg-chat relative swipe-transition">
+        <!-- منطقة المحادثة المفتوحة -->
+        <div id="chatPanel" class="hidden md:flex flex-1 flex-col h-full app-bg-chat relative">
             
-            <div id="chatHeader" class="p-3 wa-bg-header flex items-center justify-between shadow-sm z-10 border-b border-white/10 safe-header">
-                <div class="flex items-center gap-3 cursor-pointer" id="openChatDetailsBtn">
-                    <button id="backToUsersBtn" class="md:hidden text-[#00a884] hover:text-[#008f70] text-xl p-1.5 font-bold flex items-center" title="رجوع">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-
+            <!-- هيدر الدردشة العلوية -->
+            <div id="chatHeader" class="p-3 app-bg-header flex items-center justify-between shadow-sm z-10 border-b border-white/10 safe-top">
+                <div class="flex items-center gap-3">
+                    <button id="backToUsersBtn" class="md:hidden text-[#00a884] text-xl p-1 font-bold flex items-center"><i class="fas fa-arrow-right"></i></button>
                     <div id="chatHeaderAvatarContainer" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400">
                         <i class="fas fa-user-circle text-3xl"></i>
                     </div>
                     <div>
-                        <h2 id="chatHeaderName" class="font-bold text-white text-sm">اختر جهة اتصال</h2>
-                        <p id="chatHeaderStatus" class="text-xs text-[#00a884] transition">متصل الآن</p>
+                        <h2 id="chatHeaderName" class="font-bold text-white text-sm">اختر محادثة</h2>
+                        <p id="chatHeaderStatus" class="text-xs text-[#00a884]">متصل الآن</p>
                     </div>
+                </div>
+
+                <div class="flex items-center gap-4 text-gray-300">
+                    <button title="مكالمة فيديو" class="hover:text-white"><i class="fas fa-video text-base"></i></button>
+                    <button title="مكالمة صوتية" class="hover:text-white"><i class="fas fa-phone text-base"></i></button>
+                    <button title="المزيد" class="hover:text-white"><i class="fas fa-ellipsis-vertical text-base"></i></button>
                 </div>
             </div>
 
             <!-- منطقة الرسائل -->
-            <div id="chatMessages" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-3 wa-bg-chat">
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 app-bg-chat">
                 <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3">
-                    <div class="w-16 h-16 rounded-full wa-bg-header flex items-center justify-center text-3xl text-[#00a884]">
-                        <i class="fab fa-whatsapp"></i>
+                    <div class="w-16 h-16 rounded-full app-bg-header flex items-center justify-center text-3xl text-[#00a884]">
+                        <i class="fas fa-lock"></i>
                     </div>
-                    <p>اختر صديقاً لبدء المحادثة المشفرة بالكامل 🔐</p>
+                    <p>جميع المحادثات والوسائط تشفر وتفك محلياً فقط 🔐</p>
                 </div>
             </div>
 
-            <!-- شريط الرد المعاين عند التحديد -->
-            <div id="replyPreviewBar" class="hidden px-4 py-2 wa-bg-header border-t border-white/10 flex items-center justify-between text-xs text-gray-300">
-                <div class="flex items-center gap-2 truncate">
-                    <i class="fas fa-reply text-[#00a884]"></i>
-                    <span id="replyPreviewText" class="truncate">جاري الرد...</span>
-                </div>
-                <button id="cancelReplyBtn" class="text-rose-400 p-1"><i class="fas fa-times"></i></button>
+            <!-- قائمة المرفقات المنسدلة عند الضغط على + -->
+            <div id="attachmentMenu" class="hidden absolute bottom-16 right-4 app-bg-header border border-white/10 rounded-2xl p-3 shadow-2xl grid grid-cols-3 gap-3 text-xs font-semibold text-center z-20">
+                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-pink-400"><i class="fas fa-camera text-xl mb-1"></i><br>الكاميرا</div>
+                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-purple-400"><i class="fas fa-image text-xl mb-1"></i><br>معرض الصور</div>
+                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-blue-400"><i class="fas fa-file-lines text-xl mb-1"></i><br>مستندات</div>
+                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-emerald-400"><i class="fas fa-location-dot text-xl mb-1"></i><br>الموقع</div>
+                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-amber-400"><i class="fas fa-address-card text-xl mb-1"></i><br>جهة اتصال</div>
             </div>
 
-            <!-- شريط أدوات الإدخال -->
-            <div id="inputContainer" class="p-3 wa-bg-header border-t border-white/10 hidden safe-bottom">
+            <!-- شريط الكتابة والتفاعل السريع -->
+            <div id="inputContainer" class="p-3 app-bg-header border-t border-white/10 hidden safe-bottom">
                 <div class="flex items-center gap-2 max-w-5xl mx-auto">
                     
-                    <label for="imageInput" id="uploadLabel" class="cursor-pointer text-gray-400 hover:text-white p-2 rounded-full transition flex items-center justify-center" title="إرفاق صورة">
-                        <i class="fas fa-paperclip text-lg" id="uploadIcon"></i>
-                    </label>
-                    <input type="file" id="imageInput" accept="image/*" class="hidden">
+                    <button id="toggleAttachmentBtn" class="text-gray-400 hover:text-white p-2 rounded-full transition text-lg"><i class="fas fa-plus"></i></button>
 
-                    <button id="recordAudioBtn" class="text-gray-400 hover:text-rose-400 p-2 rounded-full transition flex items-center justify-center" title="تسجيل صوت">
-                        <i class="fas fa-microphone text-lg" id="recordIcon"></i>
-                    </button>
-
-                    <div class="flex-1 relative">
-                        <input id="messageInput" type="text" placeholder="اكتب رسالة..." class="w-full wa-bg-input text-white placeholder-gray-500 rounded-xl px-4 py-2.5 text-sm focus:outline-none border border-white/5">
+                    <div class="flex-1 relative flex items-center">
+                        <input id="messageInput" type="text" placeholder="اكتب رسالة..." class="w-full app-bg-input text-white placeholder-gray-500 rounded-2xl px-4 py-2.5 text-sm focus:outline-none border border-white/5">
                     </div>
                     
-                    <button id="sendBtn" class="w-10 h-10 bg-[#00a884] hover:bg-[#008f70] text-black rounded-full flex items-center justify-center shrink-0 transition shadow-md">
-                        <i class="fas fa-paper-plane text-sm -rotate-45 translate-x-0.5"></i>
+                    <!-- يتغير من ميكروفون إلى إرسال أوتوماتيكياً -->
+                    <button id="actionBtn" class="w-10 h-10 bg-[#00a884] text-black rounded-full flex items-center justify-center shrink-0 transition shadow-md font-bold">
+                        <i id="actionIcon" class="fas fa-microphone text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -340,47 +307,33 @@
         const chatPanel = document.getElementById('chatPanel');
         const backToUsersBtn = document.getElementById('backToUsersBtn');
 
-        const myAvatar = document.getElementById('myAvatar');
-        const myName = document.getElementById('myName');
-        const myUserHandle = document.getElementById('myUserHandle');
         const usersList = document.getElementById('usersList');
         const chatHeaderName = document.getElementById('chatHeaderName');
         const chatHeaderStatus = document.getElementById('chatHeaderStatus');
         const chatHeaderAvatarContainer = document.getElementById('chatHeaderAvatarContainer');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
+        const actionBtn = document.getElementById('actionBtn');
+        const actionIcon = document.getElementById('actionIcon');
         const inputContainer = document.getElementById('inputContainer');
-        const imageInput = document.getElementById('imageInput');
-        const recordAudioBtn = document.getElementById('recordAudioBtn');
-        const recordIcon = document.getElementById('recordIcon');
+
+        const searchModal = document.getElementById('searchModal');
+        const openSearchBtn = document.getElementById('openSearchBtn');
+        const closeSearchBtn = document.getElementById('closeSearchBtn');
 
         const settingsModal = document.getElementById('settingsModal');
-        const openSettingsBtn = document.getElementById('openSettingsBtn');
+        const openMenuBtn = document.getElementById('openMenuBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const settingsAvatar = document.getElementById('settingsAvatar');
+        const settingsName = document.getElementById('settingsName');
+        const settingsHandle = document.getElementById('settingsHandle');
 
-        const chatDetailsModal = document.getElementById('chatDetailsModal');
-        const openChatDetailsBtn = document.getElementById('openChatDetailsBtn');
-        const closeChatDetailsBtn = document.getElementById('closeChatDetailsBtn');
-        const detailsAvatar = document.getElementById('detailsAvatar');
-        const detailsName = document.getElementById('detailsName');
-        const detailsHandle = document.getElementById('detailsHandle');
-        const detailsBio = document.getElementById('detailsBio');
-        const sharedMediaGrid = document.getElementById('sharedMediaGrid');
-        const blockContactBtn = document.getElementById('blockContactBtn');
-        const deleteAllChatBtn = document.getElementById('deleteAllChatBtn');
+        const toggleAttachmentBtn = document.getElementById('toggleAttachmentBtn');
+        const attachmentMenu = document.getElementById('attachmentMenu');
 
         const messageContextMenu = document.getElementById('messageContextMenu');
         const highlightedMessageBubble = document.getElementById('highlightedMessageBubble');
-        const replyMsgBtn = document.getElementById('replyMsgBtn');
-        const forwardMsgBtn = document.getElementById('forwardMsgBtn');
-        const downloadMediaBtn = document.getElementById('downloadMediaBtn');
-        const deleteMsgBtn = document.getElementById('deleteMsgBtn');
         const closeContextBtn = document.getElementById('closeContextBtn');
-
-        const replyPreviewBar = document.getElementById('replyPreviewBar');
-        const replyPreviewText = document.getElementById('replyPreviewText');
-        const cancelReplyBtn = document.getElementById('cancelReplyBtn');
 
         let currentUser = null;
         let currentUserProfile = null;
@@ -388,9 +341,6 @@
         let currentChatId = null;
         let secretEncryptionKey = null;
         let unsubscribeMessages = null;
-        let unsubscribeStatus = null;
-        let selectedMessageData = null;
-        let replyContextText = null;
 
         function encryptData(text, key) {
             if (!text) return "";
@@ -423,8 +373,6 @@
                         bio: "متاح...",
                         photoURL: user.photoURL || 'https://via.placeholder.com/40',
                         friends: [],
-                        blocked: [],
-                        isTyping: false,
                         lastSeen: serverTimestamp()
                     };
                     await setDoc(userRef, currentUserProfile);
@@ -432,9 +380,9 @@
                     currentUserProfile = userSnap.data();
                 }
 
-                myAvatar.src = currentUserProfile.photoURL;
-                myName.textContent = currentUserProfile.name;
-                myUserHandle.textContent = `@${currentUserProfile.username}`;
+                settingsAvatar.src = currentUserProfile.photoURL;
+                settingsName.textContent = currentUserProfile.name;
+                settingsHandle.textContent = `@${currentUserProfile.username}`;
 
                 loginScreen.classList.add('hidden');
                 mainApp.classList.remove('hidden');
@@ -446,102 +394,26 @@
         loginBtn.addEventListener('click', () => signInWithPopup(auth, provider));
         logoutBtnModal.addEventListener('click', () => signOut(auth));
 
-        openSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        openSearchBtn.addEventListener('click', () => searchModal.classList.remove('hidden'));
+        closeSearchBtn.addEventListener('click', () => searchModal.classList.add('hidden'));
+
+        openMenuBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
         closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
 
-        // تفاصيل الشات والوسائط المشتركة
-        openChatDetailsBtn.addEventListener('click', () => {
-            if (!selectedUser) return;
-            detailsAvatar.src = selectedUser.photoURL || 'https://via.placeholder.com/80';
-            detailsName.textContent = selectedUser.name;
-            detailsHandle.textContent = `@${selectedUser.username}`;
-            detailsBio.textContent = selectedUser.bio || "متاح...";
-            chatDetailsModal.classList.remove('hidden');
-        });
-        closeChatDetailsBtn.addEventListener('click', () => chatDetailsModal.classList.add('hidden'));
-
-        // السحب لإغلاق المحادثة (Swipe-to-Close Gesture)
-        let touchStartX = 0;
-        chatPanel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive: true});
-        chatPanel.addEventListener('touchend', e => {
-            let touchEndX = e.changedTouches[0].clientX;
-            if (touchEndX - touchStartX > 120 && window.innerWidth < 768) {
-                chatPanel.classList.add('hidden');
-                sidebarPanel.classList.remove('hidden');
-            }
-        }, {passive: true});
+        toggleAttachmentBtn.addEventListener('click', () => attachmentMenu.classList.toggle('hidden'));
+        closeContextBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
 
         backToUsersBtn.addEventListener('click', () => {
             chatPanel.classList.add('hidden');
             sidebarPanel.classList.remove('hidden');
         });
 
-        // متابعة الكتابة وحالة الاتصال المباشرة
-        messageInput.addEventListener('input', async () => {
-            if (!currentChatId) return;
-            await updateDoc(doc(db, "users", currentUser.uid), { isTyping: true });
-            clearTimeout(window.typingTimer);
-            window.typingTimer = setTimeout(async () => {
-                await updateDoc(doc(db, "users", currentUser.uid), { isTyping: false });
-            }, 2000);
-        });
-
-        function openChat(targetUser) {
-            selectedUser = targetUser;
-            inputContainer.classList.remove('hidden');
-
-            if (window.innerWidth < 768) { sidebarPanel.classList.add('hidden'); }
-            chatPanel.classList.remove('hidden');
-            chatPanel.classList.add('flex');
-            
-            currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
-            secretEncryptionKey = `PingSecret_${currentChatId}_2026`;
-
-            chatHeaderAvatarContainer.innerHTML = `<img src="${targetUser.photoURL || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover">`;
-            chatHeaderName.textContent = targetUser.name;
-
-            // استعلام حالة الطرف الآخر مباشرة (Online / Typing)
-            if (unsubscribeStatus) unsubscribeStatus();
-            unsubscribeStatus = onSnapshot(doc(db, "users", targetUser.uid), snap => {
-                if (snap.exists()) {
-                    const data = snap.data();
-                    if (data.isTyping) {
-                        chatHeaderStatus.textContent = "جاري الكتابة...";
-                        chatHeaderStatus.className = "text-xs text-[#25d366] font-bold animate-pulse";
-                    } else {
-                        chatHeaderStatus.textContent = "متصل الآن";
-                        chatHeaderStatus.className = "text-xs text-[#00a884]";
-                    }
-                }
-            });
-
-            loadMessages();
-        }
-
-        // إغلاق قائمة الخيارات المنسدلة
-        closeContextBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
-
-        // الرد على رسالة
-        replyMsgBtn.addEventListener('click', () => {
-            if (!selectedMessageData) return;
-            replyContextText = selectedMessageData.text ? decryptData(selectedMessageData.text, secretEncryptionKey) : "وسائط";
-            replyPreviewText.textContent = replyContextText;
-            replyPreviewBar.classList.remove('hidden');
-            messageContextMenu.classList.add('hidden');
-        });
-        cancelReplyBtn.addEventListener('click', () => {
-            replyContextText = null;
-            replyPreviewBar.classList.add('hidden');
-        });
-
-        // حذف الدردشة بالكامل لدى الطرفين
-        deleteAllChatBtn.addEventListener('click', async () => {
-            if (confirm("هل أنت تأكد من حذف كافة الرسائل بينكم لدى الطرفين نهائياً؟")) {
-                const q = query(collection(db, "chats", currentChatId, "messages"));
-                const snap = await getDocs(q);
-                snap.forEach(async (d) => await deleteDoc(d.ref));
-                chatDetailsModal.classList.add('hidden');
-                alert("تم حذف المحادثة بالكامل لدى الطرفين.");
+        // تحويل الميكروفون إلى أزرار إرسال عند الكتابة
+        messageInput.addEventListener('input', () => {
+            if (messageInput.value.trim().length > 0) {
+                actionIcon.className = "fas fa-paper-plane -rotate-45 translate-x-0.5 text-sm";
+            } else {
+                actionIcon.className = "fas fa-microphone text-sm";
             }
         });
 
@@ -561,12 +433,17 @@
                     if (friendDoc.exists()) {
                         const userData = friendDoc.data();
                         const userEl = document.createElement('div');
-                        userEl.className = "p-3 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5";
+                        userEl.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5";
                         userEl.innerHTML = `
-                            <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-11 h-11 rounded-full object-cover">
+                            <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-12 h-12 rounded-full object-cover">
                             <div class="flex-1 min-w-0">
-                                <h3 class="font-bold text-sm text-white truncate">${userData.name}</h3>
-                                <p class="text-xs text-gray-400 font-mono truncate">@${userData.username}</p>
+                                <div class="flex items-center justify-between mb-1">
+                                    <h3 class="font-bold text-sm text-white truncate">${userData.name}</h3>
+                                    <span class="text-[10px] text-gray-400">11:42 م</span>
+                                </div>
+                                <p class="text-xs text-gray-400 truncate flex items-center gap-1">
+                                    <span class="text-blue-400 font-bold">✓✓</span> تمام، أشوفك بكرة
+                                </p>
                             </div>
                         `;
                         userEl.addEventListener('click', () => openChat(userData));
@@ -576,24 +453,38 @@
             });
         }
 
-        async function sendMessage(encryptedImageUrl = null) {
+        function openChat(targetUser) {
+            selectedUser = targetUser;
+            inputContainer.classList.remove('hidden');
+
+            if (window.innerWidth < 768) { sidebarPanel.classList.add('hidden'); }
+            chatPanel.classList.remove('hidden');
+            chatPanel.classList.add('flex');
+            
+            currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
+            secretEncryptionKey = `PingSecret_${currentChatId}_2026`;
+
+            chatHeaderAvatarContainer.innerHTML = `<img src="${targetUser.photoURL || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover">`;
+            chatHeaderName.textContent = targetUser.name;
+            chatHeaderStatus.textContent = "متصل الآن";
+
+            loadMessages();
+        }
+
+        async function sendMessage() {
             const text = messageInput.value.trim();
-            if (!text && !encryptedImageUrl) return;
+            if (!text) return;
 
             messageInput.value = '';
-            const encryptedText = text ? encryptData(text, secretEncryptionKey) : "";
+            actionIcon.className = "fas fa-microphone text-sm";
+
+            const encryptedText = encryptData(text, secretEncryptionKey);
 
             await addDoc(collection(db, "chats", currentChatId, "messages"), {
                 senderUid: currentUser.uid,
                 text: encryptedText,
-                imageUrl: encryptedImageUrl || "",
-                replyTo: replyContextText || "",
-                deleted: false,
                 timestamp: serverTimestamp()
             });
-
-            replyContextText = null;
-            replyPreviewBar.classList.add('hidden');
         }
 
         function loadMessages() {
@@ -608,44 +499,30 @@
                 chatMessages.innerHTML = '';
                 snapshot.forEach((docSnap) => {
                     const msg = docSnap.data();
-                    const msgId = docSnap.id;
                     const isMine = msg.senderUid === currentUser.uid;
 
                     const containerWrapper = document.createElement('div');
                     containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} message-pop`;
-                    
-                    let content = '';
-                    if (msg.replyTo) {
-                        content += `<div class="bg-black/20 p-1.5 rounded-lg border-r-2 border-[#00a884] mb-1 text-[11px] opacity-80">${msg.replyTo}</div>`;
-                    }
 
-                    if (msg.deleted) {
-                        content = `<p class="text-xs italic text-gray-400"><i class="fas fa-ban ml-1"></i> تم حذف هذه الرسالة</p>`;
-                    } else {
-                        const decryptedText = msg.text ? decryptData(msg.text, secretEncryptionKey) : "";
-                        const decryptedImageUrl = msg.imageUrl ? decryptData(msg.imageUrl, secretEncryptionKey) : "";
-
-                        if (decryptedImageUrl) {
-                            content += `<img src="${decryptedImageUrl}" class="rounded-xl max-w-xs max-h-60 object-cover border border-white/10 mb-1">`;
-                        }
-                        if (decryptedText) {
-                            content += `<p class="text-sm leading-relaxed">${decryptedText}</p>`;
-                        }
-                    }
+                    const decryptedText = decryptData(msg.text, secretEncryptionKey);
 
                     const bubble = document.createElement('div');
                     bubble.setAttribute('dir', 'rtl');
-                    bubble.className = `${isMine ? 'wa-bubble-mine rounded-2xl rounded-br-xs ml-auto' : 'wa-bubble-other rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3 shadow-md relative cursor-pointer`;
-                    bubble.innerHTML = content;
+                    bubble.className = `${isMine ? 'bubble-mine rounded-2xl rounded-br-xs ml-auto' : 'bubble-other rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3 shadow-md relative cursor-pointer`;
+                    bubble.innerHTML = `
+                        <p class="text-sm leading-relaxed">${decryptedText}</p>
+                        <div class="flex items-center justify-end gap-1 text-[10px] opacity-75 mt-1">
+                            <span>11:42 م</span>
+                            ${isMine ? '<span class="text-blue-300 font-bold">✓✓</span>' : ''}
+                        </div>
+                    `;
 
-                    // تفعيل القائمة المنسدلة والتعتيم بالضغط المطول
                     let pressTimer;
                     bubble.addEventListener('touchstart', () => {
                         pressTimer = setTimeout(() => {
-                            selectedMessageData = msg;
                             highlightedMessageBubble.innerHTML = bubble.outerHTML;
                             messageContextMenu.classList.remove('hidden');
-                        }, 500);
+                        }, 400);
                     }, {passive: true});
                     bubble.addEventListener('touchend', () => clearTimeout(pressTimer));
 
@@ -656,7 +533,11 @@
             });
         }
 
-        sendBtn.addEventListener('click', () => sendMessage());
+        actionBtn.addEventListener('click', () => {
+            if (messageInput.value.trim().length > 0) {
+                sendMessage();
+            }
+        });
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
