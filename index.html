@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' https: data:; media-src 'self' blob:; connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com https://apis.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' https: data: blob:; media-src 'self' blob:; connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com https://apis.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ping Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -119,13 +119,13 @@
             <input id="searchInput" type="text" placeholder="بحث عن رسالة، شخص، صور، أو روابط..." class="flex-1 bg-transparent text-white focus:outline-none text-sm">
         </div>
         <div class="p-4 flex gap-2 overflow-x-auto text-xs font-semibold text-gray-400 border-b border-white/5">
-            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer">الصور 🖼️</span>
-            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer">الفيديوهات 🎥</span>
-            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer">المستندات 📄</span>
-            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer">الروابط 🔗</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer coming-soon-btn">الصور 🖼️</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer coming-soon-btn">الفيديوهات 🎥</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer coming-soon-btn">المستندات 📄</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer coming-soon-btn">الروابط 🔗</span>
         </div>
         <div id="searchResultsList" class="flex-1 overflow-y-auto p-4 space-y-2 text-xs text-gray-500 text-center">
-            أدخل كلمة البحث للبدء...
+            ميزة البحث داخل الرسائل قريبًا — الرسائل مشفّرة بالكامل فما يقدر السيرفر يبحث فيها، لازم فك تشفيرها أول بالجهاز
         </div>
     </div>
 
@@ -145,23 +145,23 @@
             </div>
 
             <div class="space-y-2 font-medium">
-                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-key text-[#00a884]"></i> الحساب (اسم المستخدم، رقم الهاتف)</span>
                     <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
                 </div>
-                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-lock text-[#00a884]"></i> الخصوصية والأمان (آخر ظهور، المحظورون)</span>
                     <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
                 </div>
-                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-palette text-[#00a884]"></i> الدردشات (خلفية الشاشة، حجم الخط)</span>
                     <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
                 </div>
-                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-bell text-[#00a884]"></i> الإشعارات والأصوات</span>
                     <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
                 </div>
-                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-[#00a884] fa-database text-[#00a884]"></i> البيانات والتخزين</span>
                     <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
                 </div>
@@ -243,6 +243,30 @@
         </div>
     </div>
 
+    <!-- 4.7 معلومات جهة الاتصال: تفتح بالضغط على اسم/صورة الطرف الآخر بأعلى المحادثة -->
+    <div id="contactInfoModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-4 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeContactInfoBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <h2 class="font-bold text-base text-white">معلومات جهة الاتصال</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+            <div class="flex flex-col items-center gap-3 py-4">
+                <img id="contactInfoAvatar" class="w-24 h-24 rounded-full object-cover" src="https://via.placeholder.com/96">
+                <div class="text-center">
+                    <h3 id="contactInfoName" class="font-bold text-white text-lg"></h3>
+                    <p id="contactInfoUsername" class="text-xs text-gray-400 font-mono"></p>
+                </div>
+            </div>
+
+            <div class="space-y-2 font-medium">
+                <button id="contactInfoVanishBtn" class="w-full p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-hourglass-half text-[#00a884]"></i> الرسائل المؤقتة</span>
+                    <span id="contactInfoVanishValue" class="text-xs text-gray-400">متوقفة</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 5. الواجهة الرئيسية الكاملة للتطبيق -->
     <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl app-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
         
@@ -261,10 +285,10 @@
 
             <!-- تبويبات التصفية السريعة -->
             <div class="flex items-center justify-around text-xs font-bold border-b border-white/5 app-bg-dark py-2 px-2 text-gray-400">
-                <span class="tab-active py-1 px-3 cursor-pointer">الكل</span>
-                <span class="py-1 px-3 hover:text-white cursor-pointer">غير مقروءة</span>
-                <span class="py-1 px-3 hover:text-white cursor-pointer">المفضلة</span>
-                <span class="py-1 px-3 hover:text-white cursor-pointer">المجموعات</span>
+                <span id="tabAll" class="tab-active py-1 px-3 cursor-pointer">الكل</span>
+                <span id="tabUnread" class="py-1 px-3 hover:text-white cursor-pointer">غير مقروءة</span>
+                <span id="tabFavorites" class="py-1 px-3 hover:text-white cursor-pointer">المفضلة</span>
+                <span id="tabGroups" class="py-1 px-3 hover:text-white cursor-pointer">المجموعات</span>
             </div>
 
             <!-- قائمة الرسائل والمحادثات -->
@@ -274,15 +298,15 @@
 
             <!-- الشريط السفلي الثابت (الدردشات | الحالات | المكالمات) -->
             <div class="p-2 app-bg-header border-t border-white/10 flex items-center justify-around text-xs font-semibold text-gray-400 safe-bottom">
-                <button class="flex flex-col items-center gap-1 text-[#00a884]">
+                <button id="navChats" class="flex flex-col items-center gap-1 text-[#00a884]">
                     <i class="fas fa-comment-dots text-lg"></i>
                     <span>الدردشات</span>
                 </button>
-                <button class="flex flex-col items-center gap-1 hover:text-white">
+                <button id="navStatus" class="flex flex-col items-center gap-1 hover:text-white">
                     <i class="fas fa-circle-notch text-lg"></i>
                     <span>الحالات</span>
                 </button>
-                <button class="flex flex-col items-center gap-1 hover:text-white">
+                <button id="navCalls" class="flex flex-col items-center gap-1 hover:text-white">
                     <i class="fas fa-phone text-lg"></i>
                     <span>المكالمات</span>
                 </button>
@@ -295,7 +319,7 @@
 
             <!-- هيدر الدردشة العلوية -->
             <div id="chatHeader" class="p-3 app-bg-header flex items-center justify-between shadow-sm z-10 border-b border-white/10 safe-top">
-                <div class="flex items-center gap-3">
+                <div id="openContactInfoBtn" class="flex items-center gap-3 cursor-pointer">
                     <button id="backToUsersBtn" class="md:hidden text-[#00a884] text-xl p-1 font-bold flex items-center"><i class="fas fa-arrow-right"></i></button>
                     <div id="chatHeaderAvatarContainer" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400">
                         <i class="fas fa-user-circle text-3xl"></i>
@@ -306,10 +330,15 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4 text-gray-300">
-                    <button title="مكالمة فيديو" class="hover:text-white"><i class="fas fa-video text-base"></i></button>
-                    <button title="مكالمة صوتية" class="hover:text-white"><i class="fas fa-phone text-base"></i></button>
-                    <button title="المزيد" class="hover:text-white"><i class="fas fa-ellipsis-vertical text-base"></i></button>
+                <div class="flex items-center gap-4 text-gray-300 relative">
+                    <button title="مكالمة فيديو (قريبًا)" class="hover:text-white coming-soon-btn"><i class="fas fa-video text-base"></i></button>
+                    <button title="مكالمة صوتية (قريبًا)" class="hover:text-white coming-soon-btn"><i class="fas fa-phone text-base"></i></button>
+                    <button id="moreOptionsBtn" title="المزيد" class="hover:text-white"><i class="fas fa-ellipsis-vertical text-base"></i></button>
+                    <div id="moreOptionsMenu" class="hidden absolute top-8 left-0 app-bg-header border border-white/10 rounded-2xl p-2 shadow-2xl text-xs font-semibold z-20 w-44">
+                        <button id="clearChatBtn" class="w-full hover:bg-rose-500/20 text-rose-400 p-3 rounded-xl text-right flex items-center gap-3">
+                            <i class="fas fa-trash-can"></i> حذف المحادثة
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -325,11 +354,14 @@
 
             <!-- قائمة المرفقات المنسدلة عند الضغط على + -->
             <div id="attachmentMenu" class="hidden absolute bottom-16 right-4 app-bg-header border border-white/10 rounded-2xl p-3 shadow-2xl grid grid-cols-3 gap-3 text-xs font-semibold text-center z-20">
-                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-pink-400"><i class="fas fa-camera text-xl mb-1"></i><br>الكاميرا</div>
-                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-purple-400"><i class="fas fa-image text-xl mb-1"></i><br>معرض الصور</div>
-                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-blue-400"><i class="fas fa-file-lines text-xl mb-1"></i><br>مستندات</div>
-                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-emerald-400"><i class="fas fa-location-dot text-xl mb-1"></i><br>الموقع</div>
-                <div class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-amber-400"><i class="fas fa-address-card text-xl mb-1"></i><br>جهة اتصال</div>
+                <div id="attachCameraBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-pink-400"><i class="fas fa-camera text-xl mb-1"></i><br>الكاميرا</div>
+                <div id="attachGalleryBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-purple-400"><i class="fas fa-image text-xl mb-1"></i><br>معرض الصور</div>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+                <input type="file" id="galleryInput" accept="image/*" class="hidden">
+                <div id="attachDocsBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-blue-400"><i class="fas fa-file-lines text-xl mb-1"></i><br>مستندات</div>
+                <input type="file" id="docInput" class="hidden">
+                <div id="attachLocationBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-emerald-400"><i class="fas fa-location-dot text-xl mb-1"></i><br>الموقع</div>
+                <div id="attachContactBtn" class="coming-soon-btn p-3 hover:bg-white/5 rounded-xl cursor-pointer text-amber-400 opacity-50" title="قريبًا"><i class="fas fa-address-card text-xl mb-1"></i><br>جهة اتصال</div>
             </div>
 
             <!-- شريط الكتابة والتفاعل السريع -->
@@ -387,8 +419,24 @@
         const backToUsersBtn = document.getElementById('backToUsersBtn');
 
         const usersList = document.getElementById('usersList');
+        const tabAll = document.getElementById('tabAll');
+        const tabUnread = document.getElementById('tabUnread');
+        const tabFavorites = document.getElementById('tabFavorites');
+        const tabGroups = document.getElementById('tabGroups');
+        const navChats = document.getElementById('navChats');
+        const navStatus = document.getElementById('navStatus');
+        const navCalls = document.getElementById('navCalls');
         const chatHeaderName = document.getElementById('chatHeaderName');
         const chatHeaderStatus = document.getElementById('chatHeaderStatus');
+
+        const openContactInfoBtn = document.getElementById('openContactInfoBtn');
+        const contactInfoModal = document.getElementById('contactInfoModal');
+        const closeContactInfoBtn = document.getElementById('closeContactInfoBtn');
+        const contactInfoAvatar = document.getElementById('contactInfoAvatar');
+        const contactInfoName = document.getElementById('contactInfoName');
+        const contactInfoUsername = document.getElementById('contactInfoUsername');
+        const contactInfoVanishBtn = document.getElementById('contactInfoVanishBtn');
+        const contactInfoVanishValue = document.getElementById('contactInfoVanishValue');
         const chatHeaderAvatarContainer = document.getElementById('chatHeaderAvatarContainer');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
@@ -397,6 +445,8 @@
         const inputContainer = document.getElementById('inputContainer');
 
         const searchModal = document.getElementById('searchModal');
+        const searchInput = document.getElementById('searchInput');
+        const searchResultsList = document.getElementById('searchResultsList');
         const openSearchBtn = document.getElementById('openSearchBtn');
         const closeSearchBtn = document.getElementById('closeSearchBtn');
 
@@ -417,6 +467,16 @@
 
         const toggleAttachmentBtn = document.getElementById('toggleAttachmentBtn');
         const attachmentMenu = document.getElementById('attachmentMenu');
+        const moreOptionsBtn = document.getElementById('moreOptionsBtn');
+        const moreOptionsMenu = document.getElementById('moreOptionsMenu');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const attachLocationBtn = document.getElementById('attachLocationBtn');
+        const attachCameraBtn = document.getElementById('attachCameraBtn');
+        const attachGalleryBtn = document.getElementById('attachGalleryBtn');
+        const attachDocsBtn = document.getElementById('attachDocsBtn');
+        const cameraInput = document.getElementById('cameraInput');
+        const galleryInput = document.getElementById('galleryInput');
+        const docInput = document.getElementById('docInput');
 
         const messageContextMenu = document.getElementById('messageContextMenu');
         const highlightedMessageBubble = document.getElementById('highlightedMessageBubble');
@@ -479,6 +539,14 @@
             return (typeof url === 'string' && /^https:\/\//i.test(url)) ? url : 'https://via.placeholder.com/40';
         }
 
+        // يشتغل فقط على نص تم تنقيته مسبقًا بـ escapeHtml — يحوّل الروابط لعناصر <a> قابلة للنقر
+        function linkify(escapedText) {
+            return escapedText.replace(
+                /(https?:\/\/[^\s<]+)/g,
+                '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline text-blue-300 break-all">$1</a>'
+            );
+        }
+
         // ===== هوية لونية لكل جهة اتصال: هاش بسيط على الـ uid يعطي درجة لون ثابتة =====
         // نفس الشخص ياخذ نفس اللون دايمًا (بالأفتار، اسمه، وخلفية فقاعاته) بدون تخزين أي شي إضافي
         function contactHue(uid) {
@@ -504,6 +572,71 @@
         }
         applyAmbientTheme();
         setInterval(applyAmbientTheme, 30 * 60 * 1000);
+
+        // ===== حضور حقيقي: نبضة كل 25 ثانية بدل "متصل الآن" الثابتة =====
+        // Firestore ما عنده onDisconnect زي Realtime Database، فهذا أقرب تقريب عملي:
+        // لو آخر نبضة أقل من 45 ثانية نعتبره متصل، وإلا نحسب "آخر ظهور" من وقتها
+        let heartbeatInterval = null;
+        function startPresenceHeartbeat() {
+            const beat = () => {
+                if (document.visibilityState === 'visible' && currentUser) {
+                    setDoc(doc(db, "users", currentUser.uid), { lastSeen: serverTimestamp() }, { merge: true });
+                }
+            };
+            beat();
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(beat, 25000);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') beat(); });
+        }
+
+        function formatLastSeen(millis) {
+            if (!millis) return "غير متاح";
+            const diffSec = Math.floor((Date.now() - millis) / 1000);
+            if (diffSec < 45) return "متصل الآن";
+            if (diffSec < 3600) return `آخر ظهور قبل ${Math.max(1, Math.floor(diffSec / 60))} دقيقة`;
+            if (diffSec < 86400) return `آخر ظهور قبل ${Math.floor(diffSec / 3600)} ساعة`;
+            return `آخر ظهور قبل ${Math.floor(diffSec / 86400)} يوم`;
+        }
+
+        let unsubscribeFriendStatus = null;
+        let unsubscribeTyping = null;
+        let lastTypingWriteAt = 0;
+        let friendIsTyping = false;
+        let friendLastSeenMillis = null;
+
+        function updateChatHeaderStatus() {
+            if (!selectedUser || !sharedKey) return;
+            chatHeaderStatus.textContent = friendIsTyping ? "يكتب الآن..." : formatLastSeen(friendLastSeenMillis);
+        }
+        setInterval(updateChatHeaderStatus, 15000);
+
+        // ===== رسائل مؤقتة (تختفي تلقائيًا) — إعداد مشترك بين الطرفين لكل محادثة =====
+        const VANISH_OPTIONS = [0, 86400, 604800]; // متوقفة، 24 ساعة، 7 أيام (بالثواني)
+        let currentVanishDuration = 0;
+
+        function updateVanishButton() {
+            contactInfoVanishValue.textContent = currentVanishDuration === 0
+                ? "متوقفة"
+                : (currentVanishDuration === 86400 ? "24 ساعة" : "7 أيام");
+        }
+
+        contactInfoVanishBtn.addEventListener('click', async () => {
+            if (!currentChatId) return;
+            const idx = VANISH_OPTIONS.indexOf(currentVanishDuration);
+            const next = VANISH_OPTIONS[(idx + 1) % VANISH_OPTIONS.length];
+            try {
+                await setDoc(doc(db, "chats", currentChatId), { vanishDuration: next }, { merge: true });
+            } catch (e) { /* نفس ملاحظة صلاحيات Firestore السابقة */ }
+        });
+
+        openContactInfoBtn.addEventListener('click', () => {
+            if (!selectedUser) return;
+            contactInfoAvatar.src = safePhotoUrl(selectedUser.photoURL);
+            contactInfoName.textContent = selectedUser.name;
+            contactInfoUsername.textContent = selectedUser.username ? `@${selectedUser.username}` : '';
+            contactInfoModal.classList.remove('hidden');
+        });
+        closeContactInfoBtn.addEventListener('click', () => contactInfoModal.classList.add('hidden'));
 
         function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
         function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
@@ -716,6 +849,7 @@
                 loginScreen.classList.add('hidden');
                 mainApp.classList.remove('hidden');
 
+                startPresenceHeartbeat();
                 loadFriendsList();
             }
         });
@@ -723,8 +857,14 @@
         loginBtn.addEventListener('click', () => signInWithPopup(auth, provider));
         logoutBtnModal.addEventListener('click', () => signOut(auth));
 
-        openSearchBtn.addEventListener('click', () => searchModal.classList.remove('hidden'));
+        openSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            searchResultsList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">اكتب كلمة أو اسم شخص وابدأ البحث</p>`;
+            searchModal.classList.remove('hidden');
+            searchInput.focus();
+        });
         closeSearchBtn.addEventListener('click', () => searchModal.classList.add('hidden'));
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') runGlobalSearch(); });
 
         openNewChatBtn.addEventListener('click', () => {
             newChatUsernameInput.value = '';
@@ -741,6 +881,70 @@
         closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
 
         toggleAttachmentBtn.addEventListener('click', () => attachmentMenu.classList.toggle('hidden'));
+
+        // تبويبات تصفية القائمة الجانبية
+        function setActiveTab(tab, el) {
+            activeSidebarTab = tab;
+            [tabAll, tabUnread, tabFavorites, tabGroups].forEach(t => t.classList.remove('tab-active'));
+            el.classList.add('tab-active');
+            renderFriendsList();
+        }
+        tabAll.addEventListener('click', () => setActiveTab('all', tabAll));
+        tabUnread.addEventListener('click', () => setActiveTab('unread', tabUnread));
+        tabFavorites.addEventListener('click', () => setActiveTab('favorites', tabFavorites));
+        tabGroups.addEventListener('click', () => setActiveTab('groups', tabGroups));
+
+        // الشريط السفلي: الدردشات شغالة، الحالات والمكالمات لسا ما بنيت
+        function highlightNav(activeBtn) {
+            [navChats, navStatus, navCalls].forEach(b => b.classList.remove('text-[#00a884]'));
+            activeBtn.classList.add('text-[#00a884]');
+        }
+        navChats.addEventListener('click', () => { highlightNav(navChats); renderFriendsList(); });
+        navStatus.addEventListener('click', () => {
+            highlightNav(navStatus);
+            usersList.innerHTML = `<div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3 py-16"><i class="fas fa-circle-notch text-3xl"></i><p>ميزة الحالات قريبًا</p></div>`;
+        });
+        navCalls.addEventListener('click', () => {
+            highlightNav(navCalls);
+            usersList.innerHTML = `<div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3 py-16"><i class="fas fa-phone text-3xl"></i><p>ميزة المكالمات قريبًا</p></div>`;
+        });
+
+        // "المزيد" بهيدر المحادثة: حذف المحادثة
+        moreOptionsBtn.addEventListener('click', () => moreOptionsMenu.classList.toggle('hidden'));
+        clearChatBtn.addEventListener('click', async () => {
+            moreOptionsMenu.classList.add('hidden');
+            if (!currentChatId) return;
+            if (!confirm("حذف كل رسائل هذي المحادثة؟ الإجراء ما يترجع.")) return;
+            try {
+                const snap = await getDocs(collection(db, "chats", currentChatId, "messages"));
+                await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+            } catch (e) {
+                alert("ما قدرت أحذف المحادثة — تأكد من صلاحيات Firestore (Security Rules)");
+            }
+        });
+
+        // مشاركة الموقع كرسالة نصية مشفّرة عادية (رابط خرائط جوجل)
+        attachLocationBtn.addEventListener('click', () => {
+            attachmentMenu.classList.add('hidden');
+            if (!sharedKey || !currentChatId) return;
+            if (!navigator.geolocation) { alert("المتصفح ما يدعم تحديد الموقع"); return; }
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const text = `📍 موقعي: https://maps.google.com/?q=${latitude},${longitude}`;
+                const { iv, ciphertext } = await encryptMessage(sharedKey, text);
+                await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                    senderUid: currentUser.uid, iv, ciphertext, timestamp: serverTimestamp()
+                }));
+            }, () => alert("ما قدرت أوصل للموقع — تأكد من إعطاء المتصفح الإذن"));
+        });
+
+        // أي زر ثاني لسا ما بنيناه — على الأقل يرد بدل ما يكون ميت بالكامل
+        document.querySelectorAll('.coming-soon-btn').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                alert('هذي الميزة لسا ما بنيت — قريبًا إن شاء الله');
+            });
+        });
         closeContextBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
 
         reactionPicks.forEach(pick => {
@@ -773,7 +977,8 @@
         replyMsgBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
         forwardMsgBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
 
-        backToUsersBtn.addEventListener('click', () => {
+        backToUsersBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             chatPanel.classList.add('hidden');
             sidebarPanel.classList.remove('hidden');
         });
@@ -782,6 +987,11 @@
         messageInput.addEventListener('input', () => {
             if (messageInput.value.trim().length > 0) {
                 actionIcon.className = "fas fa-paper-plane -rotate-45 translate-x-0.5 text-sm";
+                const now = Date.now();
+                if (currentChatId && now - lastTypingWriteAt > 2000) {
+                    lastTypingWriteAt = now;
+                    setDoc(doc(db, "chats", currentChatId), { [`typing.${currentUser.uid}`]: serverTimestamp() }, { merge: true });
+                }
             } else {
                 actionIcon.className = "fas fa-microphone text-sm";
             }
@@ -849,45 +1059,169 @@
             openChat(userData);
         }
 
+        let cachedFriends = [];
+        let activeSidebarTab = 'all';
+
         function loadFriendsList() {
             onSnapshot(doc(db, "users", currentUser.uid), async (userSnap) => {
                 if (!userSnap.exists()) return;
-                const friendsArray = userSnap.data().friends || [];
+                currentUserProfile = userSnap.data();
+                const friendsArray = currentUserProfile.friends || [];
 
-                usersList.innerHTML = '';
-                if (friendsArray.length === 0) {
-                    usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">لا توجد محادثات نشطة<br>اضغط <i class="fas fa-user-plus"></i> لبدء محادثة جديدة</p>`;
-                    return;
-                }
-
+                const friends = [];
                 for (let friendUid of friendsArray) {
                     const friendDoc = await getDoc(doc(db, "users", friendUid));
-                    if (friendDoc.exists()) {
-                        const userData = friendDoc.data();
-                        const hue = contactHue(friendUid);
-                        const userEl = document.createElement('div');
-                        userEl.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5";
-                        userEl.innerHTML = `
-                            <img src="${safePhotoUrl(userData.photoURL)}" class="w-12 h-12 rounded-full object-cover" style="box-shadow: 0 0 0 2px hsl(${hue} 70% 55%);">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between mb-1">
-                                    <h3 class="font-bold text-sm truncate" style="color: hsl(${hue} 70% 72%);">${escapeHtml(userData.name)}</h3>
-                                    <span class="text-[10px] text-gray-400">11:42 م</span>
-                                </div>
-                                <p class="text-xs text-gray-400 truncate flex items-center gap-1">
-                                    <span class="text-blue-400 font-bold">✓✓</span> تمام، أشوفك بكرة
-                                </p>
-                            </div>
-                        `;
-                        userEl.addEventListener('click', () => openChat(userData));
-                        usersList.appendChild(userEl);
-                    }
+                    if (friendDoc.exists()) friends.push({ uid: friendUid, ...friendDoc.data() });
                 }
+                cachedFriends = friends;
+                renderFriendsList();
+            });
+        }
+
+        function renderFriendsList() {
+            if (activeSidebarTab === 'groups') {
+                usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">لا توجد مجموعات بعد<br>ميزة المجموعات قريبًا</p>`;
+                return;
+            }
+            if (activeSidebarTab === 'unread') {
+                usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">تتبّع الرسائل غير المقروءة قريبًا</p>`;
+                return;
+            }
+
+            let list = cachedFriends;
+            if (activeSidebarTab === 'favorites') {
+                const favs = currentUserProfile.favorites || [];
+                list = cachedFriends.filter(f => favs.includes(f.uid));
+            }
+
+            usersList.innerHTML = '';
+            if (list.length === 0) {
+                usersList.innerHTML = activeSidebarTab === 'favorites'
+                    ? `<p class="text-xs text-gray-500 text-center py-8">ما فيه محادثات مفضّلة بعد<br>اضغط ⭐ على أي محادثة لإضافتها</p>`
+                    : `<p class="text-xs text-gray-500 text-center py-8">لا توجد محادثات نشطة<br>اضغط <i class="fas fa-user-plus"></i> لبدء محادثة جديدة</p>`;
+                return;
+            }
+
+            list.forEach(userData => {
+                const hue = contactHue(userData.uid);
+                const isFav = (currentUserProfile.favorites || []).includes(userData.uid);
+                const userEl = document.createElement('div');
+                userEl.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5";
+                userEl.innerHTML = `
+                    <img src="${safePhotoUrl(userData.photoURL)}" class="w-12 h-12 rounded-full object-cover" style="box-shadow: 0 0 0 2px hsl(${hue} 70% 55%);">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-bold text-sm truncate" style="color: hsl(${hue} 70% 72%);">${escapeHtml(userData.name)}</h3>
+                            <span class="text-[10px] text-gray-400">11:42 م</span>
+                        </div>
+                        <p class="text-xs text-gray-400 truncate flex items-center gap-1">
+                            <span class="text-blue-400 font-bold">✓✓</span> تمام، أشوفك بكرة
+                        </p>
+                    </div>
+                    <button class="fav-star-btn text-base ${isFav ? 'text-amber-400' : 'text-gray-600'} shrink-0 px-1" title="${isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}">
+                        <i class="fas fa-star"></i>
+                    </button>
+                `;
+                userEl.addEventListener('click', () => openChat(userData));
+                userEl.querySelector('.fav-star-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(userData.uid);
+                });
+                usersList.appendChild(userEl);
+            });
+        }
+
+        async function toggleFavorite(uid) {
+            const favs = currentUserProfile.favorites || [];
+            const next = favs.includes(uid) ? favs.filter(u => u !== uid) : [...favs, uid];
+            currentUserProfile.favorites = next;
+            renderFriendsList();
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), { favorites: next }, { merge: true });
+            } catch (e) { /* ignore */ }
+        }
+
+        // ===== البحث: ما يقدر يصير Firestore query عادي لأن الرسائل مشفّرة =====
+        // نطلع كل رسائل كل محادثة، نفك تشفيرها محليًا بنفس مفتاح كل محادثة، ونقارن بالنص
+        async function runGlobalSearch() {
+            const term = searchInput.value.trim();
+            if (!term) {
+                searchResultsList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">اكتب كلمة أو اسم شخص وابدأ البحث</p>`;
+                return;
+            }
+            searchResultsList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">جاري البحث بكل محادثاتك...</p>`;
+
+            const lowerTerm = term.toLowerCase();
+            const results = [];
+
+            for (const friend of cachedFriends) {
+                if ((friend.name || '').toLowerCase().includes(lowerTerm) || (friend.username || '').toLowerCase().includes(lowerTerm)) {
+                    results.push({ friend, matchType: 'person' });
+                }
+
+                if (!friend.publicKeyJwk) continue; // ما نقدر نشتق مفتاح مشترك بدون مفتاحه العام
+                try {
+                    const chatId = [currentUser.uid, friend.uid].sort().join("_");
+                    const key = await deriveSharedKey(myPrivateKey, friend.publicKeyJwk);
+                    const snap = await getDocs(collection(db, "chats", chatId, "messages"));
+                    for (const docSnap of snap.docs) {
+                        const msg = docSnap.data();
+                        if (msg.type && msg.type !== 'text') continue; // نبحث بالنصوص فقط حاليًا
+                        if (!msg.iv || !msg.ciphertext) continue;
+                        const text = await decryptMessage(key, msg.iv, msg.ciphertext);
+                        if (text && text !== "[تعذّر فك التشفير]" && text.toLowerCase().includes(lowerTerm)) {
+                            results.push({ friend, matchType: 'message', snippet: text, timestamp: msg.timestamp });
+                        }
+                    }
+                } catch (e) { /* نتجاهل أي محادثة تفشل ونكمل الباقي */ }
+            }
+
+            results.sort((a, b) => {
+                if (a.matchType !== b.matchType) return a.matchType === 'person' ? -1 : 1;
+                const at = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+                const bt = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+                return bt - at;
+            });
+
+            renderSearchResults(results.slice(0, 50), term);
+        }
+
+        function renderSearchResults(results, term) {
+            if (results.length === 0) {
+                searchResultsList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">ما فيه نتائج لـ "${escapeHtml(term)}"</p>`;
+                return;
+            }
+            searchResultsList.innerHTML = '';
+            results.forEach(r => {
+                const hue = contactHue(r.friend.uid);
+                const el = document.createElement('div');
+                el.className = "p-3 flex items-center gap-3 hover:bg-white/5 cursor-pointer rounded-xl";
+                const subtitle = r.matchType === 'person'
+                    ? `شخص · @${escapeHtml(r.friend.username || '')}`
+                    : escapeHtml(r.snippet);
+                el.innerHTML = `
+                    <img src="${safePhotoUrl(r.friend.photoURL)}" class="w-10 h-10 rounded-full object-cover shrink-0" style="box-shadow: 0 0 0 2px hsl(${hue} 70% 55%);">
+                    <div class="min-w-0 flex-1 text-right">
+                        <p class="text-sm font-bold truncate" style="color: hsl(${hue} 70% 72%);">${escapeHtml(r.friend.name)}</p>
+                        <p class="text-[11px] text-gray-400 truncate">${subtitle}</p>
+                    </div>`;
+                el.addEventListener('click', () => {
+                    searchModal.classList.add('hidden');
+                    openChat(r.friend);
+                });
+                searchResultsList.appendChild(el);
             });
         }
 
         async function openChat(targetUser) {
             selectedUser = targetUser;
+
+            if (unsubscribeFriendStatus) { unsubscribeFriendStatus(); unsubscribeFriendStatus = null; }
+            if (unsubscribeTyping) { unsubscribeTyping(); unsubscribeTyping = null; }
+            friendIsTyping = false;
+            friendLastSeenMillis = null;
+            currentVanishDuration = 0;
+            updateVanishButton();
 
             if (window.innerWidth < 768) { sidebarPanel.classList.add('hidden'); }
             chatPanel.classList.remove('hidden');
@@ -918,6 +1252,22 @@
             sharedKey = await deriveSharedKey(myPrivateKey, targetUser.publicKeyJwk);
             chatHeaderStatus.textContent = "🔒 مشفّرة تمامًا (E2EE)";
             inputContainer.classList.remove('hidden');
+
+            unsubscribeFriendStatus = onSnapshot(doc(db, "users", targetUser.uid), (snap) => {
+                const data = snap.data();
+                friendLastSeenMillis = data?.lastSeen?.toMillis ? data.lastSeen.toMillis() : null;
+                updateChatHeaderStatus();
+            });
+            unsubscribeTyping = onSnapshot(doc(db, "chats", currentChatId), (snap) => {
+                const data = snap.data();
+                const t = data?.typing?.[targetUser.uid];
+                const millis = t?.toMillis ? t.toMillis() : 0;
+                friendIsTyping = (Date.now() - millis) < 4000;
+                updateChatHeaderStatus();
+
+                currentVanishDuration = data?.vanishDuration || 0;
+                updateVanishButton();
+            });
 
             loadMessages();
         }
@@ -980,18 +1330,121 @@
             if (rec.state !== 'inactive') rec.stop();
         }
 
+        function withVanish(payload) {
+            if (currentVanishDuration > 0) payload.expiresAt = Date.now() + currentVanishDuration * 1000;
+            return payload;
+        }
+
+        // ===== صور مشفّرة: نفس فكرة الرسائل الصوتية بالضبط — بس نضغطها أول عشان تدخل حد Firestore (1MB) =====
+        function resizeAndCompressImage(file, maxDim = 1280, startQuality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = (e) => { img.src = e.target.result; };
+                reader.onerror = () => reject(new Error("ما قدرت أقرأ الصورة"));
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+                    else if (height >= width && height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+                    let quality = startQuality;
+                    const tryExport = () => {
+                        canvas.toBlob((blob) => {
+                            if (!blob) { reject(new Error("فشل ضغط الصورة")); return; }
+                            if (blob.size > 500 * 1024 && quality > 0.25) {
+                                quality -= 0.15;
+                                tryExport();
+                            } else if (blob.size > 700 * 1024) {
+                                reject(new Error("الصورة كبيرة جدًا حتى بعد الضغط — جرب صورة ثانية"));
+                            } else {
+                                resolve(blob);
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+                    tryExport();
+                };
+                img.onerror = () => reject(new Error("ملف الصورة تالف أو غير مدعوم"));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function sendImageMessage(file) {
+            if (!sharedKey || !currentChatId) return;
+            try {
+                const blob = await resizeAndCompressImage(file);
+                const base64Image = await blobToBase64(blob);
+                const { iv, ciphertext } = await encryptMessage(sharedKey, base64Image);
+                await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                    senderUid: currentUser.uid,
+                    type: 'image',
+                    imageMime: 'image/jpeg',
+                    iv, ciphertext,
+                    timestamp: serverTimestamp()
+                }));
+            } catch (e) {
+                alert(e.message || "ما قدرت أرسل الصورة");
+            }
+        }
+
+        function handleImageInputChange(e) {
+            const file = e.target.files[0];
+            e.target.value = '';
+            if (file) sendImageMessage(file);
+        }
+        attachCameraBtn.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); cameraInput.click(); });
+        attachGalleryBtn.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); galleryInput.click(); });
+
+        // ===== مستندات مشفّرة: نفس فكرة الصور بالضبط، بدون ضغط (نقدر نضغط صورة، ما نقدر نضغط PDF) =====
+        // اسم الملف نفسه يدخل ضمن المشفّر عشان ما يتسرب حتى لو Firestore تعرّض للاختراق
+        const MAX_DOC_SIZE = 450 * 1024; // خام — بعد base64+تشفير+base64 يقترب من حد Firestore (1MB)
+
+        attachDocsBtn.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); docInput.click(); });
+        docInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            e.target.value = '';
+            if (file) sendDocumentMessage(file);
+        });
+
+        async function sendDocumentMessage(file) {
+            if (!sharedKey || !currentChatId) return;
+            if (file.size > MAX_DOC_SIZE) {
+                alert(`الملف كبير (${Math.round(file.size / 1024)} كيلوبايت) — الحد الأقصى حاليًا ${MAX_DOC_SIZE / 1024} كيلوبايت بسبب حد حجم مستند Firestore بعد التشفير`);
+                return;
+            }
+            try {
+                const base64File = await blobToBase64(file);
+                const payloadJson = JSON.stringify({ name: file.name, data: base64File });
+                const { iv, ciphertext } = await encryptMessage(sharedKey, payloadJson);
+                await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                    senderUid: currentUser.uid,
+                    type: 'file',
+                    fileMime: file.type || 'application/octet-stream',
+                    fileSize: file.size,
+                    iv, ciphertext,
+                    timestamp: serverTimestamp()
+                }));
+            } catch (e) {
+                alert("ما قدرت أرسل الملف");
+            }
+        }
+        cameraInput.addEventListener('change', handleImageInputChange);
+        galleryInput.addEventListener('change', handleImageInputChange);
+
         async function sendVoiceMessage(blob, durationSec) {
             if (!sharedKey) return;
             const base64Audio = await blobToBase64(blob);
             const { iv, ciphertext } = await encryptMessage(sharedKey, base64Audio);
-            await addDoc(collection(db, "chats", currentChatId, "messages"), {
+            await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
                 senderUid: currentUser.uid,
                 type: 'audio',
                 audioMime: recordingMimeType || 'audio/webm',
                 durationSec,
                 iv, ciphertext,
                 timestamp: serverTimestamp()
-            });
+            }));
         }
 
         async function sendMessage() {
@@ -1003,15 +1456,16 @@
 
             const { iv, ciphertext } = await encryptMessage(sharedKey, text);
 
-            await addDoc(collection(db, "chats", currentChatId, "messages"), {
+            await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
                 senderUid: currentUser.uid,
                 iv,
                 ciphertext,
                 timestamp: serverTimestamp()
-            });
+            }));
         }
 
-        let activeAudioUrls = [];
+        let activeBlobUrls = [];
+        let vanishTimeouts = [];
 
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
@@ -1022,12 +1476,21 @@
             );
 
             unsubscribeMessages = onSnapshot(q, async (snapshot) => {
-                activeAudioUrls.forEach(u => URL.revokeObjectURL(u));
-                activeAudioUrls = [];
+                activeBlobUrls.forEach(u => URL.revokeObjectURL(u));
+                activeBlobUrls = [];
+                vanishTimeouts.forEach(t => clearTimeout(t));
+                vanishTimeouts = [];
                 chatMessages.innerHTML = '';
 
                 for (const docSnap of snapshot.docs) {
                     const msg = docSnap.data();
+
+                    // رسالة مؤقتة تجاوزت وقتها — تُحذف بدل ما تُعرض
+                    if (msg.expiresAt && msg.expiresAt <= Date.now()) {
+                        deleteDoc(doc(db, "chats", currentChatId, "messages", docSnap.id)).catch(() => {});
+                        continue;
+                    }
+
                     const isMine = msg.senderUid === currentUser.uid;
 
                     const containerWrapper = document.createElement('div');
@@ -1047,13 +1510,44 @@
                             contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الرسالة الصوتية]</p>`;
                         } else {
                             const audioUrl = URL.createObjectURL(base64ToBlob(base64Audio, msg.audioMime || 'audio/webm'));
-                            activeAudioUrls.push(audioUrl);
+                            activeBlobUrls.push(audioUrl);
                             contentHtml = `<audio controls preload="metadata" src="${audioUrl}" class="max-w-[220px] h-10"></audio>`;
+                        }
+                    } else if (msg.type === 'image') {
+                        const base64Image = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                        if (base64Image === "[تعذّر فك التشفير]") {
+                            contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الصورة]</p>`;
+                        } else {
+                            const imageUrl = URL.createObjectURL(base64ToBlob(base64Image, msg.imageMime || 'image/jpeg'));
+                            activeBlobUrls.push(imageUrl);
+                            contentHtml = `<img src="${imageUrl}" class="msg-image rounded-xl max-w-[220px] max-h-[280px] w-full object-cover cursor-zoom-in">`;
+                        }
+                    } else if (msg.type === 'file') {
+                        const decryptedJson = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                        if (decryptedJson === "[تعذّر فك التشفير]") {
+                            contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الملف]</p>`;
+                        } else {
+                            try {
+                                const { name, data } = JSON.parse(decryptedJson);
+                                const fileUrl = URL.createObjectURL(base64ToBlob(data, msg.fileMime || 'application/octet-stream'));
+                                activeBlobUrls.push(fileUrl);
+                                const sizeLabel = msg.fileSize ? `${Math.round(msg.fileSize / 1024)} كيلوبايت` : '';
+                                contentHtml = `
+                                    <a href="${fileUrl}" download="${escapeHtml(name)}" class="flex items-center gap-3 bg-black/20 rounded-xl p-2.5 hover:bg-black/30 transition max-w-[220px]">
+                                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-lg shrink-0"><i class="fas fa-file-lines"></i></div>
+                                        <div class="min-w-0">
+                                            <p class="text-xs font-bold truncate">${escapeHtml(name)}</p>
+                                            <p class="text-[10px] opacity-70">${sizeLabel} · تنزيل</p>
+                                        </div>
+                                    </a>`;
+                            } catch (e) {
+                                contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[ملف تالف]</p>`;
+                            }
                         }
                     } else {
                         const decryptedText = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
                         plainTextForCopy = decryptedText;
-                        contentHtml = `<p class="text-sm leading-relaxed">${escapeHtml(decryptedText)}</p>`;
+                        contentHtml = `<p class="text-sm leading-relaxed">${linkify(escapeHtml(decryptedText))}</p>`;
                     }
 
                     const reactionEmojis = msg.reactions ? [...new Set(Object.values(msg.reactions))].join('') : '';
@@ -1064,11 +1558,26 @@
                     bubble.innerHTML = `
                         ${contentHtml}
                         <div class="flex items-center justify-end gap-1 text-[10px] opacity-75 mt-1">
+                            ${msg.expiresAt ? '<i class="fas fa-clock opacity-70" style="font-size:9px;"></i>' : ''}
                             <span>11:42 م</span>
                             ${isMine ? '<span class="text-blue-300 font-bold">✓✓</span>' : ''}
                         </div>
                         ${reactionBadge}
                     `;
+
+                    const imgEl = bubble.querySelector('.msg-image');
+                    if (imgEl) {
+                        imgEl.addEventListener('click', (e) => { e.stopPropagation(); window.open(imgEl.src, '_blank'); });
+                    }
+
+                    // جدولة حذف تلقائي للرسائل المؤقتة — بمجرد ما تنتهي مدتها تُحذف من Firestore
+                    // وهذا نفسه يعيد تشغيل onSnapshot فيعيد رسم القائمة بدون الرسالة المنتهية
+                    if (msg.expiresAt) {
+                        const msRemaining = msg.expiresAt - Date.now();
+                        vanishTimeouts.push(setTimeout(() => {
+                            deleteDoc(doc(db, "chats", currentChatId, "messages", docSnap.id)).catch(() => {});
+                        }, Math.max(0, msRemaining)));
+                    }
 
                     let pressTimer;
                     const openContext = () => {
@@ -1076,7 +1585,7 @@
                         selectedMessageSenderUid = msg.senderUid;
                         selectedMessageText = plainTextForCopy;
                         deleteMsgBtn.style.display = (msg.senderUid === currentUser.uid) ? 'flex' : 'none';
-                        copyMsgBtn.style.display = (msg.type === 'audio') ? 'none' : 'flex';
+                        copyMsgBtn.style.display = (msg.type === 'audio' || msg.type === 'image' || msg.type === 'file') ? 'none' : 'flex';
                         highlightedMessageBubble.innerHTML = bubble.outerHTML;
                         messageContextMenu.classList.remove('hidden');
                     };
