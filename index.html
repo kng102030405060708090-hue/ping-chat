@@ -24,11 +24,21 @@
             touch-action: manipulation;
             -webkit-text-size-adjust: 100%;
             user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
             overflow: hidden;
             height: 100vh;
             height: 100dvh;
             width: 100vw;
             margin: 0; padding: 0;
+        }
+
+        /* نسمح بالتحديد/اللصق الطبيعي بس داخل حقول الإدخال الفعلية */
+        input, textarea {
+            user-select: text;
+            -webkit-user-select: text;
+            -webkit-touch-callout: default;
         }
 
         .safe-top { padding-top: max(12px, env(safe-area-inset-top)); }
@@ -332,7 +342,7 @@
     </div>
 
     <!-- 5. الواجهة الرئيسية الكاملة للتطبيق -->
-    <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl app-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
+    <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl app-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10 relative">
         
         <!-- القائمة الجانبية للشاشات والدردشات -->
         <div id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full app-bg-dark">
@@ -433,7 +443,10 @@
             <div id="inputContainer" class="p-3 app-bg-header border-t border-white/10 hidden safe-bottom">
                 <div id="recordingBanner" style="display:none;" class="items-center justify-between px-2 pb-2 text-xs text-rose-400 max-w-5xl mx-auto">
                     <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span id="recordingTimer">0:00</span> جاري التسجيل بالمايك...</span>
-                    <button id="cancelRecordingBtn" class="text-gray-400 hover:text-white font-semibold">إلغاء</button>
+                    <div class="flex items-center gap-3">
+                        <button id="cancelRecordingBtn" class="text-gray-400 hover:text-white font-semibold">إلغاء</button>
+                        <button id="sendRecordingBtn" class="w-7 h-7 rounded-full bg-[#00a884] text-black flex items-center justify-center shrink-0"><i class="fas fa-paper-plane" style="font-size:11px; transform: rotate(-45deg);"></i></button>
+                    </div>
                 </div>
                 <div id="replyBanner" style="display:none;" class="items-center justify-between px-3 py-2 mb-2 rounded-xl bg-black/20 border-r-2 border-[#00a884] max-w-5xl mx-auto">
                     <div class="min-w-0">
@@ -578,6 +591,7 @@
         const recordingBanner = document.getElementById('recordingBanner');
         const recordingTimer = document.getElementById('recordingTimer');
         const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
+        const sendRecordingBtn = document.getElementById('sendRecordingBtn');
 
         const replyBanner = document.getElementById('replyBanner');
         const replyBannerText = document.getElementById('replyBannerText');
@@ -1310,6 +1324,91 @@
             sidebarPanel.classList.remove('hidden');
         });
 
+        // ===== سحب تفاعلي للخروج من المحادثة — يتبع إصبعك لحظيًا مع شفافية وعمق، زي iOS بالضبط =====
+        // يشتغل من أي مكان بالهيدر، أو بالسحب من حافة الشاشة اليسرى بأي مكان بالمحادثة
+        let swipeStartX = null, swipeStartY = null, swipeActive = false, swipeDragging = false, swipeScrimEl = null;
+        const SWIPE_EDGE_ZONE = 30;
+        const SWIPE_THRESHOLD = 90;
+        const isMobileLayout = () => window.innerWidth < 768;
+
+        function beginSwipeVisual() {
+            sidebarPanel.classList.remove('hidden');
+            sidebarPanel.style.position = 'relative';
+            chatPanel.style.position = 'absolute';
+            chatPanel.style.inset = '0';
+            chatPanel.style.zIndex = '30';
+            chatPanel.style.boxShadow = '-14px 0 40px rgba(0,0,0,0.4)';
+            chatPanel.style.willChange = 'transform, opacity';
+            swipeScrimEl = document.createElement('div');
+            swipeScrimEl.style.cssText = 'position:absolute;inset:0;background:#000;pointer-events:none;z-index:29;opacity:0.35;';
+            sidebarPanel.appendChild(swipeScrimEl);
+        }
+        function applySwipeVisual(dx) {
+            const width = chatPanel.offsetWidth || window.innerWidth;
+            const pct = Math.min(1, dx / width);
+            chatPanel.style.transform = `translateX(${dx}px) scale(${1 - pct * 0.04})`;
+            chatPanel.style.opacity = String(1 - pct * 0.55);
+            if (swipeScrimEl) swipeScrimEl.style.opacity = String(0.35 * (1 - pct));
+        }
+        function resetSwipeStyles() {
+            chatPanel.style.position = '';
+            chatPanel.style.inset = '';
+            chatPanel.style.zIndex = '';
+            chatPanel.style.boxShadow = '';
+            chatPanel.style.transform = '';
+            chatPanel.style.opacity = '';
+            chatPanel.style.transition = '';
+            chatPanel.style.willChange = '';
+            if (swipeScrimEl) { swipeScrimEl.remove(); swipeScrimEl = null; }
+        }
+        function completeSwipeExit() {
+            const width = chatPanel.offsetWidth || window.innerWidth;
+            chatPanel.style.transform = `translateX(${width}px) scale(0.96)`;
+            chatPanel.style.opacity = '0';
+            if (swipeScrimEl) swipeScrimEl.style.opacity = '0';
+            setTimeout(() => { chatPanel.classList.add('hidden'); resetSwipeStyles(); }, 280);
+        }
+        function cancelSwipeExit() {
+            chatPanel.style.transform = 'translateX(0) scale(1)';
+            chatPanel.style.opacity = '1';
+            if (swipeScrimEl) swipeScrimEl.style.opacity = '0';
+            setTimeout(() => { resetSwipeStyles(); if (isMobileLayout()) sidebarPanel.classList.add('hidden'); }, 280);
+        }
+
+        chatPanel.addEventListener('pointerdown', (e) => {
+            if (!isMobileLayout() || chatPanel.classList.contains('hidden')) return;
+            if (!chatHeader.contains(e.target) && e.clientX > SWIPE_EDGE_ZONE) return;
+            swipeStartX = e.clientX; swipeStartY = e.clientY;
+            swipeActive = true; swipeDragging = false;
+            chatPanel.style.transition = 'none';
+        });
+        window.addEventListener('pointermove', (e) => {
+            if (!swipeActive) return;
+            const dx = e.clientX - swipeStartX, dy = e.clientY - swipeStartY;
+            if (!swipeDragging) {
+                if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+                if (Math.abs(dy) > Math.abs(dx) || dx <= 0) { swipeActive = false; return; }
+                swipeDragging = true;
+                beginSwipeVisual();
+            }
+            e.preventDefault();
+            applySwipeVisual(Math.max(0, dx));
+        }, { passive: false });
+        window.addEventListener('pointerup', (e) => {
+            if (!swipeActive) return;
+            swipeActive = false;
+            if (!swipeDragging) { chatPanel.style.transition = ''; return; }
+            const dx = Math.max(0, e.clientX - swipeStartX);
+            chatPanel.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease';
+            if (dx > SWIPE_THRESHOLD) completeSwipeExit(); else cancelSwipeExit();
+        });
+        window.addEventListener('pointercancel', () => {
+            if (!swipeActive || !swipeDragging) { swipeActive = false; return; }
+            swipeActive = false;
+            chatPanel.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease';
+            cancelSwipeExit();
+        });
+
         // تحويل الميكروفون إلى أزرار إرسال عند الكتابة
         messageInput.addEventListener('input', () => {
             if (messageInput.value.trim().length > 0) {
@@ -1669,6 +1768,7 @@
                 recordingBanner.style.display = 'flex';
                 actionBtn.style.backgroundColor = '#e11d48';
                 actionBtn.classList.add('animate-pulse');
+                actionIcon.className = "fas fa-check text-sm";
                 recordingTimerInterval = setInterval(() => {
                     const secs = Math.floor((Date.now() - recordingStartTime) / 1000);
                     recordingTimer.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
@@ -1688,6 +1788,7 @@
             recordingBanner.style.display = 'none';
             actionBtn.style.backgroundColor = '';
             actionBtn.classList.remove('animate-pulse');
+            actionIcon.className = "fas fa-microphone text-sm";
 
             const rec = mediaRecorder;
             const elapsedMs = Date.now() - recordingStartTime;
@@ -1863,222 +1964,278 @@
             updateLastMessagePreview(text);
         }
 
-        let activeBlobUrls = [];
-        let vanishTimeouts = [];
+        // ===== عرض تدريجي بدل إعادة بناء القائمة كاملة كل تحديث =====
+        // قبل هذا التعديل، أي تغيير بسيط (رسالة جديدة، تفاعل، صوت وصل) كان يمسح كل
+        // الفقاعات ويعيد بناءها من الصفر — فتحس إنها "تحمّل من سيرفر" كل مرة بدل ما
+        // تكون ثابتة زي واتساب. الحين نلمس بس الرسالة اللي فعليًا تغيّرت.
+        let messageElements = {};    // msgId -> عنصر DOM
+        let messageBlobUrls = {};    // msgId -> روابط blob تخصّها (صوت/صورة/ملف)
+        let messageVanishTimers = {}; // msgId -> مؤقّت حذفها التلقائي
+
+        function cleanupMessageNode(msgId) {
+            if (messageElements[msgId]) { messageElements[msgId].remove(); delete messageElements[msgId]; }
+            if (messageBlobUrls[msgId]) { messageBlobUrls[msgId].forEach(u => URL.revokeObjectURL(u)); delete messageBlobUrls[msgId]; }
+            if (messageVanishTimers[msgId]) { clearTimeout(messageVanishTimers[msgId]); delete messageVanishTimers[msgId]; }
+        }
+
+        async function buildMessageWrapper(docSnap, isNew) {
+            const msg = docSnap.data();
+            const msgId = docSnap.id;
+            const localBlobUrls = [];
+            const isMine = msg.senderUid === currentUser.uid;
+
+            const containerWrapper = document.createElement('div');
+            containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'}${isNew ? ' message-pop' : ''}`;
+
+            const bubble = document.createElement('div');
+            bubble.setAttribute('dir', 'rtl');
+            bubble.className = `${isMine ? 'bubble-mine rounded-2xl rounded-br-xs ml-auto' : 'bubble-other rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3 shadow-md relative cursor-pointer`;
+            if (!isMine) bubble.style.backgroundColor = `hsl(${contactHue(msg.senderUid)} 32% 19%)`;
+
+            let contentHtml;
+            let plainTextForCopy = '';
+
+            if (msg.type === 'audio') {
+                const base64Audio = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                if (base64Audio === "[تعذّر فك التشفير]") {
+                    contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الرسالة الصوتية]</p>`;
+                } else {
+                    const audioBlob = base64ToBlob(base64Audio, msg.audioMime || 'audio/webm');
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    localBlobUrls.push(audioUrl);
+                    const bars = await computeWaveformBars(await audioBlob.arrayBuffer());
+                    contentHtml = buildVoicePlayerHtml(audioUrl, bars, msg.durationSec || 0);
+                }
+            } else if (msg.type === 'image') {
+                const base64Image = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                if (base64Image === "[تعذّر فك التشفير]") {
+                    contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الصورة]</p>`;
+                } else {
+                    const imageUrl = URL.createObjectURL(base64ToBlob(base64Image, msg.imageMime || 'image/jpeg'));
+                    localBlobUrls.push(imageUrl);
+                    contentHtml = `<img src="${imageUrl}" class="msg-image rounded-xl max-w-[220px] max-h-[280px] w-full object-cover cursor-zoom-in">`;
+                }
+            } else if (msg.type === 'file') {
+                const decryptedJson = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                if (decryptedJson === "[تعذّر فك التشفير]") {
+                    contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الملف]</p>`;
+                } else {
+                    try {
+                        const { name, data } = JSON.parse(decryptedJson);
+                        const fileUrl = URL.createObjectURL(base64ToBlob(data, msg.fileMime || 'application/octet-stream'));
+                        localBlobUrls.push(fileUrl);
+                        const sizeLabel = msg.fileSize ? `${Math.round(msg.fileSize / 1024)} كيلوبايت` : '';
+                        contentHtml = `
+                            <a href="${fileUrl}" download="${escapeHtml(name)}" class="flex items-center gap-3 bg-black/20 rounded-xl p-2.5 hover:bg-black/30 transition max-w-[220px]">
+                                <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-lg shrink-0"><i class="fas fa-file-lines"></i></div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold truncate">${escapeHtml(name)}</p>
+                                    <p class="text-[10px] opacity-70">${sizeLabel} · تنزيل</p>
+                                </div>
+                            </a>`;
+                    } catch (e) {
+                        contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[ملف تالف]</p>`;
+                    }
+                }
+            } else if (msg.type === 'poll') {
+                const decryptedJson = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                if (decryptedJson === "[تعذّر فك التشفير]") {
+                    contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الاستطلاع]</p>`;
+                } else {
+                    try {
+                        const { question, options } = JSON.parse(decryptedJson);
+                        const votes = msg.votes || {};
+                        const totalVotes = Object.keys(votes).length;
+                        const myVote = votes[currentUser.uid];
+                        const optionsHtml = options.map((opt, idx) => {
+                            const count = Object.values(votes).filter(v => v === idx).length;
+                            const pct = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
+                            const isMyChoice = myVote === idx;
+                            return `
+                                <div class="poll-option-row cursor-pointer rounded-lg p-2 mb-1.5 relative overflow-hidden ${isMyChoice ? 'ring-1 ring-[#00a884]' : ''}" data-msg-id="${msgId}" data-option-idx="${idx}" style="background: rgba(255,255,255,0.08);">
+                                    <div class="absolute inset-y-0 right-0 bg-[#00a884]/25" style="width:${pct}%;"></div>
+                                    <div class="relative flex items-center justify-between text-xs gap-2">
+                                        <span class="truncate">${isMyChoice ? '✓ ' : ''}${escapeHtml(opt)}</span>
+                                        <span class="opacity-70 shrink-0">${pct}%</span>
+                                    </div>
+                                </div>`;
+                        }).join('');
+                        contentHtml = `
+                            <div style="min-width:200px;">
+                                <p class="text-sm font-bold mb-2 flex items-center gap-1.5"><i class="fas fa-square-poll-vertical"></i> ${escapeHtml(question)}</p>
+                                ${optionsHtml}
+                                <p class="text-[10px] opacity-60 mt-1">${totalVotes} صوت</p>
+                            </div>`;
+                    } catch (e) {
+                        contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[استطلاع تالف]</p>`;
+                    }
+                }
+            } else {
+                const decryptedText = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                plainTextForCopy = decryptedText;
+                contentHtml = `<p class="text-sm leading-relaxed">${linkify(escapeHtml(decryptedText))}</p>`;
+            }
+
+            let replyHtml = '';
+            if (msg.replyPreview) {
+                const replyText = await decryptMessage(sharedKey, msg.replyPreview.iv, msg.replyPreview.ciphertext);
+                const isReplyMine = msg.replyPreview.senderUid === currentUser.uid;
+                replyHtml = `<div class="mb-1.5 pr-2 border-r-2 border-white/30 text-[11px] opacity-80 truncate">${isReplyMine ? 'أنت: ' : ''}${escapeHtml(replyText)}</div>`;
+            }
+
+            const reactionEmojis = msg.reactions ? [...new Set(Object.values(msg.reactions))].join('') : '';
+            const reactionBadge = reactionEmojis
+                ? `<div class="absolute -bottom-3 ${isMine ? 'left-1' : 'right-1'} bg-[#2a3942] rounded-full px-1.5 py-0.5 text-[11px] shadow-md border border-black/20">${escapeHtml(reactionEmojis)}</div>`
+                : '';
+
+            bubble.innerHTML = `
+                ${replyHtml}
+                ${contentHtml}
+                <div class="flex items-center justify-end gap-1 text-[10px] opacity-75 mt-1">
+                    ${msg.expiresAt ? '<i class="fas fa-clock opacity-70" style="font-size:9px;"></i>' : ''}
+                    <span>${formatMsgTime(msg.timestamp)}</span>
+                    ${isMine ? '<span class="text-gray-300">✓</span>' : ''}
+                </div>
+                ${reactionBadge}
+            `;
+
+            const imgEl = bubble.querySelector('.msg-image');
+            if (imgEl) {
+                imgEl.addEventListener('click', (e) => { e.stopPropagation(); window.open(imgEl.src, '_blank'); });
+            }
+            wireVoicePlayer(bubble, msg.durationSec || 0);
+
+            bubble.querySelectorAll('.poll-option-row').forEach(row => {
+                row.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(row.dataset.optionIdx, 10);
+                    try {
+                        await updateDoc(doc(db, "chats", currentChatId, "messages", row.dataset.msgId), {
+                            [`votes.${currentUser.uid}`]: idx
+                        });
+                    } catch (err) { /* ignore */ }
+                });
+            });
+
+            messageBlobUrls[msgId] = localBlobUrls;
+
+            if (messageVanishTimers[msgId]) clearTimeout(messageVanishTimers[msgId]);
+            if (msg.expiresAt) {
+                const msRemaining = msg.expiresAt - Date.now();
+                messageVanishTimers[msgId] = setTimeout(() => {
+                    deleteDoc(doc(db, "chats", currentChatId, "messages", msgId)).catch(() => {});
+                }, Math.max(0, msRemaining));
+            }
+
+            let pressTimer;
+            const openContext = () => {
+                selectedMessageId = msgId;
+                selectedMessageSenderUid = msg.senderUid;
+                selectedMessageText = plainTextForCopy;
+                selectedMessageType = msg.type || 'text';
+                deleteMsgBtn.style.display = (msg.senderUid === currentUser.uid) ? 'flex' : 'none';
+                copyMsgBtn.style.display = (msg.type === 'audio' || msg.type === 'image' || msg.type === 'file' || msg.type === 'poll') ? 'none' : 'flex';
+                highlightedMessageBubble.innerHTML = bubble.outerHTML;
+                messageContextMenu.classList.remove('hidden');
+            };
+            bubble.addEventListener('pointerdown', () => { pressTimer = setTimeout(openContext, 400); });
+            bubble.addEventListener('pointerup', () => clearTimeout(pressTimer));
+            bubble.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+            bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); openContext(); });
+
+            containerWrapper.appendChild(bubble);
+            return containerWrapper;
+        }
 
         const MESSAGES_LIMIT = 60;
 
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
+            Object.keys(messageElements).forEach(cleanupMessageNode);
+            messageElements = {}; messageBlobUrls = {}; messageVanishTimers = {};
+            chatMessages.innerHTML = '';
 
             // نجيب أحدث 60 رسالة (الأجدد أول) بدل كل التاريخ، حتى ما نعيد فك تشفير محادثة كاملة
-            // كل ما يصير تغيير بسيط (تفاعل، رسالة جديدة). نعكس الترتيب بعدين للعرض الطبيعي.
+            // كل ما يصير تغيير بسيط. نعكس الترتيب بعدين للعرض الطبيعي بالتحميل الأول.
             const q = query(
                 collection(db, "chats", currentChatId, "messages"),
                 orderBy("timestamp", "desc"),
                 limit(MESSAGES_LIMIT)
             );
 
+            let firstLoad = true;
+
             unsubscribeMessages = onSnapshot(q, async (snapshot) => {
-                activeBlobUrls.forEach(u => URL.revokeObjectURL(u));
-                activeBlobUrls = [];
-                vanishTimeouts.forEach(t => clearTimeout(t));
-                vanishTimeouts = [];
-                chatMessages.innerHTML = '';
+                if (firstLoad) {
+                    firstLoad = false;
+                    const orderedDocs = [...snapshot.docs].reverse();
+                    for (const docSnap of orderedDocs) {
+                        const msg = docSnap.data();
+                        if (msg.expiresAt && msg.expiresAt <= Date.now()) {
+                            deleteDoc(doc(db, "chats", currentChatId, "messages", docSnap.id)).catch(() => {});
+                            continue;
+                        }
+                        const wrapper = await buildMessageWrapper(docSnap, false);
+                        messageElements[docSnap.id] = wrapper;
+                        chatMessages.appendChild(wrapper);
+                    }
+                    updateTypingBubble();
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    return;
+                }
 
-                const orderedDocs = [...snapshot.docs].reverse();
-                for (const docSnap of orderedDocs) {
-                    const msg = docSnap.data();
+                const changes = snapshot.docChanges();
+                const addedChanges = changes.filter(c => c.type === 'added');
+                const otherChanges = changes.filter(c => c.type !== 'added');
 
-                    // رسالة مؤقتة تجاوزت وقتها — تُحذف بدل ما تُعرض
+                for (const change of otherChanges) {
+                    const msgId = change.doc.id;
+                    if (change.type === 'removed') { cleanupMessageNode(msgId); continue; }
+                    const msg = change.doc.data();
                     if (msg.expiresAt && msg.expiresAt <= Date.now()) {
-                        deleteDoc(doc(db, "chats", currentChatId, "messages", docSnap.id)).catch(() => {});
+                        deleteDoc(doc(db, "chats", currentChatId, "messages", msgId)).catch(() => {});
+                        cleanupMessageNode(msgId);
                         continue;
                     }
-
-                    const isMine = msg.senderUid === currentUser.uid;
-
-                    const containerWrapper = document.createElement('div');
-                    containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} message-pop`;
-
-                    const bubble = document.createElement('div');
-                    bubble.setAttribute('dir', 'rtl');
-                    bubble.className = `${isMine ? 'bubble-mine rounded-2xl rounded-br-xs ml-auto' : 'bubble-other rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3 shadow-md relative cursor-pointer`;
-                    if (!isMine) bubble.style.backgroundColor = `hsl(${contactHue(msg.senderUid)} 32% 19%)`;
-
-                    let contentHtml;
-                    let plainTextForCopy = '';
-
-                    if (msg.type === 'audio') {
-                        const base64Audio = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
-                        if (base64Audio === "[تعذّر فك التشفير]") {
-                            contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الرسالة الصوتية]</p>`;
-                        } else {
-                            const audioBlob = base64ToBlob(base64Audio, msg.audioMime || 'audio/webm');
-                            const audioUrl = URL.createObjectURL(audioBlob);
-                            activeBlobUrls.push(audioUrl);
-                            const bars = await computeWaveformBars(await audioBlob.arrayBuffer());
-                            contentHtml = buildVoicePlayerHtml(audioUrl, bars, msg.durationSec || 0);
-                        }
-                    } else if (msg.type === 'image') {
-                        const base64Image = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
-                        if (base64Image === "[تعذّر فك التشفير]") {
-                            contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الصورة]</p>`;
-                        } else {
-                            const imageUrl = URL.createObjectURL(base64ToBlob(base64Image, msg.imageMime || 'image/jpeg'));
-                            activeBlobUrls.push(imageUrl);
-                            contentHtml = `<img src="${imageUrl}" class="msg-image rounded-xl max-w-[220px] max-h-[280px] w-full object-cover cursor-zoom-in">`;
-                        }
-                    } else if (msg.type === 'file') {
-                        const decryptedJson = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
-                        if (decryptedJson === "[تعذّر فك التشفير]") {
-                            contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الملف]</p>`;
-                        } else {
-                            try {
-                                const { name, data } = JSON.parse(decryptedJson);
-                                const fileUrl = URL.createObjectURL(base64ToBlob(data, msg.fileMime || 'application/octet-stream'));
-                                activeBlobUrls.push(fileUrl);
-                                const sizeLabel = msg.fileSize ? `${Math.round(msg.fileSize / 1024)} كيلوبايت` : '';
-                                contentHtml = `
-                                    <a href="${fileUrl}" download="${escapeHtml(name)}" class="flex items-center gap-3 bg-black/20 rounded-xl p-2.5 hover:bg-black/30 transition max-w-[220px]">
-                                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-lg shrink-0"><i class="fas fa-file-lines"></i></div>
-                                        <div class="min-w-0">
-                                            <p class="text-xs font-bold truncate">${escapeHtml(name)}</p>
-                                            <p class="text-[10px] opacity-70">${sizeLabel} · تنزيل</p>
-                                        </div>
-                                    </a>`;
-                            } catch (e) {
-                                contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[ملف تالف]</p>`;
-                            }
-                        }
-                    } else if (msg.type === 'poll') {
-                        const decryptedJson = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
-                        if (decryptedJson === "[تعذّر فك التشفير]") {
-                            contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الاستطلاع]</p>`;
-                        } else {
-                            try {
-                                const { question, options } = JSON.parse(decryptedJson);
-                                const votes = msg.votes || {};
-                                const totalVotes = Object.keys(votes).length;
-                                const myVote = votes[currentUser.uid];
-                                const optionsHtml = options.map((opt, idx) => {
-                                    const count = Object.values(votes).filter(v => v === idx).length;
-                                    const pct = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
-                                    const isMyChoice = myVote === idx;
-                                    return `
-                                        <div class="poll-option-row cursor-pointer rounded-lg p-2 mb-1.5 relative overflow-hidden ${isMyChoice ? 'ring-1 ring-[#00a884]' : ''}" data-msg-id="${docSnap.id}" data-option-idx="${idx}" style="background: rgba(255,255,255,0.08);">
-                                            <div class="absolute inset-y-0 right-0 bg-[#00a884]/25" style="width:${pct}%;"></div>
-                                            <div class="relative flex items-center justify-between text-xs gap-2">
-                                                <span class="truncate">${isMyChoice ? '✓ ' : ''}${escapeHtml(opt)}</span>
-                                                <span class="opacity-70 shrink-0">${pct}%</span>
-                                            </div>
-                                        </div>`;
-                                }).join('');
-                                contentHtml = `
-                                    <div style="min-width:200px;">
-                                        <p class="text-sm font-bold mb-2 flex items-center gap-1.5"><i class="fas fa-square-poll-vertical"></i> ${escapeHtml(question)}</p>
-                                        ${optionsHtml}
-                                        <p class="text-[10px] opacity-60 mt-1">${totalVotes} صوت</p>
-                                    </div>`;
-                            } catch (e) {
-                                contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[استطلاع تالف]</p>`;
-                            }
-                        }
-                    } else {
-                        const decryptedText = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
-                        plainTextForCopy = decryptedText;
-                        contentHtml = `<p class="text-sm leading-relaxed">${linkify(escapeHtml(decryptedText))}</p>`;
-                    }
-
-                    let replyHtml = '';
-                    if (msg.replyPreview) {
-                        const replyText = await decryptMessage(sharedKey, msg.replyPreview.iv, msg.replyPreview.ciphertext);
-                        const isReplyMine = msg.replyPreview.senderUid === currentUser.uid;
-                        replyHtml = `<div class="mb-1.5 pr-2 border-r-2 border-white/30 text-[11px] opacity-80 truncate">${isReplyMine ? 'أنت: ' : ''}${escapeHtml(replyText)}</div>`;
-                    }
-
-                    const reactionEmojis = msg.reactions ? [...new Set(Object.values(msg.reactions))].join('') : '';
-                    const reactionBadge = reactionEmojis
-                        ? `<div class="absolute -bottom-3 ${isMine ? 'left-1' : 'right-1'} bg-[#2a3942] rounded-full px-1.5 py-0.5 text-[11px] shadow-md border border-black/20">${escapeHtml(reactionEmojis)}</div>`
-                        : '';
-
-                    bubble.innerHTML = `
-                        ${replyHtml}
-                        ${contentHtml}
-                        <div class="flex items-center justify-end gap-1 text-[10px] opacity-75 mt-1">
-                            ${msg.expiresAt ? '<i class="fas fa-clock opacity-70" style="font-size:9px;"></i>' : ''}
-                            <span>${formatMsgTime(msg.timestamp)}</span>
-                            ${isMine ? '<span class="text-gray-300">✓</span>' : ''}
-                        </div>
-                        ${reactionBadge}
-                    `;
-
-                    const imgEl = bubble.querySelector('.msg-image');
-                    if (imgEl) {
-                        imgEl.addEventListener('click', (e) => { e.stopPropagation(); window.open(imgEl.src, '_blank'); });
-                    }
-                    wireVoicePlayer(bubble, msg.durationSec || 0);
-
-                    bubble.querySelectorAll('.poll-option-row').forEach(row => {
-                        row.addEventListener('click', async (e) => {
-                            e.stopPropagation();
-                            const msgId = row.dataset.msgId;
-                            const idx = parseInt(row.dataset.optionIdx, 10);
-                            try {
-                                await updateDoc(doc(db, "chats", currentChatId, "messages", msgId), {
-                                    [`votes.${currentUser.uid}`]: idx
-                                });
-                            } catch (err) { /* ignore */ }
-                        });
-                    });
-
-                    // جدولة حذف تلقائي للرسائل المؤقتة — بمجرد ما تنتهي مدتها تُحذف من Firestore
-                    // وهذا نفسه يعيد تشغيل onSnapshot فيعيد رسم القائمة بدون الرسالة المنتهية
-                    if (msg.expiresAt) {
-                        const msRemaining = msg.expiresAt - Date.now();
-                        vanishTimeouts.push(setTimeout(() => {
-                            deleteDoc(doc(db, "chats", currentChatId, "messages", docSnap.id)).catch(() => {});
-                        }, Math.max(0, msRemaining)));
-                    }
-
-                    let pressTimer;
-                    const openContext = () => {
-                        selectedMessageId = docSnap.id;
-                        selectedMessageSenderUid = msg.senderUid;
-                        selectedMessageText = plainTextForCopy;
-                        selectedMessageType = msg.type || 'text';
-                        deleteMsgBtn.style.display = (msg.senderUid === currentUser.uid) ? 'flex' : 'none';
-                        copyMsgBtn.style.display = (msg.type === 'audio' || msg.type === 'image' || msg.type === 'file' || msg.type === 'poll') ? 'none' : 'flex';
-                        highlightedMessageBubble.innerHTML = bubble.outerHTML;
-                        messageContextMenu.classList.remove('hidden');
-                    };
-                    bubble.addEventListener('pointerdown', () => { pressTimer = setTimeout(openContext, 400); });
-                    bubble.addEventListener('pointerup', () => clearTimeout(pressTimer));
-                    bubble.addEventListener('pointerleave', () => clearTimeout(pressTimer));
-                    bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); openContext(); });
-
-                    containerWrapper.appendChild(bubble);
-                    chatMessages.appendChild(containerWrapper);
+                    const oldWrapper = messageElements[msgId];
+                    const oldBlobUrls = messageBlobUrls[msgId];
+                    const newWrapper = await buildMessageWrapper(change.doc, false);
+                    if (oldWrapper) oldWrapper.replaceWith(newWrapper); else chatMessages.appendChild(newWrapper);
+                    messageElements[msgId] = newWrapper;
+                    if (oldBlobUrls) oldBlobUrls.forEach(u => URL.revokeObjectURL(u));
                 }
+
+                // الاستعلام تنازلي، فنعكس ترتيب أي دفعة إضافات وصلت مرة وحدة حتى ترتّب زمنيًا صح
+                addedChanges.reverse();
+                for (const change of addedChanges) {
+                    const msgId = change.doc.id;
+                    const msg = change.doc.data();
+                    if (msg.expiresAt && msg.expiresAt <= Date.now()) {
+                        deleteDoc(doc(db, "chats", currentChatId, "messages", msgId)).catch(() => {});
+                        continue;
+                    }
+                    const wrapper = await buildMessageWrapper(change.doc, true);
+                    messageElements[msgId] = wrapper;
+                    chatMessages.appendChild(wrapper);
+                }
+
                 updateTypingBubble();
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
         }
 
+        // تسجيل صوتي بالضغط (مو بالإمساك) — أوثق بكثير: بداية ونهاية واضحتين، بدون
+        // اعتماد على استمرار إصبعك على الزر (اللي كان يفشل أحيانًا لو تأخر إذن المايك)
         actionBtn.addEventListener('click', () => {
             if (messageInput.value.trim().length > 0) {
                 sendMessage();
-            }
-        });
-        actionBtn.addEventListener('pointerdown', (e) => {
-            if (messageInput.value.trim().length === 0) {
-                e.preventDefault();
-                actionBtn.setPointerCapture(e.pointerId);
+            } else if (mediaRecorder) {
+                finishRecording(true);
+            } else {
                 startRecording();
             }
         });
-        actionBtn.addEventListener('pointerup', () => { if (mediaRecorder) finishRecording(true); });
-        actionBtn.addEventListener('pointercancel', () => { if (mediaRecorder) finishRecording(false); });
+        sendRecordingBtn.addEventListener('click', () => finishRecording(true));
         cancelRecordingBtn.addEventListener('click', () => finishRecording(false));
 
         messageInput.addEventListener('keypress', (e) => {
