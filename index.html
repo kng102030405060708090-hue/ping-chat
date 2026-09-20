@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <!-- دعم المنطقة الآمنة ومنع التكبير والتداخل مع شريط الحالة للجوال -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ping Secure - WhatsApp Web Style</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,8 +11,12 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Readex+Pro:wght@300;400;500;600;700&display=swap');
         
         :root {
-            --sat: env(safe-area-inset-top);
-            --sab: env(safe-area-inset-bottom);
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
 
         html, body { 
@@ -24,18 +27,24 @@
             -webkit-text-size-adjust: 100%;
             user-select: none;
             overflow: hidden;
-            height: 100%;
-            width: 100%;
-            padding-top: var(--sat);
-            padding-bottom: var(--sab);
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
         }
 
-        /* إضافة مسافة أمان علوية تجنباً لأبراج الشبكة والبطارية */
-        .safe-padding-top {
-            padding-top: max(12px, env(safe-area-inset-top));
+        /* حماية الهيدر والشريط العلوي للجوال من أجهزة النوتش */
+        .safe-header {
+            padding-top: max(16px, env(safe-area-inset-top));
         }
 
-        /* ألوان خلفيات واتساب */
+        /* حماية حقل الإدخال السفلي من شريط التنقل للآيفون والجوالات الحديثة */
+        .safe-bottom {
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+
+        /* ألوان واجهة واتساب الداكنة */
         .wa-bg-dark { background-color: #111b21; }
         .wa-bg-header { background-color: #202c33; }
         .wa-bg-chat { background-color: #0b141a; }
@@ -44,7 +53,7 @@
         .wa-bubble-mine { background-color: #005c4b; color: #e9edef; }
         .wa-bubble-other { background-color: #202c33; color: #e9edef; }
 
-        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 10px; }
 
@@ -57,10 +66,10 @@
         }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex items-center justify-center p-0 md:p-4 bg-[#0c1317]">
+<body class="h-[100dvh] w-screen overflow-hidden flex items-center justify-center p-0 bg-[#0c1317]">
 
     <!-- 1. شاشة تسجيل الدخول -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0c1317]/90 backdrop-blur-xl safe-padding-top">
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0c1317]/95 backdrop-blur-xl safe-header safe-bottom">
         <div class="wa-bg-dark rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative border border-white/10">
             <div class="w-20 h-20 bg-[#25d366] rounded-full flex items-center justify-center text-white text-4xl mx-auto mb-6 shadow-xl">
                 <i class="fab fa-whatsapp"></i>
@@ -75,13 +84,13 @@
     </div>
 
     <!-- 2. نافذة تعديل البروفايل -->
-    <div id="profileModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-padding-top">
+    <div id="profileModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-header safe-bottom">
         <div class="wa-bg-dark rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
             <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-3">
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
                     <i class="fas fa-user-gear text-[#00a884]"></i> تعديل الملف الشخصي
                 </h3>
-                <button id="closeProfileBtn" class="text-gray-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+                <button id="closeProfileBtn" class="text-gray-400 hover:text-white p-2"><i class="fas fa-times text-lg"></i></button>
             </div>
 
             <div class="space-y-4">
@@ -125,13 +134,13 @@
     </div>
 
     <!-- 3. نافذة طلبات المحادثة المعلقة -->
-    <div id="requestsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-padding-top">
+    <div id="requestsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-header safe-bottom">
         <div class="wa-bg-dark rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
             <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
                     <i class="fas fa-bell text-amber-400"></i> طلبات المراسلة المعلقة
                 </h3>
-                <button id="closeRequestsBtn" class="text-gray-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+                <button id="closeRequestsBtn" class="text-gray-400 hover:text-white p-2"><i class="fas fa-times text-lg"></i></button>
             </div>
             <div id="requestsListContainer" class="space-y-3 max-h-60 overflow-y-auto my-4">
                 <!-- طلبات الصداقة -->
@@ -140,13 +149,13 @@
     </div>
 
     <!-- 4. نافذة إرسال طلب محادثة جديد -->
-    <div id="addUserModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-padding-top">
+    <div id="addUserModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl safe-header safe-bottom">
         <div class="wa-bg-dark rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10">
             <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
                 <h3 class="font-bold text-lg text-white flex items-center gap-2">
                     <i class="fas fa-user-plus text-[#00a884]"></i> إرسال طلب محادثة
                 </h3>
-                <button id="closeAddUserBtn" class="text-gray-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+                <button id="closeAddUserBtn" class="text-gray-400 hover:text-white p-2"><i class="fas fa-times text-lg"></i></button>
             </div>
             <p class="text-xs text-gray-400 mb-4">أدخل اسم المستخدم (@username) لإرسال طلب محادثة:</p>
             <div class="flex items-center wa-bg-header border border-white/10 rounded-xl px-3 py-2.5 mb-4">
@@ -160,23 +169,24 @@
     </div>
 
     <!-- 5. عارض صور المشاهدة لمرة واحدة (View Once) -->
-    <div id="viewOnceModal" class="fixed inset-0 z-50 hidden flex flex-col items-center justify-center p-4 bg-black/95 backdrop-blur-2xl safe-padding-top">
-        <div class="absolute top-4 right-4 text-white text-xs bg-slate-800 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10">
+    <div id="viewOnceModal" class="fixed inset-0 z-50 hidden flex flex-col items-center justify-center p-4 bg-black/95 backdrop-blur-2xl safe-header safe-bottom">
+        <div class="absolute top-6 right-4 text-white text-xs bg-slate-800 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10">
             <i class="fas fa-eye text-amber-400"></i> صورة للعرض مرة واحدة فقط
         </div>
-        <img id="viewOnceImg" class="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl mb-6">
+        <img id="viewOnceImg" class="max-w-full max-h-[75vh] rounded-2xl object-contain shadow-2xl mb-6">
         <button id="closeViewOnceBtn" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 px-8 rounded-2xl transition shadow-lg">
             إغلاق وحذف الصورة نهائياً
         </button>
     </div>
 
-    <!-- 6. واجهة التطبيق الرئيسية مع مسافة أمان علوية للجوالات -->
-    <div id="mainApp" class="hidden w-full h-full max-w-7xl h-[100vh] md:h-[95vh] wa-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border border-white/10">
+    <!-- 6. واجهة التطبيق الرئيسية الشاملة للجوال بدون أي تداخل -->
+    <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl wa-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
         
         <!-- القائمة الجانبية (الأصدقاء) -->
         <div id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full wa-bg-dark">
             
-            <div class="p-3 wa-bg-header flex items-center justify-between safe-padding-top">
+            <!-- الهيدر العلوي المحمي للجوال -->
+            <div class="p-3 wa-bg-header flex items-center justify-between safe-header">
                 <div class="flex items-center gap-3 cursor-pointer" id="openProfileBtn">
                     <img id="myAvatar" class="w-10 h-10 rounded-full object-cover ring-1 ring-white/20">
                     <div>
@@ -218,9 +228,10 @@
         <!-- منطقة المحادثة الرئيسية -->
         <div id="chatPanel" class="hidden md:flex flex-1 flex-col h-full wa-bg-chat relative">
             
-            <div id="chatHeader" class="p-3 wa-bg-header flex items-center justify-between shadow-sm z-10 border-b border-white/10 safe-padding-top">
+            <!-- الهيدر العلوي لشاشة المحادثة المحمي للجوال -->
+            <div id="chatHeader" class="p-3 wa-bg-header flex items-center justify-between shadow-sm z-10 border-b border-white/10 safe-header">
                 <div class="flex items-center gap-3">
-                    <button id="backToUsersBtn" class="md:hidden text-[#00a884] hover:text-[#008f70] text-xl p-1 font-bold flex items-center" title="رجوع">
+                    <button id="backToUsersBtn" class="md:hidden text-[#00a884] hover:text-[#008f70] text-xl p-1.5 font-bold flex items-center" title="رجوع">
                         <i class="fas fa-arrow-right"></i>
                     </button>
 
@@ -240,6 +251,7 @@
                 </div>
             </div>
 
+            <!-- منطقة الرسائل -->
             <div id="chatMessages" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-3 wa-bg-chat">
                 <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3">
                     <div class="w-16 h-16 rounded-full wa-bg-header flex items-center justify-center text-3xl text-[#00a884]">
@@ -249,9 +261,10 @@
                 </div>
             </div>
 
-            <!-- شريط الكتابة وأدوات واتساب -->
-            <div id="inputContainer" class="p-3 wa-bg-header border-t border-white/10 hidden">
+            <!-- شريط الكتابة وأدوات الإدخال المحمي سفلياً من حواف الجوال -->
+            <div id="inputContainer" class="p-3 wa-bg-header border-t border-white/10 hidden safe-bottom">
                 <div class="flex items-center gap-2 max-w-5xl mx-auto">
+                    
                     <label for="imageInput" id="uploadLabel" class="cursor-pointer text-gray-400 hover:text-white p-2 rounded-full transition flex items-center justify-center" title="إرفاق صورة">
                         <i class="fas fa-paperclip text-lg" id="uploadIcon"></i>
                     </label>
