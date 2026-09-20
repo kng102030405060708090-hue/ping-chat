@@ -6,7 +6,6 @@
     <title>Ping Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Readex+Pro:wght@300;400;500;600;700&display=swap');
         
@@ -166,6 +165,26 @@
             </button>
             <button id="closeContextBtn" class="w-full bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-center text-gray-400 mt-2">
                 إلغاء
+            </button>
+        </div>
+    </div>
+
+    <!-- 4.5 نافذة تأمين المفتاح الخاص بكلمة مرور/PIN -->
+    <div id="pinModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-[#0b141a]/95 backdrop-blur-xl safe-top safe-bottom">
+        <div class="app-bg-dark rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative border border-white/10">
+            <div class="w-16 h-16 bg-[#00a884]/15 rounded-full flex items-center justify-center text-[#00a884] text-3xl mx-auto mb-5">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <h2 id="pinModalTitle" class="text-2xl font-extrabold text-white mb-2">تأمين مفتاح التشفير</h2>
+            <p id="pinModalSubtitle" class="text-gray-400 mb-6 text-sm leading-relaxed">اختر كلمة مرور أو رمز PIN لحماية مفتاحك الخاص على هذا الجهاز.</p>
+
+            <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="كلمة المرور / PIN" class="w-full app-bg-input text-white placeholder-gray-500 rounded-2xl px-4 py-3 text-sm text-center focus:outline-none border border-white/5 mb-3 tracking-widest">
+            <input id="pinConfirmInput" type="password" inputmode="numeric" autocomplete="off" placeholder="تأكيد كلمة المرور / PIN" class="w-full app-bg-input text-white placeholder-gray-500 rounded-2xl px-4 py-3 text-sm text-center focus:outline-none border border-white/5 mb-3 tracking-widest hidden">
+
+            <p id="pinError" class="text-rose-400 text-xs mb-3 hidden"></p>
+
+            <button id="pinSubmitBtn" class="w-full bg-[#00a884] hover:bg-[#008f70] text-black font-bold py-3.5 px-6 rounded-2xl transition duration-300 shadow-lg">
+                تأكيد
             </button>
         </div>
     </div>
@@ -335,33 +354,201 @@
         const highlightedMessageBubble = document.getElementById('highlightedMessageBubble');
         const closeContextBtn = document.getElementById('closeContextBtn');
 
+        const pinModal = document.getElementById('pinModal');
+        const pinModalTitle = document.getElementById('pinModalTitle');
+        const pinModalSubtitle = document.getElementById('pinModalSubtitle');
+        const pinInput = document.getElementById('pinInput');
+        const pinConfirmInput = document.getElementById('pinConfirmInput');
+        const pinError = document.getElementById('pinError');
+        const pinSubmitBtn = document.getElementById('pinSubmitBtn');
+
         let currentUser = null;
         let currentUserProfile = null;
         let selectedUser = null;
         let currentChatId = null;
-        let secretEncryptionKey = null;
+        let myPrivateKey = null;      // مفتاحي الخاص - لا يغادر هذا الجهاز أبدًا
+        let sharedKey = null;         // المفتاح المشترك المشتق لهذه المحادثة تحديدًا
         let unsubscribeMessages = null;
 
-        function encryptData(text, key) {
-            if (!text) return "";
-            return CryptoJS.AES.encrypt(text, key).toString();
+        // ===== تشفير حقيقي من طرف إلى طرف (E2EE) عبر ECDH + AES-GCM =====
+        // الفكرة: كل مستخدم عنده زوج مفاتيح (خاص/عام). العام يُنشر في Firestore،
+        // والخاص يبقى محليًا فقط (localStorage) ولا يُرسل لأي سيرفر أبدًا.
+        // عند فتح محادثة، كل طرف يشتق نفس المفتاح المشترك رياضيًا من
+        // (مفتاحه الخاص + المفتاح العام للطرف الآخر) دون أن يمر هذا المفتاح
+        // المشترك عبر الشبكة إطلاقًا — هذا هو الفرق عن النسخة القديمة.
+        const ECDH_ALG = { name: "ECDH", namedCurve: "P-256" };
+        const textEnc = new TextEncoder();
+        const textDec = new TextDecoder();
+
+        function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+        function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+
+        // ===== طبقة حماية إضافية: تشفير المفتاح الخاص بكلمة مرور/PIN قبل تخزينه =====
+        // بدون هذا، أي سكربت أو إضافة متصفح خبيثة تقدر تقرأ localStorage مباشرة
+        // وتسرق المفتاح الخاص. الآن المخزَّن هو نسخة مشفّرة منه فقط، ومفتاح
+        // فكها (PBKDF2 من كلمة المرور) موجود بذاكرة المستخدم هو فقط، مو بالجهاز.
+        const PBKDF2_ITERATIONS = 250000;
+
+        async function deriveWrappingKey(pin, saltBytes) {
+            const baseKey = await crypto.subtle.importKey("raw", textEnc.encode(pin), "PBKDF2", false, ["deriveKey"]);
+            return crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: saltBytes, iterations: PBKDF2_ITERATIONS, hash: "SHA-256" },
+                baseKey,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
         }
 
-        function decryptData(ciphertext, key) {
-            if (!ciphertext) return "";
+        async function encryptPrivateKeyWithPin(privateJwk, pin) {
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const wrappingKey = await deriveWrappingKey(pin, salt);
+            const ciphertext = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv }, wrappingKey, textEnc.encode(JSON.stringify(privateJwk))
+            );
+            return { salt: bufToB64(salt), iv: bufToB64(iv), ciphertext: bufToB64(ciphertext) };
+        }
+
+        async function decryptPrivateKeyWithPin(blob, pin) {
+            const wrappingKey = await deriveWrappingKey(pin, b64ToBuf(blob.salt));
+            const plainBuf = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: b64ToBuf(blob.iv) }, wrappingKey, b64ToBuf(blob.ciphertext)
+            );
+            return JSON.parse(textDec.decode(plainBuf));
+        }
+
+        function showPinError(msg) { pinError.textContent = msg; pinError.classList.remove('hidden'); }
+        function clearPinError() { pinError.classList.add('hidden'); pinError.textContent = ''; }
+
+        // mode: 'set' (مفتاح جديد) | 'migrate' (مفتاح قديم غير محمي) | 'unlock' (فك مفتاح محمي)
+        function askForPin(mode, prefillError) {
+            return new Promise((resolve) => {
+                pinInput.value = ''; pinConfirmInput.value = '';
+                clearPinError();
+                if (prefillError) showPinError(prefillError);
+
+                pinConfirmInput.classList.toggle('hidden', mode === 'unlock');
+                if (mode === 'unlock') {
+                    pinModalTitle.textContent = "أدخل كلمة المرور";
+                    pinModalSubtitle.textContent = "أدخل كلمة المرور/PIN اللي أمّنت فيها مفتاحك على هذا الجهاز";
+                } else {
+                    pinModalTitle.textContent = "تأمين مفتاح التشفير";
+                    pinModalSubtitle.textContent = mode === 'migrate'
+                        ? "مفتاحك الحالي غير محمي بعد — اختر كلمة مرور/PIN لتشفيره على هذا الجهاز فقط"
+                        : "اختر كلمة مرور أو PIN لحماية مفتاحك الخاص على هذا الجهاز — لا يُرسل لأي سيرفر";
+                }
+
+                pinModal.classList.remove('hidden');
+                pinInput.focus();
+
+                function cleanup() {
+                    pinSubmitBtn.removeEventListener('click', handler);
+                    pinInput.removeEventListener('keypress', onEnter);
+                    pinConfirmInput.removeEventListener('keypress', onEnter);
+                }
+                function handler() {
+                    const pin = pinInput.value;
+                    if (!pin || pin.length < 4) { showPinError("لازم 4 خانات على الأقل"); return; }
+                    if (mode !== 'unlock' && pin !== pinConfirmInput.value) { showPinError("كلمتا المرور غير متطابقتين"); return; }
+                    cleanup();
+                    pinModal.classList.add('hidden');
+                    resolve(pin);
+                }
+                function onEnter(e) { if (e.key === 'Enter') handler(); }
+
+                pinSubmitBtn.addEventListener('click', handler);
+                pinInput.addEventListener('keypress', onEnter);
+                pinConfirmInput.addEventListener('keypress', onEnter);
+            });
+        }
+
+        async function unlockOrCreateKeyPair(uid) {
+            const encBlobRaw = localStorage.getItem(`ping_priv_enc_${uid}`);
+
+            // 1) عنده مفتاح محمي بالفعل — نطلب كلمة المرور لفكه
+            if (encBlobRaw) {
+                const blob = JSON.parse(encBlobRaw);
+                let err = null;
+                while (true) {
+                    const pin = await askForPin('unlock', err);
+                    try {
+                        const privJwk = await decryptPrivateKeyWithPin(blob, pin);
+                        const privateKey = await crypto.subtle.importKey("jwk", privJwk, ECDH_ALG, true, ["deriveKey"]);
+                        const publicJwk = JSON.parse(localStorage.getItem(`ping_pub_${uid}`));
+                        return { privateKey, publicJwk };
+                    } catch (e) {
+                        err = "كلمة المرور غير صحيحة، حاول مرة ثانية";
+                    }
+                }
+            }
+
+            // 2) ترحيل: مفتاح من نسخة سابقة كان مخزّن بدون حماية
+            const oldPlainPriv = localStorage.getItem(`ping_priv_${uid}`);
+            if (oldPlainPriv) {
+                const privJwk = JSON.parse(oldPlainPriv);
+                const pin = await askForPin('migrate');
+                const blob = await encryptPrivateKeyWithPin(privJwk, pin);
+                localStorage.setItem(`ping_priv_enc_${uid}`, JSON.stringify(blob));
+                localStorage.removeItem(`ping_priv_${uid}`);
+                const privateKey = await crypto.subtle.importKey("jwk", privJwk, ECDH_ALG, true, ["deriveKey"]);
+                const publicJwk = JSON.parse(localStorage.getItem(`ping_pub_${uid}`));
+                return { privateKey, publicJwk };
+            }
+
+            // 3) ما فيه أي مفتاح — نولّد واحد جديد ونحميه مباشرة
+            const pair = await crypto.subtle.generateKey(ECDH_ALG, true, ["deriveKey"]);
+            const privJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
+            const publicJwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
+            const pin = await askForPin('set');
+            const blob = await encryptPrivateKeyWithPin(privJwk, pin);
+            localStorage.setItem(`ping_priv_enc_${uid}`, JSON.stringify(blob));
+            localStorage.setItem(`ping_pub_${uid}`, JSON.stringify(publicJwk));
+            return { privateKey: pair.privateKey, publicJwk };
+        }
+
+        async function deriveSharedKey(myPriv, theirPublicJwk) {
+            const theirPublicKey = await crypto.subtle.importKey(
+                "jwk", theirPublicJwk, ECDH_ALG, true, []
+            );
+            return crypto.subtle.deriveKey(
+                { name: "ECDH", public: theirPublicKey },
+                myPriv,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        async function encryptMessage(key, text) {
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const data = textEnc.encode(text);
+            const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
+            return { iv: bufToB64(iv), ciphertext: bufToB64(ciphertext) };
+        }
+
+        async function decryptMessage(key, ivB64, ciphertextB64) {
+            if (!key || !ivB64 || !ciphertextB64) return "[تعذّر فك التشفير]";
             try {
-                const bytes = CryptoJS.AES.decrypt(ciphertext, key);
-                return bytes.toString(CryptoJS.enc.Utf8);
+                const plainBuf = await crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: b64ToBuf(ivB64) }, key, b64ToBuf(ciphertextB64)
+                );
+                return textDec.decode(plainBuf);
             } catch (e) {
-                return "[رسالة مشفرة]";
+                return "[تعذّر فك التشفير]";
             }
         }
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                loginScreen.classList.add('hidden');
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
+
+                // مفتاحي الخاص يُفكّ أو يُولَّد ويُحمى بكلمة مرور الآن — قبل أي شيء آخر
+                const { privateKey, publicJwk } = await unlockOrCreateKeyPair(user.uid);
+                myPrivateKey = privateKey;
 
                 let defaultUsername = user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
 
@@ -373,11 +560,18 @@
                         bio: "متاح...",
                         photoURL: user.photoURL || 'https://via.placeholder.com/40',
                         friends: [],
+                        publicKeyJwk: publicJwk,
                         lastSeen: serverTimestamp()
                     };
                     await setDoc(userRef, currentUserProfile);
                 } else {
                     currentUserProfile = userSnap.data();
+                    // إذا المفتاح العام المخزّن ما يطابق مفتاح هذا الجهاز، حدّثه
+                    // (يحصل أول مرة، أو عند فتح التطبيق من جهاز/متصفح جديد)
+                    if (JSON.stringify(currentUserProfile.publicKeyJwk) !== JSON.stringify(publicJwk)) {
+                        await updateDoc(userRef, { publicKeyJwk: publicJwk });
+                        currentUserProfile.publicKeyJwk = publicJwk;
+                    }
                 }
 
                 settingsAvatar.src = currentUserProfile.photoURL;
@@ -453,36 +647,54 @@
             });
         }
 
-        function openChat(targetUser) {
+        async function openChat(targetUser) {
             selectedUser = targetUser;
-            inputContainer.classList.remove('hidden');
 
             if (window.innerWidth < 768) { sidebarPanel.classList.add('hidden'); }
             chatPanel.classList.remove('hidden');
             chatPanel.classList.add('flex');
-            
+
             currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
-            secretEncryptionKey = `PingSecret_${currentChatId}_2026`;
+            sharedKey = null;
 
             chatHeaderAvatarContainer.innerHTML = `<img src="${targetUser.photoURL || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover">`;
             chatHeaderName.textContent = targetUser.name;
-            chatHeaderStatus.textContent = "متصل الآن";
+
+            if (!targetUser.publicKeyJwk) {
+                // الطرف الآخر ما دخل التطبيق بعد بالنسخة الجديدة، فما عنده مفتاح عام منشور
+                chatHeaderStatus.textContent = "بانتظار تفعيل التشفير من الطرف الآخر";
+                inputContainer.classList.add('hidden');
+                chatMessages.innerHTML = `
+                    <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3 text-center px-6">
+                        <div class="w-16 h-16 rounded-full app-bg-header flex items-center justify-center text-3xl text-amber-400">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <p>ما تقدر تبدأ المحادثة إلا بعد ما ${targetUser.name} يفتح التطبيق مرة، حتى يتولّد مفتاحه الخاص بالتشفير</p>
+                    </div>`;
+                return;
+            }
+
+            chatHeaderStatus.textContent = "🔒 جاري تأمين المحادثة...";
+            sharedKey = await deriveSharedKey(myPrivateKey, targetUser.publicKeyJwk);
+            chatHeaderStatus.textContent = "🔒 مشفّرة تمامًا (E2EE)";
+            inputContainer.classList.remove('hidden');
 
             loadMessages();
         }
 
         async function sendMessage() {
             const text = messageInput.value.trim();
-            if (!text) return;
+            if (!text || !sharedKey) return;
 
             messageInput.value = '';
             actionIcon.className = "fas fa-microphone text-sm";
 
-            const encryptedText = encryptData(text, secretEncryptionKey);
+            const { iv, ciphertext } = await encryptMessage(sharedKey, text);
 
             await addDoc(collection(db, "chats", currentChatId, "messages"), {
                 senderUid: currentUser.uid,
-                text: encryptedText,
+                iv,
+                ciphertext,
                 timestamp: serverTimestamp()
             });
         }
@@ -495,16 +707,16 @@
                 orderBy("timestamp", "asc")
             );
 
-            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+            unsubscribeMessages = onSnapshot(q, async (snapshot) => {
                 chatMessages.innerHTML = '';
-                snapshot.forEach((docSnap) => {
+                for (const docSnap of snapshot.docs) {
                     const msg = docSnap.data();
                     const isMine = msg.senderUid === currentUser.uid;
 
                     const containerWrapper = document.createElement('div');
                     containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} message-pop`;
 
-                    const decryptedText = decryptData(msg.text, secretEncryptionKey);
+                    const decryptedText = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
 
                     const bubble = document.createElement('div');
                     bubble.setAttribute('dir', 'rtl');
@@ -528,7 +740,7 @@
 
                     containerWrapper.appendChild(bubble);
                     chatMessages.appendChild(containerWrapper);
-                });
+                }
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
         }
