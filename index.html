@@ -34,17 +34,9 @@
             padding: 0;
         }
 
-        /* حماية الهيدر والشريط العلوي للجوال من أجهزة النوتش */
-        .safe-header {
-            padding-top: max(16px, env(safe-area-inset-top));
-        }
+        .safe-header { padding-top: max(16px, env(safe-area-inset-top)); }
+        .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
 
-        /* حماية حقل الإدخال السفلي من شريط التنقل للآيفون والجوالات الحديثة */
-        .safe-bottom {
-            padding-bottom: max(12px, env(safe-area-inset-bottom));
-        }
-
-        /* ألوان واجهة واتساب الداكنة */
         .wa-bg-dark { background-color: #111b21; }
         .wa-bg-header { background-color: #202c33; }
         .wa-bg-chat { background-color: #0b141a; }
@@ -57,9 +49,7 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 10px; }
 
-        .message-pop {
-            animation: popIn 0.2s ease-out forwards;
-        }
+        .message-pop { animation: popIn 0.2s ease-out forwards; }
         @keyframes popIn {
             0% { opacity: 0; transform: scale(0.96) translateY(6px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -179,13 +169,12 @@
         </button>
     </div>
 
-    <!-- 6. واجهة التطبيق الرئيسية الشاملة للجوال بدون أي تداخل -->
+    <!-- 6. واجهة التطبيق الرئيسية -->
     <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl wa-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
         
         <!-- القائمة الجانبية (الأصدقاء) -->
         <div id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full wa-bg-dark">
             
-            <!-- الهيدر العلوي المحمي للجوال -->
             <div class="p-3 wa-bg-header flex items-center justify-between safe-header">
                 <div class="flex items-center gap-3 cursor-pointer" id="openProfileBtn">
                     <img id="myAvatar" class="w-10 h-10 rounded-full object-cover ring-1 ring-white/20">
@@ -228,7 +217,6 @@
         <!-- منطقة المحادثة الرئيسية -->
         <div id="chatPanel" class="hidden md:flex flex-1 flex-col h-full wa-bg-chat relative">
             
-            <!-- الهيدر العلوي لشاشة المحادثة المحمي للجوال -->
             <div id="chatHeader" class="p-3 wa-bg-header flex items-center justify-between shadow-sm z-10 border-b border-white/10 safe-header">
                 <div class="flex items-center gap-3">
                     <button id="backToUsersBtn" class="md:hidden text-[#00a884] hover:text-[#008f70] text-xl p-1.5 font-bold flex items-center" title="رجوع">
@@ -261,7 +249,7 @@
                 </div>
             </div>
 
-            <!-- شريط الكتابة وأدوات الإدخال المحمي سفلياً من حواف الجوال -->
+            <!-- شريط الكتابة وأدوات الإدخال -->
             <div id="inputContainer" class="p-3 wa-bg-header border-t border-white/10 hidden safe-bottom">
                 <div class="flex items-center gap-2 max-w-5xl mx-auto">
                     
@@ -295,7 +283,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const IMGBB_API_KEY = "d0e78a427404c26f247b3e644e8b3cbe";
@@ -378,6 +366,7 @@
         let currentChatId = null;
         let secretEncryptionKey = null;
         let unsubscribeMessages = null;
+        let unsubscribeUserFriends = null;
         let tempAvatarURL = null;
         let mediaRecorder = null;
         let audioChunks = [];
@@ -443,10 +432,11 @@
                 mainApp.classList.remove('hidden');
 
                 listenToFriendRequests();
-                loadFriendsList();
+                loadFriendsListRealtime();
                 checkInviteURL();
             } else {
                 currentUser = null;
+                if (unsubscribeUserFriends) unsubscribeUserFriends();
                 loginScreen.classList.remove('hidden');
                 mainApp.classList.add('hidden');
             }
@@ -595,16 +585,13 @@
                     item.querySelector('.accept-btn').addEventListener('click', async () => {
                         await updateDoc(doc(db, "requests", reqId), { status: "accepted" });
                         
-                        await setDoc(doc(db, "users", currentUser.uid), {
-                            friends: [...currentUserProfile.friends, req.fromUid]
-                        }, { merge: true });
+                        await updateDoc(doc(db, "users", currentUser.uid), {
+                            friends: arrayUnion(req.fromUid)
+                        });
 
-                        const otherRef = doc(db, "users", req.fromUid);
-                        const otherSnap = await getDoc(otherRef);
-                        if (otherSnap.exists()) {
-                            const otherFriends = otherSnap.data().friends || [];
-                            await setDoc(otherRef, { friends: [...otherFriends, currentUser.uid] }, { merge: true });
-                        }
+                        await updateDoc(doc(db, "users", req.fromUid), {
+                            friends: arrayUnion(currentUser.uid)
+                        });
 
                         requestsModal.classList.add('hidden');
                     });
@@ -660,21 +647,25 @@
             }
         }
 
-        function loadFriendsList() {
-            onSnapshot(doc(db, "users", currentUser.uid), async (userSnap) => {
+        // حفظ وجلب الأصدقاء دائماً بالربط المباشر مع قاعدة البيانات لتجنب اختفائها بعد التحديث
+        function loadFriendsListRealtime() {
+            if (unsubscribeUserFriends) unsubscribeUserFriends();
+
+            unsubscribeUserFriends = onSnapshot(doc(db, "users", currentUser.uid), async (userSnap) => {
                 if (!userSnap.exists()) return;
                 const myData = userSnap.data();
-                currentUserProfile.friends = myData.friends || [];
+                const friendsArray = myData.friends || [];
+                currentUserProfile.friends = friendsArray;
                 currentUserProfile.blocked = myData.blocked || [];
 
                 usersList.innerHTML = '';
                 
-                if (currentUserProfile.friends.length === 0) {
+                if (friendsArray.length === 0) {
                     usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">لا توجد محادثات نشطة.<br>أرسل رابط دعوة لبدء المحادثة!</p>`;
                     return;
                 }
 
-                for (let friendUid of currentUserProfile.friends) {
+                for (let friendUid of friendsArray) {
                     const friendDoc = await getDoc(doc(db, "users", friendUid));
                     if (friendDoc.exists()) {
                         const userData = friendDoc.data();
@@ -722,9 +713,9 @@
         blockUserBtn.addEventListener('click', async () => {
             if (!selectedUser) return;
             if (confirm(`حظر ${selectedUser.name}؟`)) {
-                await setDoc(doc(db, "users", currentUser.uid), {
-                    blocked: [...currentUserProfile.blocked, selectedUser.uid]
-                }, { merge: true });
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    blocked: arrayUnion(selectedUser.uid)
+                });
                 alert("تم الحظر.");
                 inputContainer.classList.add('hidden');
             }
