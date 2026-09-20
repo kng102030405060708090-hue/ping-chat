@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com https://apis.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' https: data:; media-src 'self' blob:; connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com https://apis.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ping Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -142,12 +142,12 @@
         
         <!-- شريط التفاعلات ❤️ -->
         <div class="flex items-center justify-around w-full max-w-sm app-bg-header p-2.5 rounded-full mb-3 text-xl border border-white/10 shadow-lg">
-            <span class="cursor-pointer hover:scale-125 transition">❤️</span>
-            <span class="cursor-pointer hover:scale-125 transition">👍</span>
-            <span class="cursor-pointer hover:scale-125 transition">😂</span>
-            <span class="cursor-pointer hover:scale-125 transition">😮</span>
-            <span class="cursor-pointer hover:scale-125 transition">😢</span>
-            <span class="cursor-pointer hover:scale-125 transition">🙏</span>
+            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="❤️">❤️</span>
+            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="👍">👍</span>
+            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="😂">😂</span>
+            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="😮">😮</span>
+            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="😢">😢</span>
+            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="🙏">🙏</span>
         </div>
 
         <div class="app-bg-dark border border-white/10 rounded-2xl p-2 w-full max-w-sm space-y-1 text-xs font-semibold shadow-2xl">
@@ -296,6 +296,10 @@
 
             <!-- شريط الكتابة والتفاعل السريع -->
             <div id="inputContainer" class="p-3 app-bg-header border-t border-white/10 hidden safe-bottom">
+                <div id="recordingBanner" style="display:none;" class="items-center justify-between px-2 pb-2 text-xs text-rose-400 max-w-5xl mx-auto">
+                    <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span id="recordingTimer">0:00</span> جاري التسجيل بالمايك...</span>
+                    <button id="cancelRecordingBtn" class="text-gray-400 hover:text-white font-semibold">إلغاء</button>
+                </div>
                 <div class="flex items-center gap-2 max-w-5xl mx-auto">
                     
                     <button id="toggleAttachmentBtn" class="text-gray-400 hover:text-white p-2 rounded-full transition text-lg"><i class="fas fa-plus"></i></button>
@@ -379,6 +383,19 @@
         const messageContextMenu = document.getElementById('messageContextMenu');
         const highlightedMessageBubble = document.getElementById('highlightedMessageBubble');
         const closeContextBtn = document.getElementById('closeContextBtn');
+        const replyMsgBtn = document.getElementById('replyMsgBtn');
+        const copyMsgBtn = document.getElementById('copyMsgBtn');
+        const forwardMsgBtn = document.getElementById('forwardMsgBtn');
+        const deleteMsgBtn = document.getElementById('deleteMsgBtn');
+        const reactionPicks = document.querySelectorAll('.reaction-pick');
+
+        const recordingBanner = document.getElementById('recordingBanner');
+        const recordingTimer = document.getElementById('recordingTimer');
+        const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
+
+        let selectedMessageId = null;
+        let selectedMessageSenderUid = null;
+        let selectedMessageText = '';
 
         const pinModal = document.getElementById('pinModal');
         const pinModalTitle = document.getElementById('pinModalTitle');
@@ -426,6 +443,16 @@
 
         function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
         function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+
+        function base64ToBlob(b64, mime) { return new Blob([b64ToBuf(b64)], { type: mime }); }
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(String(reader.result).split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
 
         // ===== طبقة حماية إضافية: تشفير المفتاح الخاص بكلمة مرور/PIN قبل تخزينه =====
         // بدون هذا، أي سكربت أو إضافة متصفح خبيثة تقدر تقرأ localStorage مباشرة
@@ -652,6 +679,36 @@
         toggleAttachmentBtn.addEventListener('click', () => attachmentMenu.classList.toggle('hidden'));
         closeContextBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
 
+        reactionPicks.forEach(pick => {
+            pick.addEventListener('click', async () => {
+                if (!selectedMessageId) return;
+                try {
+                    await updateDoc(doc(db, "chats", currentChatId, "messages", selectedMessageId), {
+                        [`reactions.${currentUser.uid}`]: pick.dataset.emoji
+                    });
+                } catch (e) { /* ignore */ }
+                messageContextMenu.classList.add('hidden');
+            });
+        });
+
+        copyMsgBtn.addEventListener('click', async () => {
+            if (selectedMessageText) {
+                try { await navigator.clipboard.writeText(selectedMessageText); } catch (e) { /* ignore */ }
+            }
+            messageContextMenu.classList.add('hidden');
+        });
+
+        deleteMsgBtn.addEventListener('click', async () => {
+            if (selectedMessageId && selectedMessageSenderUid === currentUser.uid) {
+                try { await deleteDoc(doc(db, "chats", currentChatId, "messages", selectedMessageId)); } catch (e) { /* ignore */ }
+            }
+            messageContextMenu.classList.add('hidden');
+        });
+
+        // الرد المقتبس وإعادة التوجيه لسا ما جهزوا — نسكر القائمة بدل ما تكون معلّقة بدون رد
+        replyMsgBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
+        forwardMsgBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
+
         backToUsersBtn.addEventListener('click', () => {
             chatPanel.classList.add('hidden');
             sidebarPanel.classList.remove('hidden');
@@ -799,6 +856,78 @@
             loadMessages();
         }
 
+        // ===== رسائل صوتية: تسجيل بالمايك، تُشفَّر مثل أي رسالة نصية بالضبط =====
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingStartTime = 0;
+        let recordingTimerInterval = null;
+        let recordingAutoStopTimeout = null;
+        let recordingMimeType = '';
+
+        async function startRecording() {
+            if (mediaRecorder || !sharedKey) return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                recordingMimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus'
+                    : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream, recordingMimeType ? { mimeType: recordingMimeType } : undefined);
+                mediaRecorder.addEventListener('dataavailable', (e) => { if (e.data.size > 0) audioChunks.push(e.data); });
+                mediaRecorder.start();
+                recordingStartTime = Date.now();
+                recordingBanner.style.display = 'flex';
+                actionBtn.style.backgroundColor = '#e11d48';
+                actionBtn.classList.add('animate-pulse');
+                recordingTimerInterval = setInterval(() => {
+                    const secs = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    recordingTimer.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+                }, 200);
+                // حد أقصى دقيقتين حتى ما تتخطى الرسالة حجم مستند Firestore المسموح (1MB)
+                recordingAutoStopTimeout = setTimeout(() => finishRecording(true), 120000);
+            } catch (e) {
+                recordingBanner.style.display = 'none';
+                alert("ما قدرت أوصل المايك — تأكد من إعطاء المتصفح صلاحية الوصول له");
+            }
+        }
+
+        function finishRecording(send) {
+            if (!mediaRecorder) return;
+            clearInterval(recordingTimerInterval);
+            clearTimeout(recordingAutoStopTimeout);
+            recordingBanner.style.display = 'none';
+            actionBtn.style.backgroundColor = '';
+            actionBtn.classList.remove('animate-pulse');
+
+            const rec = mediaRecorder;
+            const elapsedMs = Date.now() - recordingStartTime;
+            mediaRecorder = null;
+
+            rec.addEventListener('stop', () => {
+                rec.stream.getTracks().forEach(t => t.stop());
+                if (send && elapsedMs >= 600) {
+                    const blob = new Blob(audioChunks, { type: recordingMimeType || 'audio/webm' });
+                    sendVoiceMessage(blob, Math.round(elapsedMs / 1000));
+                }
+            }, { once: true });
+
+            if (rec.state !== 'inactive') rec.stop();
+        }
+
+        async function sendVoiceMessage(blob, durationSec) {
+            if (!sharedKey) return;
+            const base64Audio = await blobToBase64(blob);
+            const { iv, ciphertext } = await encryptMessage(sharedKey, base64Audio);
+            await addDoc(collection(db, "chats", currentChatId, "messages"), {
+                senderUid: currentUser.uid,
+                type: 'audio',
+                audioMime: recordingMimeType || 'audio/webm',
+                durationSec,
+                iv, ciphertext,
+                timestamp: serverTimestamp()
+            });
+        }
+
         async function sendMessage() {
             const text = messageInput.value.trim();
             if (!text || !sharedKey) return;
@@ -816,6 +945,8 @@
             });
         }
 
+        let activeAudioUrls = [];
+
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
 
@@ -825,7 +956,10 @@
             );
 
             unsubscribeMessages = onSnapshot(q, async (snapshot) => {
+                activeAudioUrls.forEach(u => URL.revokeObjectURL(u));
+                activeAudioUrls = [];
                 chatMessages.innerHTML = '';
+
                 for (const docSnap of snapshot.docs) {
                     const msg = docSnap.data();
                     const isMine = msg.senderUid === currentUser.uid;
@@ -833,27 +967,56 @@
                     const containerWrapper = document.createElement('div');
                     containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} message-pop`;
 
-                    const decryptedText = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
-
                     const bubble = document.createElement('div');
                     bubble.setAttribute('dir', 'rtl');
                     bubble.className = `${isMine ? 'bubble-mine rounded-2xl rounded-br-xs ml-auto' : 'bubble-other rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3 shadow-md relative cursor-pointer`;
+
+                    let contentHtml;
+                    let plainTextForCopy = '';
+
+                    if (msg.type === 'audio') {
+                        const base64Audio = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                        if (base64Audio === "[تعذّر فك التشفير]") {
+                            contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الرسالة الصوتية]</p>`;
+                        } else {
+                            const audioUrl = URL.createObjectURL(base64ToBlob(base64Audio, msg.audioMime || 'audio/webm'));
+                            activeAudioUrls.push(audioUrl);
+                            contentHtml = `<audio controls preload="metadata" src="${audioUrl}" class="max-w-[220px] h-10"></audio>`;
+                        }
+                    } else {
+                        const decryptedText = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                        plainTextForCopy = decryptedText;
+                        contentHtml = `<p class="text-sm leading-relaxed">${escapeHtml(decryptedText)}</p>`;
+                    }
+
+                    const reactionEmojis = msg.reactions ? [...new Set(Object.values(msg.reactions))].join('') : '';
+                    const reactionBadge = reactionEmojis
+                        ? `<div class="absolute -bottom-3 ${isMine ? 'left-1' : 'right-1'} bg-[#2a3942] rounded-full px-1.5 py-0.5 text-[11px] shadow-md border border-black/20">${escapeHtml(reactionEmojis)}</div>`
+                        : '';
+
                     bubble.innerHTML = `
-                        <p class="text-sm leading-relaxed">${escapeHtml(decryptedText)}</p>
+                        ${contentHtml}
                         <div class="flex items-center justify-end gap-1 text-[10px] opacity-75 mt-1">
                             <span>11:42 م</span>
                             ${isMine ? '<span class="text-blue-300 font-bold">✓✓</span>' : ''}
                         </div>
+                        ${reactionBadge}
                     `;
 
                     let pressTimer;
-                    bubble.addEventListener('touchstart', () => {
-                        pressTimer = setTimeout(() => {
-                            highlightedMessageBubble.innerHTML = bubble.outerHTML;
-                            messageContextMenu.classList.remove('hidden');
-                        }, 400);
-                    }, {passive: true});
-                    bubble.addEventListener('touchend', () => clearTimeout(pressTimer));
+                    const openContext = () => {
+                        selectedMessageId = docSnap.id;
+                        selectedMessageSenderUid = msg.senderUid;
+                        selectedMessageText = plainTextForCopy;
+                        deleteMsgBtn.style.display = (msg.senderUid === currentUser.uid) ? 'flex' : 'none';
+                        copyMsgBtn.style.display = (msg.type === 'audio') ? 'none' : 'flex';
+                        highlightedMessageBubble.innerHTML = bubble.outerHTML;
+                        messageContextMenu.classList.remove('hidden');
+                    };
+                    bubble.addEventListener('pointerdown', () => { pressTimer = setTimeout(openContext, 400); });
+                    bubble.addEventListener('pointerup', () => clearTimeout(pressTimer));
+                    bubble.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+                    bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); openContext(); });
 
                     containerWrapper.appendChild(bubble);
                     chatMessages.appendChild(containerWrapper);
@@ -867,6 +1030,17 @@
                 sendMessage();
             }
         });
+        actionBtn.addEventListener('pointerdown', (e) => {
+            if (messageInput.value.trim().length === 0) {
+                e.preventDefault();
+                actionBtn.setPointerCapture(e.pointerId);
+                startRecording();
+            }
+        });
+        actionBtn.addEventListener('pointerup', () => { if (mediaRecorder) finishRecording(true); });
+        actionBtn.addEventListener('pointercancel', () => { if (mediaRecorder) finishRecording(false); });
+        cancelRecordingBtn.addEventListener('click', () => finishRecording(false));
+
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
