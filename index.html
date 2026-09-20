@@ -380,6 +380,24 @@
         const textEnc = new TextEncoder();
         const textDec = new TextDecoder();
 
+        // ===== حماية ضد XSS: أي نص مصدره مستخدم (رسالة، اسم صديق) يمر من هنا =====
+        // قبل هذا التعديل كان innerHTML يستقبل نص الرسائل وأسماء الأصدقاء مباشرة،
+        // فأي رسالة فيها وسم HTML كانت تُنفَّذ كـ كود بدل ما تُعرض كنص — وهذا يفتح
+        // طريقة لسرقة المفتاح المشفّر من localStorage بدون أي اختراق فعلي للجهاز.
+        function escapeHtml(str) {
+            if (str === undefined || str === null) return '';
+            return String(str)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function safePhotoUrl(url) {
+            return (typeof url === 'string' && /^https:\/\//i.test(url)) ? url : 'https://via.placeholder.com/40';
+        }
+
         function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
         function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
 
@@ -574,7 +592,7 @@
                     }
                 }
 
-                settingsAvatar.src = currentUserProfile.photoURL;
+                settingsAvatar.src = safePhotoUrl(currentUserProfile.photoURL);
                 settingsName.textContent = currentUserProfile.name;
                 settingsHandle.textContent = `@${currentUserProfile.username}`;
 
@@ -629,10 +647,10 @@
                         const userEl = document.createElement('div');
                         userEl.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5";
                         userEl.innerHTML = `
-                            <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-12 h-12 rounded-full object-cover">
+                            <img src="${safePhotoUrl(userData.photoURL)}" class="w-12 h-12 rounded-full object-cover">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between mb-1">
-                                    <h3 class="font-bold text-sm text-white truncate">${userData.name}</h3>
+                                    <h3 class="font-bold text-sm text-white truncate">${escapeHtml(userData.name)}</h3>
                                     <span class="text-[10px] text-gray-400">11:42 م</span>
                                 </div>
                                 <p class="text-xs text-gray-400 truncate flex items-center gap-1">
@@ -657,7 +675,7 @@
             currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
             sharedKey = null;
 
-            chatHeaderAvatarContainer.innerHTML = `<img src="${targetUser.photoURL || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover">`;
+            chatHeaderAvatarContainer.innerHTML = `<img src="${safePhotoUrl(targetUser.photoURL)}" class="w-10 h-10 rounded-full object-cover">`;
             chatHeaderName.textContent = targetUser.name;
 
             if (!targetUser.publicKeyJwk) {
@@ -669,7 +687,7 @@
                         <div class="w-16 h-16 rounded-full app-bg-header flex items-center justify-center text-3xl text-amber-400">
                             <i class="fas fa-key"></i>
                         </div>
-                        <p>ما تقدر تبدأ المحادثة إلا بعد ما ${targetUser.name} يفتح التطبيق مرة، حتى يتولّد مفتاحه الخاص بالتشفير</p>
+                        <p>ما تقدر تبدأ المحادثة إلا بعد ما ${escapeHtml(targetUser.name)} يفتح التطبيق مرة، حتى يتولّد مفتاحه الخاص بالتشفير</p>
                     </div>`;
                 return;
             }
@@ -722,7 +740,7 @@
                     bubble.setAttribute('dir', 'rtl');
                     bubble.className = `${isMine ? 'bubble-mine rounded-2xl rounded-br-xs ml-auto' : 'bubble-other rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3 shadow-md relative cursor-pointer`;
                     bubble.innerHTML = `
-                        <p class="text-sm leading-relaxed">${decryptedText}</p>
+                        <p class="text-sm leading-relaxed">${escapeHtml(decryptedText)}</p>
                         <div class="flex items-center justify-end gap-1 text-[10px] opacity-75 mt-1">
                             <span>11:42 م</span>
                             ${isMine ? '<span class="text-blue-300 font-bold">✓✓</span>' : ''}
