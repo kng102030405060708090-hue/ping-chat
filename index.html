@@ -21,7 +21,7 @@
             font-family: 'Readex Pro', 'Plus Jakarta Sans', sans-serif;
             background: #0b141a;
             color: #e9edef;
-            touch-action: manipulation;
+            touch-action: pan-x pan-y;
             -webkit-text-size-adjust: 100%;
             user-select: none;
             -webkit-user-select: none;
@@ -55,6 +55,10 @@
 
         .bubble-mine { background-color: #005c4b; color: #e9edef; }
         .bubble-other { background-color: #202c33; color: #e9edef; }
+        .bubble-mine, .bubble-other {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -686,6 +690,11 @@
         }
         applyAmbientTheme();
         setInterval(applyAmbientTheme, 30 * 60 * 1000);
+
+        // منع التكبير/التصغير بالكامل — gesturestart خاصة بسفاري وما تتأثر بـ touch-action
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        document.addEventListener('gesturechange', (e) => e.preventDefault());
+        document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
         // ===== حضور حقيقي: نبضة كل 25 ثانية بدل "متصل الآن" الثابتة =====
         // Firestore ما عنده onDisconnect زي Realtime Database، فهذا أقرب تقريب عملي:
