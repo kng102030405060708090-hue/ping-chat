@@ -2,11 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' https: data: blob:; media-src 'self' blob:; connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com wss://*.firebaseio.com; frame-src https://accounts.google.com https://*.firebaseapp.com https://apis.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Instagram Direct</title>
+    <title>Ping Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Readex+Pro:wght@300;400;500;600;700&display=swap');
         
@@ -18,12 +18,15 @@
         *, *::before, *::after { box-sizing: border-box; }
 
         html, body { 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Readex Pro", sans-serif;
-            background: #000000;
-            color: #ffffff;
-            touch-action: manipulation;
+            font-family: 'Readex Pro', 'Plus Jakarta Sans', sans-serif;
+            background: #0b141a;
+            color: #e9edef;
+            touch-action: pan-x pan-y;
             -webkit-text-size-adjust: 100%;
             user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
             overflow: hidden;
             height: 100vh;
             height: 100dvh;
@@ -31,145 +34,202 @@
             margin: 0; padding: 0;
         }
 
+        /* نسمح بالتحديد/اللصق الطبيعي بس داخل حقول الإدخال الفعلية */
+        input, textarea {
+            user-select: text;
+            -webkit-user-select: text;
+            -webkit-touch-callout: default;
+        }
+
         .safe-top { padding-top: max(12px, env(safe-area-inset-top)); }
         .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
 
-        .ig-bg-black { background-color: #000000; }
-        .ig-bg-dark { background-color: #121212; }
-        .ig-bg-card { background-color: #262626; }
+        .app-bg-dark { background-color: #111b21; }
+        .app-bg-header {
+            background-color: rgba(32, 44, 51, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .app-bg-chat { background-color: #0b141a; }
+        .app-bg-input { background-color: #2a3942; }
 
-        .ig-story-ring {
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            padding: 2px;
+        .bubble-mine { background-color: #005c4b; color: #e9edef; }
+        .bubble-other { background-color: #202c33; color: #e9edef; }
+        .bubble-mine, .bubble-other {
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
-        .ig-bubble-mine {
-            background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
-            color: #ffffff;
-        }
-        .ig-bubble-other {
-            background-color: #262626;
-            color: #ffffff;
-        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 10px; }
 
-        ::-webkit-scrollbar { width: 0px; }
-
-        .message-pop { animation: popIn 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .message-pop { animation: popIn 0.2s ease-out forwards; }
         @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+            0% { opacity: 0; transform: scale(0.96) translateY(6px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        .heart-pop {
-            animation: heartBounce 0.4s ease-out forwards;
+        .tab-active {
+            color: #00a884;
+            border-bottom: 3px solid #00a884;
         }
-        @keyframes heartBounce {
-            0% { transform: scale(0); opacity: 0; }
-            50% { transform: scale(1.3); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
+
+        .typing-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: currentColor; opacity: 0.6;
+            animation: typingBounce 1.2s infinite ease-in-out;
+            display: inline-block;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        .voice-bar { width: 3px; background: rgba(255,255,255,0.35); border-radius: 2px; min-height: 3px; transition: background 0.1s; }
+        .voice-bar.played { background: rgba(255,255,255,0.9); }
+
+        /* توهج خلفية متحرك يتغيّر لونه حسب وقت اليوم — يعطي إحساس "حي" بدون ما يزعج القراءة */
+        @keyframes ambientDrift {
+            0%, 100% { transform: translate(-8%, -8%) scale(1); }
+            50% { transform: translate(8%, 8%) scale(1.2); }
+        }
+        .ambient-glow {
+            position: absolute;
+            inset: -25%;
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(70px);
+            opacity: 0.16;
+            border-radius: 9999px;
+            animation: ambientDrift 24s ease-in-out infinite;
+        }
+
+        /* خلفية أورورا متحركة بألوان العلامة، خلف شاشة الدخول */
+        @keyframes auroraFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(6%, -6%) rotate(15deg); }
+        }
+        .aurora-bg {
+            position: absolute;
+            inset: -30%;
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(90px);
+            opacity: 0.35;
+            background: conic-gradient(from 0deg, #00a884, #005c4b, #0b141a, #00a884);
+            animation: auroraFloat 18s ease-in-out infinite;
         }
     </style>
 </head>
-<body class="h-[100dvh] w-screen overflow-hidden flex items-center justify-center p-0 bg-black">
+<body class="h-[100dvh] w-screen overflow-hidden flex items-center justify-center p-0 bg-[#0b141a]">
 
     <!-- 1. شاشة تسجيل الدخول -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black safe-top safe-bottom">
-        <div class="ig-bg-dark rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative border border-white/10">
-            <div class="w-20 h-20 ig-story-ring rounded-3xl flex items-center justify-center text-white text-4xl mx-auto mb-6 shadow-2xl">
-                <i class="fab fa-instagram"></i>
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b141a]/95 backdrop-blur-xl safe-top safe-bottom">
+        <div class="aurora-bg"></div>
+        <div class="app-bg-dark rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative border border-white/10">
+            <div class="w-20 h-20 bg-[#00a884] rounded-full flex items-center justify-center text-white text-4xl mx-auto mb-6 shadow-xl">
+                <i class="fas fa-comments"></i>
             </div>
-            <h2 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Instagram Direct</h2>
-            <p class="text-gray-400 mb-8 text-sm">محادثات خاصة بتصميم آيفون وتشفير تام (E2EE)</p>
-            <button id="loginBtn" class="w-full bg-[#0095f6] hover:bg-[#1877f2] text-white font-bold py-3.5 px-6 rounded-2xl transition duration-300 flex items-center justify-center gap-3 shadow-lg">
+            <h2 class="text-3xl font-extrabold text-white mb-2">Ping Messenger</h2>
+            <p class="text-gray-400 mb-8 text-sm">محادثات خاصة بتشفير تام (E2EE) وتصميم حديث</p>
+            <button id="loginBtn" class="w-full bg-[#00a884] hover:bg-[#008f70] text-black font-bold py-3.5 px-6 rounded-2xl transition duration-300 flex items-center justify-center gap-3 shadow-lg">
                 <i class="fab fa-google text-xl"></i>
                 <span class="text-base">تسجيل الدخول بواسطة Google</span>
             </button>
         </div>
     </div>
 
-    <!-- 2. نافذة معلومات وتفاصيل الدردشة (الحظر، الإبلاغ، والوسائط) -->
-    <div id="chatInfoModal" class="fixed inset-0 z-50 hidden flex flex-col bg-black safe-top safe-bottom">
-        <div class="p-3 border-b border-white/10 flex items-center justify-between">
-            <button id="closeChatInfoBtn" class="text-white text-lg p-2"><i class="fas fa-chevron-right"></i></button>
-            <h2 class="font-bold text-sm text-white">التفاصيل</h2>
-            <div class="w-8"></div>
+    <!-- 2. نافذة البحث المتقدم -->
+    <div id="searchModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-3 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeSearchBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <input id="searchInput" type="text" placeholder="بحث عن رسالة، شخص، صور، أو روابط..." class="flex-1 bg-transparent text-white focus:outline-none text-sm">
         </div>
+        <div class="p-4 flex gap-2 overflow-x-auto text-xs font-semibold text-gray-400 border-b border-white/5">
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer coming-soon-btn">الصور 🖼️</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer coming-soon-btn">الفيديوهات 🎥</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer coming-soon-btn">المستندات 📄</span>
+            <span class="px-3 py-1.5 rounded-full app-bg-header hover:text-white cursor-pointer coming-soon-btn">الروابط 🔗</span>
+        </div>
+        <div id="searchResultsList" class="flex-1 overflow-y-auto p-4 space-y-2 text-xs text-gray-500 text-center">
+            ميزة البحث داخل الرسائل قريبًا — الرسائل مشفّرة بالكامل فما يقدر السيرفر يبحث فيها، لازم فك تشفيرها أول بالجهاز
+        </div>
+    </div>
 
-        <div class="flex-1 overflow-y-auto p-4 space-y-6">
-            <div class="flex flex-col items-center text-center">
-                <img id="infoUserAvatar" class="w-24 h-24 rounded-full object-cover p-0.5 ig-story-ring mb-3" src="https://via.placeholder.com/96">
-                <h3 id="infoUserName" class="font-bold text-lg text-white">الاسم</h3>
-                <p id="infoUserHandle" class="text-xs text-gray-400 font-mono mb-2">@username</p>
-            </div>
-
-            <!-- الوسائط والملفات المشتركة -->
-            <div>
-                <h4 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">الوسائط والملفات المشتركة</h4>
-                <div id="sharedMediaContainer" class="grid grid-cols-3 gap-2 p-2 bg-[#121212] rounded-2xl border border-white/5 min-h-[100px] flex items-center justify-center">
-                    <p class="col-span-3 text-xs text-gray-500 text-center">لا توجد وسائط متبادلة بعد</p>
+    <!-- 3. قائمة الإعدادات الشاملة (حساب، خصوصية، دردشات، إشعارات، تخزين) -->
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-4 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeSettingsBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <h2 class="font-bold text-base text-white">الإعدادات</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+            <div class="flex items-center gap-4 p-3 app-bg-dark rounded-2xl border border-white/5">
+                <img id="settingsAvatar" class="w-16 h-16 rounded-full object-cover" src="https://via.placeholder.com/60">
+                <div>
+                    <h3 id="settingsName" class="font-bold text-white text-base">اسم المستخدم</h3>
+                    <p id="settingsHandle" class="text-xs text-[#00a884] font-mono">@username</p>
                 </div>
             </div>
 
-            <!-- خيارات التحكم الحصرية لـ Instagram -->
-            <div class="space-y-2 text-xs font-semibold">
-                <button id="changeThemeBtn" class="w-full bg-[#121212] hover:bg-[#1a1a1a] p-3.5 rounded-2xl flex items-center justify-between border border-white/5">
-                    <span class="flex items-center gap-3 text-white"><i class="fas fa-palette text-purple-400"></i> سمة المحادثة (Theme)</span>
-                    <i class="fas fa-chevron-left text-gray-500"></i>
-                </button>
-
-                <button id="blockUserBtn" class="w-full bg-[#121212] hover:bg-rose-500/20 text-rose-500 p-3.5 rounded-2xl flex items-center justify-between border border-rose-500/20">
-                    <span class="flex items-center gap-3"><i class="fas fa-ban"></i> حظر الحساب (Block)</span>
-                </button>
-
-                <button id="reportUserBtn" class="w-full bg-[#121212] hover:bg-amber-500/20 text-amber-400 p-3.5 rounded-2xl flex items-center justify-between border border-amber-500/20">
-                    <span class="flex items-center gap-3"><i class="fas fa-flag"></i> الإبلاغ عن هذا الحساب (Report)</span>
-                </button>
-
-                <button id="deleteChatBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold p-3.5 rounded-2xl shadow-lg mt-4">
-                    حذف المحادثة بالكامل لدي الطرفين
-                </button>
+            <div class="space-y-2 font-medium">
+                <div id="openMyProfileBtn" class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-key text-[#00a884]"></i> الحساب (الاسم، النبذة، رابط المشاركة)</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
+                    <span class="flex items-center gap-3"><i class="fas fa-lock text-[#00a884]"></i> الخصوصية والأمان (آخر ظهور، المحظورون)</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
+                    <span class="flex items-center gap-3"><i class="fas fa-palette text-[#00a884]"></i> الدردشات (خلفية الشاشة، حجم الخط)</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
+                    <span class="flex items-center gap-3"><i class="fas fa-bell text-[#00a884]"></i> الإشعارات والأصوات</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
+                <div class="p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 coming-soon-btn">
+                    <span class="flex items-center gap-3"><i class="fas fa-[#00a884] fa-database text-[#00a884]"></i> البيانات والتخزين</span>
+                    <i class="fas fa-chevron-left text-gray-600 text-xs"></i>
+                </div>
             </div>
+
+            <button id="logoutBtnModal" class="w-full bg-rose-600/20 text-rose-400 font-bold py-3.5 rounded-xl border border-rose-500/20 transition hover:bg-rose-600/30 mt-6">
+                تسجيل الخروج
+            </button>
         </div>
     </div>
 
-    <!-- 3. نافذة كتابة ملاحظة جديدة (Instagram Note) -->
-    <div id="noteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
-        <div class="ig-bg-dark rounded-3xl p-6 max-w-sm w-full border border-white/10 shadow-2xl text-center">
-            <h3 class="font-bold text-white text-base mb-2">ملاحظة جديدة (Note)</h3>
-            <p class="text-xs text-gray-400 mb-4">تظهر الملاحظة لأصدقائك أعلى قائمة الرسائل لمدة 24 ساعة</p>
-            <input id="noteInput" type="text" maxlength="60" placeholder="شارِك أفكارك..." class="w-full bg-[#262626] text-white rounded-2xl px-4 py-3 text-sm focus:outline-none border border-white/10 mb-4 text-center">
-            <div class="flex gap-2">
-                <button id="closeNoteBtn" class="flex-1 bg-white/10 hover:bg-white/15 text-white py-2.5 rounded-xl text-xs font-bold">إلغاء</button>
-                <button id="saveNoteBtn" class="flex-1 bg-[#0095f6] hover:bg-[#1877f2] text-white py-2.5 rounded-xl text-xs font-bold">مشاركة</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. قائمة التفاعل المطول بأسلوب iOS Blur -->
-    <div id="messageContextMenu" class="fixed inset-0 z-50 hidden flex flex-col justify-end md:justify-center items-center p-4 bg-black/80 backdrop-blur-2xl">
+    <!-- 4. قائمة التفاعل بالضغط المطول على الرسالة -->
+    <div id="messageContextMenu" class="fixed inset-0 z-50 hidden flex flex-col justify-end md:justify-center items-center p-4 bg-black/80 backdrop-blur-md">
         <div id="highlightedMessageBubble" class="w-full max-w-sm mb-3"></div>
         
-        <div class="flex items-center justify-around w-full max-w-sm ig-bg-card p-3 rounded-full mb-3 text-2xl border border-white/10 shadow-2xl">
+        <!-- شريط التفاعلات ❤️ -->
+        <div class="flex items-center justify-around w-full max-w-sm app-bg-header p-2.5 rounded-full mb-3 text-xl border border-white/10 shadow-lg">
             <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="❤️">❤️</span>
-            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="🙌">🙌</span>
-            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="🔥">🔥</span>
+            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="👍">👍</span>
             <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="😂">😂</span>
             <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="😮">😮</span>
             <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="😢">😢</span>
+            <span class="reaction-pick cursor-pointer hover:scale-125 transition" data-emoji="🙏">🙏</span>
         </div>
 
-        <div class="ig-bg-card border border-white/10 rounded-2xl p-2 w-full max-w-sm space-y-1 text-xs font-semibold shadow-2xl">
-            <button id="replyMsgBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center justify-between">
-                <span>رد سريـع</span>
-                <i class="fas fa-reply text-pink-500"></i>
+        <div class="app-bg-dark border border-white/10 rounded-2xl p-2 w-full max-w-sm space-y-1 text-xs font-semibold shadow-2xl">
+            <button id="replyMsgBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center gap-3">
+                <i class="fas fa-reply text-[#00a884]"></i> رد
             </button>
-            <button id="copyMsgBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center justify-between">
-                <span>نسخ النص</span>
-                <i class="fas fa-copy text-blue-400"></i>
+            <button id="copyMsgBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center gap-3">
+                <i class="fas fa-copy text-blue-400"></i> نسخ
             </button>
-            <button id="deleteMsgBtn" class="w-full hover:bg-rose-500/20 text-rose-500 p-3 rounded-xl text-right flex items-center justify-between border-t border-white/5">
-                <span>إلغاء الإرسال (Unsend)</span>
-                <i class="fas fa-trash-can"></i>
+            <button id="forwardMsgBtn" class="w-full hover:bg-white/10 p-3 rounded-xl text-right flex items-center gap-3">
+                <i class="fas fa-share text-amber-400"></i> إعادة توجيه
+            </button>
+
+            <button id="deleteMsgBtn" class="w-full hover:bg-rose-500/20 text-rose-400 p-3 rounded-xl text-right flex items-center gap-3 border-t border-white/5">
+                <i class="fas fa-trash-can"></i> حذف لدى الجميع
             </button>
             <button id="closeContextBtn" class="w-full bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-center text-gray-400 mt-2">
                 إلغاء
@@ -177,126 +237,239 @@
         </div>
     </div>
 
-    <!-- 5. نافذة إرسال طلب محادثة جديد (بحث باليوزر) -->
-    <div id="newChatModal" class="fixed inset-0 z-50 hidden flex flex-col bg-black safe-top safe-bottom">
-        <div class="p-3 border-b border-white/10 flex items-center gap-3">
-            <button id="closeNewChatBtn" class="text-white text-xl p-2"><i class="fas fa-chevron-right"></i></button>
-            <div class="flex-1 relative flex items-center bg-[#262626] rounded-xl px-3 py-2">
-                <i class="fas fa-search text-gray-400 text-sm ml-2"></i>
-                <input id="newChatUsernameInput" type="text" placeholder="بحث عن شخص..." class="w-full bg-transparent text-white focus:outline-none text-sm">
+    <!-- 4.5 نافذة تأمين المفتاح الخاص بكلمة مرور/PIN -->
+    <div id="pinModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-[#0b141a]/95 backdrop-blur-xl safe-top safe-bottom">
+        <div class="app-bg-dark rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative border border-white/10">
+            <div class="w-16 h-16 bg-[#00a884]/15 rounded-full flex items-center justify-center text-[#00a884] text-3xl mx-auto mb-5">
+                <i class="fas fa-shield-halved"></i>
             </div>
-            <button id="newChatSearchBtn" class="text-[#0095f6] font-bold text-sm px-2">بحث</button>
-        </div>
-        <div id="newChatResults" class="flex-1 overflow-y-auto p-4">
-            <p class="text-xs text-gray-500 text-center py-8">ابحث بـ @username لبدء المحادثة</p>
+            <h2 id="pinModalTitle" class="text-2xl font-extrabold text-white mb-2">تأمين مفتاح التشفير</h2>
+            <p id="pinModalSubtitle" class="text-gray-400 mb-6 text-sm leading-relaxed">اختر كلمة مرور أو رمز PIN لحماية مفتاحك الخاص على هذا الجهاز.</p>
+
+            <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="كلمة المرور / PIN" class="w-full app-bg-input text-white placeholder-gray-500 rounded-2xl px-4 py-3 text-sm text-center focus:outline-none border border-white/5 mb-3 tracking-widest">
+            <input id="pinConfirmInput" type="password" inputmode="numeric" autocomplete="off" placeholder="تأكيد كلمة المرور / PIN" class="w-full app-bg-input text-white placeholder-gray-500 rounded-2xl px-4 py-3 text-sm text-center focus:outline-none border border-white/5 mb-3 tracking-widest hidden">
+
+            <p id="pinError" class="text-rose-400 text-xs mb-3 hidden"></p>
+
+            <button id="pinSubmitBtn" class="w-full bg-[#00a884] hover:bg-[#008f70] text-black font-bold py-3.5 px-6 rounded-2xl transition duration-300 shadow-lg">
+                تأكيد
+            </button>
         </div>
     </div>
 
-    <!-- 6. عارض صور المشاهدة لمرة واحدة (View Once) -->
-    <div id="viewOnceModal" class="fixed inset-0 z-50 hidden flex flex-col items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
-        <div class="absolute top-6 right-4 text-white text-xs bg-[#262626] px-3.5 py-2 rounded-full flex items-center gap-2 border border-white/10 shadow-lg">
-            <i class="fas fa-bomb text-rose-500"></i> صورة للعرض مرة واحدة فقط
+    <!-- 4.6 محادثة جديدة: بحث عن مستخدم بالـ username لبدء محادثة معه -->
+    <div id="newChatModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-3 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeNewChatBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <div class="flex-1 relative flex items-center">
+                <span class="absolute right-3 text-gray-500 text-sm pointer-events-none">@</span>
+                <input id="newChatUsernameInput" type="text" placeholder="ابحث باسم المستخدم" autocomplete="off" class="w-full bg-transparent text-white focus:outline-none text-sm pr-7">
+            </div>
+            <button id="newChatSearchBtn" class="text-[#00a884] font-bold text-sm px-2 shrink-0">بحث</button>
         </div>
-        <img id="viewOnceImg" class="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl mb-6">
-        <button id="closeViewOnceBtn" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 px-8 rounded-2xl transition shadow-xl">
-            إغلاق وحذف الصورة نهائياً
-        </button>
+        <p id="newChatError" class="text-rose-400 text-xs text-center mt-4 px-4 hidden"></p>
+        <div id="newChatResults" class="flex-1 overflow-y-auto p-2 space-y-1">
+            <p class="text-xs text-gray-500 text-center py-8">اكتب اسم المستخدم بالضبط واضغط بحث</p>
+        </div>
     </div>
 
-    <!-- 7. الواجهة الرئيسية الكاملة (Instagram Inbox View) -->
-    <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl bg-black md:rounded-3xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10">
+    <!-- 4.7 معلومات جهة الاتصال: تفتح بالضغط على اسم/صورة الطرف الآخر بأعلى المحادثة -->
+    <div id="contactInfoModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-4 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeContactInfoBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <h2 class="font-bold text-base text-white">معلومات جهة الاتصال</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+            <div class="flex flex-col items-center gap-3 py-4">
+                <img id="contactInfoAvatar" class="w-24 h-24 rounded-full object-cover" src="https://via.placeholder.com/96">
+                <div class="text-center">
+                    <h3 id="contactInfoName" class="font-bold text-white text-lg"></h3>
+                    <p id="contactInfoUsername" class="text-xs text-gray-400 font-mono"></p>
+                </div>
+            </div>
+
+            <div class="space-y-2 font-medium">
+                <button id="contactInfoVanishBtn" class="w-full p-3.5 app-bg-dark rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5">
+                    <span class="flex items-center gap-3"><i class="fas fa-hourglass-half text-[#00a884]"></i> الرسائل المؤقتة</span>
+                    <span id="contactInfoVanishValue" class="text-xs text-gray-400">متوقفة</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4.8 ملفي الشخصي: تعديل الاسم والنبذة، ورابط مشاركة لإضافتك كصديق مباشرة -->
+    <div id="myProfileModal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#0b141a] safe-top safe-bottom">
+        <div class="p-4 app-bg-header flex items-center gap-3 border-b border-white/10">
+            <button id="closeMyProfileBtn" class="text-gray-400 hover:text-white p-2 text-lg"><i class="fas fa-arrow-right"></i></button>
+            <h2 class="font-bold text-base text-white">ملفي الشخصي</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+            <div class="flex flex-col items-center gap-2 py-2">
+                <img id="myProfileAvatar" class="w-24 h-24 rounded-full object-cover" src="https://via.placeholder.com/96">
+                <p class="text-xs text-gray-500">@<span id="myProfileUsername"></span></p>
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 mb-1 block">الاسم</label>
+                <input id="myProfileNameInput" class="w-full app-bg-input text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none border border-white/5">
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 mb-1 block">نبذة</label>
+                <textarea id="myProfileBioInput" rows="2" class="w-full app-bg-input text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none border border-white/5 resize-none"></textarea>
+            </div>
+            <button id="saveMyProfileBtn" class="w-full bg-[#00a884] text-black font-bold py-3 rounded-xl text-sm">حفظ</button>
+
+            <div class="pt-4 border-t border-white/10">
+                <p class="text-xs text-gray-400 mb-2">شارك رابطك — يفتح عند من يضغطه صفحة إضافتك صديق مباشرة</p>
+                <div class="flex items-center gap-2">
+                    <input id="myShareLinkInput" readonly class="flex-1 app-bg-input text-gray-300 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                    <button id="copyShareLinkBtn" class="bg-[#00a884] text-black px-3.5 py-2.5 rounded-xl text-xs font-bold shrink-0"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4.9 إنشاء استطلاع رأي -->
+    <div id="pollModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="app-bg-dark rounded-3xl p-6 max-w-sm w-full border border-white/10 shadow-2xl">
+            <h2 class="font-bold text-white text-lg mb-4 flex items-center gap-2"><i class="fas fa-square-poll-vertical text-[#00a884]"></i> استطلاع رأي</h2>
+            <input id="pollQuestionInput" placeholder="اكتب سؤالك..." class="w-full app-bg-input text-white rounded-xl px-4 py-2.5 text-sm mb-3 focus:outline-none border border-white/5">
+            <div id="pollOptionsContainer" class="space-y-2 mb-3">
+                <input class="poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5" placeholder="خيار 1">
+                <input class="poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5" placeholder="خيار 2">
+            </div>
+            <button id="addPollOptionBtn" class="text-[#00a884] text-xs font-bold mb-5"><i class="fas fa-plus"></i> إضافة خيار</button>
+            <div class="flex gap-2">
+                <button id="cancelPollBtn" class="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-xl text-sm">إلغاء</button>
+                <button id="sendPollBtn" class="flex-1 bg-[#00a884] hover:bg-[#008f70] text-black font-bold py-2.5 rounded-xl text-sm">إرسال</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. الواجهة الرئيسية الكاملة للتطبيق -->
+    <div id="mainApp" class="hidden w-full h-[100dvh] md:h-[95vh] max-w-7xl app-bg-dark md:rounded-2xl shadow-2xl flex overflow-hidden border-none md:border md:border-white/10 relative">
         
-        <!-- القائمة الجانبية (Inbox List) -->
-        <div id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full bg-black">
+        <!-- القائمة الجانبية للشاشات والدردشات -->
+        <div id="sidebarPanel" class="w-full md:w-80 lg:w-96 border-l border-white/10 flex flex-col h-full app-bg-dark">
             
-            <!-- الهيدر العلوي بنمط Instagram Direct -->
-            <div class="p-3.5 border-b border-white/10 flex items-center justify-between safe-top">
-                <div class="flex items-center gap-2 cursor-pointer" id="openProfileBtn">
-                    <h1 id="myUserHandle" class="font-extrabold text-lg text-white font-mono truncate max-w-[150px]">@username</h1>
-                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
-                </div>
-                <div class="flex items-center gap-4 text-white text-lg">
-                    <button id="openNewChatBtn" title="رسالة جديدة"><i class="far fa-pen-to-square"></i></button>
-                </div>
-            </div>
-
-            <!-- شريط القصص والملاحظات (Notes & Active Status) -->
-            <div class="p-3 border-b border-white/10 flex gap-4 overflow-x-auto bg-black">
-                <div class="flex flex-col items-center gap-1 shrink-0 cursor-pointer" id="openNoteModalBtn">
-                    <div class="relative">
-                        <img id="myAvatar" class="w-14 h-14 rounded-full object-cover border border-white/20">
-                        <span id="myNoteBadge" class="absolute -top-1 right-0 bg-[#262626] border border-white/20 text-[9px] px-2 py-0.5 rounded-full text-gray-300">ملاحظة...</span>
-                    </div>
-                    <span class="text-[10px] text-gray-400 truncate w-14 text-center">ملاحظتك</span>
-                </div>
-                <div id="activeStoriesContainer" class="flex gap-4">
-                    <!-- متصل الآن -->
+            <!-- الهيدر العلوي الرئيسي -->
+            <div class="p-3.5 app-bg-header flex items-center justify-between safe-top">
+                <h1 class="font-bold text-lg text-white tracking-wide">Ping Messenger</h1>
+                <div class="flex items-center gap-3 text-gray-300">
+                    <button id="openNewChatBtn" title="محادثة جديدة" class="hover:text-white"><i class="fas fa-user-plus text-lg"></i></button>
+                    <button id="openSearchBtn" title="بحث" class="hover:text-white"><i class="fas fa-magnifying-glass text-lg"></i></button>
+                    <button id="openMenuBtn" title="القائمة" class="hover:text-white"><i class="fas fa-ellipsis-vertical text-lg"></i></button>
                 </div>
             </div>
 
-            <div class="px-4 py-3 flex items-center justify-between text-xs font-bold text-gray-400">
-                <span>الرسائل</span>
-                <span class="text-[#0095f6]">المحادثات الخاصة</span>
+            <!-- تبويبات التصفية السريعة -->
+            <div class="flex items-center justify-around text-xs font-bold border-b border-white/5 app-bg-dark py-2 px-2 text-gray-400">
+                <span id="tabAll" class="tab-active py-1 px-3 cursor-pointer">الكل</span>
+                <span id="tabUnread" class="py-1 px-3 hover:text-white cursor-pointer">غير مقروءة</span>
+                <span id="tabFavorites" class="py-1 px-3 hover:text-white cursor-pointer">المفضلة</span>
+                <span id="tabGroups" class="py-1 px-3 hover:text-white cursor-pointer">المجموعات</span>
             </div>
 
+            <!-- قائمة الرسائل والمحادثات -->
             <div id="usersList" class="flex-1 overflow-y-auto divide-y divide-white/5">
-                <!-- المحادثات -->
+                <!-- ملء المحادثات -->
+            </div>
+
+            <!-- الشريط السفلي الثابت (الدردشات | الحالات | المكالمات) -->
+            <div class="p-2 app-bg-header border-t border-white/10 flex items-center justify-around text-xs font-semibold text-gray-400 safe-bottom">
+                <button id="navChats" class="flex flex-col items-center gap-1 text-[#00a884]">
+                    <i class="fas fa-comment-dots text-lg"></i>
+                    <span>الدردشات</span>
+                </button>
+                <button id="navStatus" class="flex flex-col items-center gap-1 hover:text-white">
+                    <i class="fas fa-circle-notch text-lg"></i>
+                    <span>الحالات</span>
+                </button>
+                <button id="navCalls" class="flex flex-col items-center gap-1 hover:text-white">
+                    <i class="fas fa-phone text-lg"></i>
+                    <span>المكالمات</span>
+                </button>
             </div>
         </div>
 
-        <!-- منطقة المحادثة المباشرة (Instagram Direct Chat Panel) -->
-        <div id="chatPanel" class="hidden md:flex flex-1 flex-col h-full bg-black relative">
-            
-            <div id="chatHeader" class="p-3 border-b border-white/10 bg-black flex items-center justify-between shadow-sm z-10 safe-top">
-                <div class="flex items-center gap-3">
-                    <button id="backToUsersBtn" class="md:hidden text-white text-xl p-1" title="رجوع"><i class="fas fa-chevron-right"></i></button>
+        <!-- منطقة المحادثة المفتوحة -->
+        <div id="chatPanel" class="hidden md:flex flex-1 flex-col h-full app-bg-chat relative">
+            <div id="ambientGlow" class="ambient-glow"></div>
+
+            <!-- هيدر الدردشة العلوية -->
+            <div id="chatHeader" class="p-3 app-bg-header flex items-center justify-between shadow-sm z-10 border-b border-white/10 safe-top">
+                <div id="openContactInfoBtn" class="flex items-center gap-3 cursor-pointer">
+                    <button id="backToUsersBtn" class="md:hidden text-[#00a884] text-xl p-1 font-bold flex items-center"><i class="fas fa-arrow-right"></i></button>
                     <div id="chatHeaderAvatarContainer" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400">
-                        <i class="far fa-user-circle text-3xl"></i>
+                        <i class="fas fa-user-circle text-3xl"></i>
                     </div>
                     <div>
                         <h2 id="chatHeaderName" class="font-bold text-white text-sm">اختر محادثة</h2>
-                        <p id="chatHeaderStatus" class="text-[11px] text-gray-400">نشط الآن</p>
+                        <p id="chatHeaderStatus" class="text-xs text-[#00a884]">متصل الآن</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4 text-white text-lg">
-                    <button title="مكالمة فيديو"><i class="fas fa-video"></i></button>
-                    <button title="مكالمة صوتية"><i class="fas fa-phone"></i></button>
-                    <button id="openChatInfoBtn" title="معلومات"><i class="fas fa-circle-info"></i></button>
+                <div class="flex items-center gap-4 text-gray-300 relative">
+                    <button title="مكالمة فيديو (قريبًا)" class="hover:text-white coming-soon-btn"><i class="fas fa-video text-base"></i></button>
+                    <button title="مكالمة صوتية (قريبًا)" class="hover:text-white coming-soon-btn"><i class="fas fa-phone text-base"></i></button>
+                    <button id="moreOptionsBtn" title="المزيد" class="hover:text-white"><i class="fas fa-ellipsis-vertical text-base"></i></button>
+                    <div id="moreOptionsMenu" class="hidden absolute top-8 left-0 app-bg-header border border-white/10 rounded-2xl p-2 shadow-2xl text-xs font-semibold z-20 w-44">
+                        <button id="clearChatBtn" class="w-full hover:bg-rose-500/20 text-rose-400 p-3 rounded-xl text-right flex items-center gap-3">
+                            <i class="fas fa-trash-can"></i> حذف المحادثة
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- منطقة الرسائل والمحاذاة -->
-            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-black">
+            <!-- منطقة الرسائل -->
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 relative z-[1]">
                 <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3">
-                    <div class="w-20 h-20 rounded-full ig-story-ring flex items-center justify-center text-4xl text-white">
-                        <i class="fab fa-instagram"></i>
+                    <div class="w-16 h-16 rounded-full app-bg-header flex items-center justify-center text-3xl text-[#00a884]">
+                        <i class="fas fa-lock"></i>
                     </div>
-                    <p class="text-xs">محادثات خاصة بتشفير تام (E2EE) 🔐</p>
+                    <p>جميع المحادثات والوسائط تشفر وتفك محلياً فقط 🔐</p>
                 </div>
             </div>
 
-            <!-- شريط الأدوات المبتكر لـ Instagram Direct -->
-            <div id="inputContainer" class="p-3 bg-black border-t border-white/10 hidden safe-bottom">
-                <div class="flex items-center gap-2 max-w-5xl mx-auto bg-[#262626] rounded-full px-3 py-1.5 border border-white/10">
-                    
-                    <label for="cameraInput" class="cursor-pointer text-white bg-[#0095f6] hover:bg-[#1877f2] w-8 h-8 rounded-full transition flex items-center justify-center shrink-0 shadow-md" title="صورة للعرض مرة واحدة">
-                        <i class="fas fa-camera text-xs"></i>
-                    </label>
-                    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+            <!-- قائمة المرفقات المنسدلة عند الضغط على + -->
+            <div id="attachmentMenu" class="hidden absolute bottom-16 right-4 app-bg-header border border-white/10 rounded-2xl p-3 shadow-2xl grid grid-cols-3 gap-3 text-xs font-semibold text-center z-20">
+                <div id="attachCameraBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-pink-400"><i class="fas fa-camera text-xl mb-1"></i><br>الكاميرا</div>
+                <div id="attachGalleryBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-purple-400"><i class="fas fa-image text-xl mb-1"></i><br>معرض الصور</div>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+                <input type="file" id="galleryInput" accept="image/*" class="hidden">
+                <div id="attachDocsBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-blue-400"><i class="fas fa-file-lines text-xl mb-1"></i><br>مستندات</div>
+                <input type="file" id="docInput" class="hidden">
+                <div id="attachLocationBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-emerald-400"><i class="fas fa-location-dot text-xl mb-1"></i><br>الموقع</div>
+                <div id="attachContactBtn" class="coming-soon-btn p-3 hover:bg-white/5 rounded-xl cursor-pointer text-amber-400 opacity-50" title="قريبًا"><i class="fas fa-address-card text-xl mb-1"></i><br>جهة اتصال</div>
+                <div id="attachPollBtn" class="p-3 hover:bg-white/5 rounded-xl cursor-pointer text-teal-400"><i class="fas fa-square-poll-vertical text-xl mb-1"></i><br>استطلاع</div>
+            </div>
 
-                    <input id="messageInput" type="text" placeholder="Message..." class="flex-1 bg-transparent text-white placeholder-gray-500 text-sm focus:outline-none px-2">
+            <!-- شريط الكتابة والتفاعل السريع -->
+            <div id="inputContainer" class="p-3 app-bg-header border-t border-white/10 hidden safe-bottom">
+                <div id="recordingBanner" style="display:none;" class="items-center justify-between px-2 pb-2 text-xs text-rose-400 max-w-5xl mx-auto">
+                    <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span id="recordingTimer">0:00</span> جاري التسجيل بالمايك...</span>
+                    <div class="flex items-center gap-3">
+                        <button id="cancelRecordingBtn" class="text-gray-400 hover:text-white font-semibold">إلغاء</button>
+                        <button id="sendRecordingBtn" class="w-7 h-7 rounded-full bg-[#00a884] text-black flex items-center justify-center shrink-0"><i class="fas fa-paper-plane" style="font-size:11px; transform: rotate(-45deg);"></i></button>
+                    </div>
+                </div>
+                <div id="replyBanner" style="display:none;" class="items-center justify-between px-3 py-2 mb-2 rounded-xl bg-black/20 border-r-2 border-[#00a884] max-w-5xl mx-auto">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-bold text-[#00a884]">الرد على</p>
+                        <p id="replyBannerText" class="text-xs text-gray-300 truncate"></p>
+                    </div>
+                    <button id="cancelReplyBtn" class="text-gray-400 hover:text-white shrink-0 px-2"><i class="fas fa-xmark"></i></button>
+                </div>
+                <div class="flex items-center gap-2 max-w-5xl mx-auto">
                     
-                    <button id="recordAudioBtn" class="text-gray-400 hover:text-white p-1.5 transition text-base" title="تسجيل صوت">
-                        <i class="fas fa-microphone" id="recordIcon"></i>
-                    </button>
-                    <label for="galleryInput" class="cursor-pointer text-gray-400 hover:text-white p-1.5 transition text-base" title="إرفاق صورة">
-                        <i class="far fa-image"></i>
-                    </label>
-                    <input type="file" id="galleryInput" accept="image/*" class="hidden">
+                    <button id="toggleAttachmentBtn" class="text-gray-400 hover:text-white p-2 rounded-full transition text-lg"><i class="fas fa-plus"></i></button>
 
-                    <button id="sendBtn" class="text-[#0095f6] hover:text-white font-bold text-sm px-2 py-1 transition hidden">
-                        Send
+                    <div class="flex-1 relative flex items-center">
+                        <input id="messageInput" type="text" placeholder="اكتب رسالة..." class="w-full app-bg-input text-white placeholder-gray-500 rounded-2xl px-4 py-2.5 text-sm focus:outline-none border border-white/5">
+                    </div>
+                    
+                    <!-- يتغير من ميكروفون إلى إرسال أوتوماتيكياً -->
+                    <button id="actionBtn" class="w-10 h-10 bg-[#00a884] text-black rounded-full flex items-center justify-center shrink-0 transition shadow-md font-bold">
+                        <i id="actionIcon" class="fas fa-microphone text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -305,13 +478,10 @@
 
     </div>
 
-    <!-- البرمجية السحابية والتفاعل -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const IMGBB_API_KEY = "d0e78a427404c26f247b3e644e8b3cbe";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDsdSew4trEXkeKnecguN2uZWIq9XtNGhI",
@@ -330,394 +500,1753 @@
         const loginScreen = document.getElementById('loginScreen');
         const mainApp = document.getElementById('mainApp');
         const loginBtn = document.getElementById('loginBtn');
+        const logoutBtnModal = document.getElementById('logoutBtnModal');
         const sidebarPanel = document.getElementById('sidebarPanel');
         const chatPanel = document.getElementById('chatPanel');
         const backToUsersBtn = document.getElementById('backToUsersBtn');
 
-        const myAvatar = document.getElementById('myAvatar');
-        const myUserHandle = document.getElementById('myUserHandle');
         const usersList = document.getElementById('usersList');
+        const tabAll = document.getElementById('tabAll');
+        const tabUnread = document.getElementById('tabUnread');
+        const tabFavorites = document.getElementById('tabFavorites');
+        const tabGroups = document.getElementById('tabGroups');
+        const navChats = document.getElementById('navChats');
+        const navStatus = document.getElementById('navStatus');
+        const navCalls = document.getElementById('navCalls');
         const chatHeaderName = document.getElementById('chatHeaderName');
         const chatHeaderStatus = document.getElementById('chatHeaderStatus');
+
+        const openContactInfoBtn = document.getElementById('openContactInfoBtn');
+        const contactInfoModal = document.getElementById('contactInfoModal');
+        const closeContactInfoBtn = document.getElementById('closeContactInfoBtn');
+        const contactInfoAvatar = document.getElementById('contactInfoAvatar');
+        const contactInfoName = document.getElementById('contactInfoName');
+        const contactInfoUsername = document.getElementById('contactInfoUsername');
+        const contactInfoVanishBtn = document.getElementById('contactInfoVanishBtn');
+        const contactInfoVanishValue = document.getElementById('contactInfoVanishValue');
         const chatHeaderAvatarContainer = document.getElementById('chatHeaderAvatarContainer');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const recordAudioBtn = document.getElementById('recordAudioBtn');
-        const recordIcon = document.getElementById('recordIcon');
+        const actionBtn = document.getElementById('actionBtn');
+        const actionIcon = document.getElementById('actionIcon');
         const inputContainer = document.getElementById('inputContainer');
 
-        const cameraInput = document.getElementById('cameraInput');
-        const galleryInput = document.getElementById('galleryInput');
+        const searchModal = document.getElementById('searchModal');
+        const searchInput = document.getElementById('searchInput');
+        const searchResultsList = document.getElementById('searchResultsList');
+        const openSearchBtn = document.getElementById('openSearchBtn');
+        const closeSearchBtn = document.getElementById('closeSearchBtn');
 
         const newChatModal = document.getElementById('newChatModal');
         const openNewChatBtn = document.getElementById('openNewChatBtn');
         const closeNewChatBtn = document.getElementById('closeNewChatBtn');
         const newChatUsernameInput = document.getElementById('newChatUsernameInput');
         const newChatSearchBtn = document.getElementById('newChatSearchBtn');
+        const newChatError = document.getElementById('newChatError');
         const newChatResults = document.getElementById('newChatResults');
 
-        const chatInfoModal = document.getElementById('chatInfoModal');
-        const openChatInfoBtn = document.getElementById('openChatInfoBtn');
-        const closeChatInfoBtn = document.getElementById('closeChatInfoBtn');
-        const infoUserAvatar = document.getElementById('infoUserAvatar');
-        const infoUserName = document.getElementById('infoUserName');
-        const infoUserHandle = document.getElementById('infoUserHandle');
-        const blockUserBtn = document.getElementById('blockUserBtn');
-        const reportUserBtn = document.getElementById('reportUserBtn');
-        const deleteChatBtn = document.getElementById('deleteChatBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const openMenuBtn = document.getElementById('openMenuBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const settingsAvatar = document.getElementById('settingsAvatar');
+        const settingsName = document.getElementById('settingsName');
+        const settingsHandle = document.getElementById('settingsHandle');
 
-        const noteModal = document.getElementById('noteModal');
-        const openNoteModalBtn = document.getElementById('openNoteModalBtn');
-        const closeNoteBtn = document.getElementById('closeNoteBtn');
-        const saveNoteBtn = document.getElementById('saveNoteBtn');
-        const noteInput = document.getElementById('noteInput');
-        const myNoteBadge = document.getElementById('myNoteBadge');
+        const toggleAttachmentBtn = document.getElementById('toggleAttachmentBtn');
+        const attachmentMenu = document.getElementById('attachmentMenu');
+        const moreOptionsBtn = document.getElementById('moreOptionsBtn');
+        const moreOptionsMenu = document.getElementById('moreOptionsMenu');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const attachLocationBtn = document.getElementById('attachLocationBtn');
+        const attachPollBtn = document.getElementById('attachPollBtn');
+        const pollModal = document.getElementById('pollModal');
+        const pollQuestionInput = document.getElementById('pollQuestionInput');
+        const pollOptionsContainer = document.getElementById('pollOptionsContainer');
+        const addPollOptionBtn = document.getElementById('addPollOptionBtn');
+        const cancelPollBtn = document.getElementById('cancelPollBtn');
+        const sendPollBtn = document.getElementById('sendPollBtn');
+
+        const openMyProfileBtn = document.getElementById('openMyProfileBtn');
+        const myProfileModal = document.getElementById('myProfileModal');
+        const closeMyProfileBtn = document.getElementById('closeMyProfileBtn');
+        const myProfileAvatar = document.getElementById('myProfileAvatar');
+        const myProfileUsername = document.getElementById('myProfileUsername');
+        const myProfileNameInput = document.getElementById('myProfileNameInput');
+        const myProfileBioInput = document.getElementById('myProfileBioInput');
+        const saveMyProfileBtn = document.getElementById('saveMyProfileBtn');
+        const myShareLinkInput = document.getElementById('myShareLinkInput');
+        const copyShareLinkBtn = document.getElementById('copyShareLinkBtn');
+        const attachCameraBtn = document.getElementById('attachCameraBtn');
+        const attachGalleryBtn = document.getElementById('attachGalleryBtn');
+        const attachDocsBtn = document.getElementById('attachDocsBtn');
+        const cameraInput = document.getElementById('cameraInput');
+        const galleryInput = document.getElementById('galleryInput');
+        const docInput = document.getElementById('docInput');
 
         const messageContextMenu = document.getElementById('messageContextMenu');
         const highlightedMessageBubble = document.getElementById('highlightedMessageBubble');
         const closeContextBtn = document.getElementById('closeContextBtn');
+        const replyMsgBtn = document.getElementById('replyMsgBtn');
+        const copyMsgBtn = document.getElementById('copyMsgBtn');
+        const forwardMsgBtn = document.getElementById('forwardMsgBtn');
         const deleteMsgBtn = document.getElementById('deleteMsgBtn');
+        const reactionPicks = document.querySelectorAll('.reaction-pick');
 
-        const viewOnceModal = document.getElementById('viewOnceModal');
-        const viewOnceImg = document.getElementById('viewOnceImg');
-        const closeViewOnceBtn = document.getElementById('closeViewOnceBtn');
+        const recordingBanner = document.getElementById('recordingBanner');
+        const recordingTimer = document.getElementById('recordingTimer');
+        const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
+        const sendRecordingBtn = document.getElementById('sendRecordingBtn');
+
+        const replyBanner = document.getElementById('replyBanner');
+        const replyBannerText = document.getElementById('replyBannerText');
+        const cancelReplyBtn = document.getElementById('cancelReplyBtn');
+        let activeReply = null; // { text, senderUid }
+
+        let selectedMessageId = null;
+        let selectedMessageSenderUid = null;
+        let selectedMessageText = '';
+        let selectedMessageType = 'text';
+
+        const pinModal = document.getElementById('pinModal');
+        const pinModalTitle = document.getElementById('pinModalTitle');
+        const pinModalSubtitle = document.getElementById('pinModalSubtitle');
+        const pinInput = document.getElementById('pinInput');
+        const pinConfirmInput = document.getElementById('pinConfirmInput');
+        const pinError = document.getElementById('pinError');
+        const pinSubmitBtn = document.getElementById('pinSubmitBtn');
 
         let currentUser = null;
         let currentUserProfile = null;
         let selectedUser = null;
         let currentChatId = null;
+        let myPrivateKey = null;      // مفتاحي الخاص - لا يغادر هذا الجهاز أبدًا
+        let sharedKey = null;         // المفتاح المشترك المشتق لهذه المحادثة تحديدًا
         let unsubscribeMessages = null;
-        let activeViewOnceMsgId = null;
-        let selectedMessageId = null;
 
-        function encryptData(text, key) {
-            if (!text) return "";
-            return CryptoJS.AES.encrypt(text, key).toString();
+        // ===== تشفير حقيقي من طرف إلى طرف (E2EE) عبر ECDH + AES-GCM =====
+        // الفكرة: كل مستخدم عنده زوج مفاتيح (خاص/عام). العام يُنشر في Firestore،
+        // والخاص يبقى محليًا فقط (localStorage) ولا يُرسل لأي سيرفر أبدًا.
+        // عند فتح محادثة، كل طرف يشتق نفس المفتاح المشترك رياضيًا من
+        // (مفتاحه الخاص + المفتاح العام للطرف الآخر) دون أن يمر هذا المفتاح
+        // المشترك عبر الشبكة إطلاقًا — هذا هو الفرق عن النسخة القديمة.
+        const ECDH_ALG = { name: "ECDH", namedCurve: "P-256" };
+        const textEnc = new TextEncoder();
+        const textDec = new TextDecoder();
+
+        // ===== حماية ضد XSS: أي نص مصدره مستخدم (رسالة، اسم صديق) يمر من هنا =====
+        // قبل هذا التعديل كان innerHTML يستقبل نص الرسائل وأسماء الأصدقاء مباشرة،
+        // فأي رسالة فيها وسم HTML كانت تُنفَّذ كـ كود بدل ما تُعرض كنص — وهذا يفتح
+        // طريقة لسرقة المفتاح المشفّر من localStorage بدون أي اختراق فعلي للجهاز.
+        function escapeHtml(str) {
+            if (str === undefined || str === null) return '';
+            return String(str)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
         }
 
-        function decryptData(ciphertext, key) {
-            if (!ciphertext) return "";
+        function safePhotoUrl(url) {
+            return (typeof url === 'string' && /^https:\/\//i.test(url)) ? url : 'https://via.placeholder.com/40';
+        }
+
+        // يشتغل فقط على نص تم تنقيته مسبقًا بـ escapeHtml — يحوّل الروابط لعناصر <a> قابلة للنقر
+        function linkify(escapedText) {
+            return escapedText.replace(
+                /(https?:\/\/[^\s<]+)/g,
+                '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline text-blue-300 break-all">$1</a>'
+            );
+        }
+
+        // وقت حقيقي للرسالة بدل النص الثابت "11:42 م" اللي كان بكل الرسائل بلا استثناء
+        function formatMsgTime(timestamp) {
+            if (!timestamp || !timestamp.toDate) return '';
+            return timestamp.toDate().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ===== هوية لونية لكل جهة اتصال: هاش بسيط على الـ uid يعطي درجة لون ثابتة =====
+        // نفس الشخص ياخذ نفس اللون دايمًا (بالأفتار، اسمه، وخلفية فقاعاته) بدون تخزين أي شي إضافي
+        function contactHue(uid) {
+            let hash = 0;
+            const s = String(uid || '');
+            for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+            return hash % 360;
+        }
+
+        // ===== توهج خلفية يتغيّر حسب وقت اليوم — لمسة تصميم حية بدون إزعاج =====
+        function timeOfDayHue() {
+            const h = new Date().getHours();
+            if (h >= 5 && h < 8) return 30;   // شروق دافئ
+            if (h >= 8 && h < 17) return 190; // نهار هادئ
+            if (h >= 17 && h < 20) return 20; // غروب
+            return 255;                       // ليل
+        }
+        function applyAmbientTheme() {
+            const glow = document.getElementById('ambientGlow');
+            if (!glow) return;
+            const hue = timeOfDayHue();
+            glow.style.background = `radial-gradient(circle, hsl(${hue} 70% 55%), transparent 70%)`;
+        }
+        applyAmbientTheme();
+        setInterval(applyAmbientTheme, 30 * 60 * 1000);
+
+        // منع التكبير/التصغير بالكامل — gesturestart خاصة بسفاري وما تتأثر بـ touch-action
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        document.addEventListener('gesturechange', (e) => e.preventDefault());
+        document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
+        // ===== حضور حقيقي: نبضة كل 25 ثانية بدل "متصل الآن" الثابتة =====
+        // Firestore ما عنده onDisconnect زي Realtime Database، فهذا أقرب تقريب عملي:
+        // لو آخر نبضة أقل من 45 ثانية نعتبره متصل، وإلا نحسب "آخر ظهور" من وقتها
+        let heartbeatInterval = null;
+        function startPresenceHeartbeat() {
+            const beat = () => {
+                if (document.visibilityState === 'visible' && currentUser) {
+                    setDoc(doc(db, "users", currentUser.uid), { lastSeen: serverTimestamp() }, { merge: true });
+                }
+            };
+            beat();
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(beat, 25000);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') beat(); });
+        }
+
+        function formatLastSeen(millis) {
+            if (!millis) return "غير متاح";
+            const diffSec = Math.floor((Date.now() - millis) / 1000);
+            if (diffSec < 45) return "متصل الآن";
+            if (diffSec < 3600) return `آخر ظهور قبل ${Math.max(1, Math.floor(diffSec / 60))} دقيقة`;
+            if (diffSec < 86400) return `آخر ظهور قبل ${Math.floor(diffSec / 3600)} ساعة`;
+            return `آخر ظهور قبل ${Math.floor(diffSec / 86400)} يوم`;
+        }
+
+        let unsubscribeFriendStatus = null;
+        let unsubscribeTyping = null;
+        let lastTypingWriteAt = 0;
+        let friendIsTyping = false;
+        let friendLastSeenMillis = null;
+
+        function updateChatHeaderStatus() {
+            if (!selectedUser || !sharedKey) return;
+            chatHeaderStatus.textContent = friendIsTyping ? "يكتب الآن..." : formatLastSeen(friendLastSeenMillis);
+            updateTypingBubble();
+        }
+        setInterval(updateChatHeaderStatus, 15000);
+
+        // فقاعة "يكتب الآن" متحركة داخل المحادثة نفسها، مو بس نص بالهيدر
+        function updateTypingBubble() {
+            const existing = document.getElementById('typingBubbleEl');
+            if (friendIsTyping && selectedUser && sharedKey) {
+                if (!existing) {
+                    const wrapper = document.createElement('div');
+                    wrapper.id = 'typingBubbleEl';
+                    wrapper.className = 'flex w-full justify-start message-pop';
+                    wrapper.innerHTML = `
+                        <div class="rounded-2xl rounded-bl-xs mr-auto p-3 shadow-md flex items-center gap-1.5" style="background-color: hsl(${contactHue(selectedUser.uid)} 32% 19%);">
+                            <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+                        </div>`;
+                    chatMessages.appendChild(wrapper);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } else if (existing) {
+                existing.remove();
+            }
+        }
+
+        // ===== رسائل مؤقتة (تختفي تلقائيًا) — إعداد مشترك بين الطرفين لكل محادثة =====
+        const VANISH_OPTIONS = [0, 86400, 604800]; // متوقفة، 24 ساعة، 7 أيام (بالثواني)
+        let currentVanishDuration = 0;
+
+        function updateVanishButton() {
+            contactInfoVanishValue.textContent = currentVanishDuration === 0
+                ? "متوقفة"
+                : (currentVanishDuration === 86400 ? "24 ساعة" : "7 أيام");
+        }
+
+        contactInfoVanishBtn.addEventListener('click', async () => {
+            if (!currentChatId) return;
+            const idx = VANISH_OPTIONS.indexOf(currentVanishDuration);
+            const next = VANISH_OPTIONS[(idx + 1) % VANISH_OPTIONS.length];
             try {
-                const bytes = CryptoJS.AES.decrypt(ciphertext, key);
-                return bytes.toString(CryptoJS.enc.Utf8);
+                await setDoc(doc(db, "chats", currentChatId), { vanishDuration: next }, { merge: true });
+            } catch (e) { /* نفس ملاحظة صلاحيات Firestore السابقة */ }
+        });
+
+        openContactInfoBtn.addEventListener('click', () => {
+            if (!selectedUser) return;
+            contactInfoAvatar.src = safePhotoUrl(selectedUser.photoURL);
+            contactInfoName.textContent = selectedUser.name;
+            contactInfoUsername.textContent = selectedUser.username ? `@${selectedUser.username}` : '';
+            contactInfoModal.classList.remove('hidden');
+        });
+        closeContactInfoBtn.addEventListener('click', () => contactInfoModal.classList.add('hidden'));
+
+        function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+        function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+
+        function base64ToBlob(b64, mime) { return new Blob([b64ToBuf(b64)], { type: mime }); }
+
+        // ===== موجة صوتية حقيقية بدل مشغّل الصوت الافتراضي بالمتصفح =====
+        function formatDuration(totalSec) {
+            const s = Math.max(0, Math.round(totalSec || 0));
+            return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+        }
+
+        async function computeWaveformBars(arrayBuffer, barCount = 28) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                const audioCtx = new AudioCtx();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+                const raw = audioBuffer.getChannelData(0);
+                const blockSize = Math.max(1, Math.floor(raw.length / barCount));
+                const bars = [];
+                for (let i = 0; i < barCount; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < blockSize; j++) sum += Math.abs(raw[i * blockSize + j] || 0);
+                    bars.push(sum / blockSize);
+                }
+                audioCtx.close();
+                const max = Math.max(...bars, 0.001);
+                return bars.map(b => Math.max(0.15, b / max));
             } catch (e) {
-                return "[رسالة مشفرة]";
+                return Array.from({ length: barCount }, () => 0.35 + Math.random() * 0.35);
+            }
+        }
+
+        function buildVoicePlayerHtml(audioUrl, bars, durationSec) {
+            const barsHtml = bars.map((h, i) => `<span class="voice-bar" data-idx="${i}" style="height:${Math.round(h * 100)}%"></span>`).join('');
+            return `
+                <div class="voice-player flex items-center gap-2" style="width:210px;">
+                    <button class="voice-play-btn w-8 h-8 rounded-full bg-black/25 flex items-center justify-center shrink-0"><i class="fas fa-play" style="font-size:11px;"></i></button>
+                    <div class="voice-bars flex items-end gap-[2px] h-8 flex-1 cursor-pointer">${barsHtml}</div>
+                    <span class="voice-time text-[10px] opacity-70 shrink-0">${formatDuration(durationSec)}</span>
+                    <audio class="voice-audio-el hidden" src="${audioUrl}" preload="metadata"></audio>
+                </div>`;
+        }
+
+        function wireVoicePlayer(bubble, durationSec) {
+            const playerEl = bubble.querySelector('.voice-player');
+            if (!playerEl) return;
+            const audioEl = playerEl.querySelector('.voice-audio-el');
+            const playBtn = playerEl.querySelector('.voice-play-btn');
+            const barsEls = playerEl.querySelectorAll('.voice-bar');
+            const timeEl = playerEl.querySelector('.voice-time');
+
+            playBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.voice-audio-el').forEach(a => { if (a !== audioEl) a.pause(); });
+                if (audioEl.paused) {
+                    audioEl.play();
+                    playBtn.innerHTML = '<i class="fas fa-pause" style="font-size:11px;"></i>';
+                } else {
+                    audioEl.pause();
+                    playBtn.innerHTML = '<i class="fas fa-play" style="font-size:11px;"></i>';
+                }
+            });
+            audioEl.addEventListener('play', () => { playBtn.innerHTML = '<i class="fas fa-pause" style="font-size:11px;"></i>'; });
+            audioEl.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fas fa-play" style="font-size:11px;"></i>'; });
+            audioEl.addEventListener('timeupdate', () => {
+                const pct = audioEl.duration ? audioEl.currentTime / audioEl.duration : 0;
+                const activeCount = Math.floor(pct * barsEls.length);
+                barsEls.forEach((b, i) => b.classList.toggle('played', i < activeCount));
+                timeEl.textContent = formatDuration(audioEl.duration - audioEl.currentTime);
+            });
+            audioEl.addEventListener('ended', () => {
+                barsEls.forEach(b => b.classList.remove('played'));
+                timeEl.textContent = formatDuration(durationSec);
+            });
+            playerEl.querySelector('.voice-bars').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pct = (e.clientX - rect.left) / rect.width;
+                if (audioEl.duration) audioEl.currentTime = pct * audioEl.duration;
+            });
+        }
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(String(reader.result).split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // ===== طبقة حماية إضافية: تشفير المفتاح الخاص بكلمة مرور/PIN قبل تخزينه =====
+        // بدون هذا، أي سكربت أو إضافة متصفح خبيثة تقدر تقرأ localStorage مباشرة
+        // وتسرق المفتاح الخاص. الآن المخزَّن هو نسخة مشفّرة منه فقط، ومفتاح
+        // فكها (PBKDF2 من كلمة المرور) موجود بذاكرة المستخدم هو فقط، مو بالجهاز.
+        const PBKDF2_ITERATIONS = 250000;
+
+        async function deriveWrappingKey(pin, saltBytes) {
+            const baseKey = await crypto.subtle.importKey("raw", textEnc.encode(pin), "PBKDF2", false, ["deriveKey"]);
+            return crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: saltBytes, iterations: PBKDF2_ITERATIONS, hash: "SHA-256" },
+                baseKey,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        async function encryptPrivateKeyWithPin(privateJwk, pin) {
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const wrappingKey = await deriveWrappingKey(pin, salt);
+            const ciphertext = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv }, wrappingKey, textEnc.encode(JSON.stringify(privateJwk))
+            );
+            return { salt: bufToB64(salt), iv: bufToB64(iv), ciphertext: bufToB64(ciphertext) };
+        }
+
+        async function decryptPrivateKeyWithPin(blob, pin) {
+            const wrappingKey = await deriveWrappingKey(pin, b64ToBuf(blob.salt));
+            const plainBuf = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: b64ToBuf(blob.iv) }, wrappingKey, b64ToBuf(blob.ciphertext)
+            );
+            return JSON.parse(textDec.decode(plainBuf));
+        }
+
+        function showPinError(msg) { pinError.textContent = msg; pinError.classList.remove('hidden'); }
+        function clearPinError() { pinError.classList.add('hidden'); pinError.textContent = ''; }
+
+        // mode: 'set' (مفتاح جديد) | 'migrate' (مفتاح قديم غير محمي) | 'unlock' (فك مفتاح محمي)
+        function askForPin(mode, prefillError) {
+            return new Promise((resolve) => {
+                pinInput.value = ''; pinConfirmInput.value = '';
+                clearPinError();
+                if (prefillError) showPinError(prefillError);
+
+                pinConfirmInput.classList.toggle('hidden', mode === 'unlock');
+                if (mode === 'unlock') {
+                    pinModalTitle.textContent = "أدخل كلمة المرور";
+                    pinModalSubtitle.textContent = "أدخل كلمة المرور/PIN اللي أمّنت فيها مفتاحك على هذا الجهاز";
+                } else {
+                    pinModalTitle.textContent = "تأمين مفتاح التشفير";
+                    pinModalSubtitle.textContent = mode === 'migrate'
+                        ? "مفتاحك الحالي غير محمي بعد — اختر كلمة مرور/PIN لتشفيره على هذا الجهاز فقط"
+                        : "اختر كلمة مرور أو PIN لحماية مفتاحك الخاص على هذا الجهاز — لا يُرسل لأي سيرفر";
+                }
+
+                pinModal.classList.remove('hidden');
+                pinInput.focus();
+
+                function cleanup() {
+                    pinSubmitBtn.removeEventListener('click', handler);
+                    pinInput.removeEventListener('keypress', onEnter);
+                    pinConfirmInput.removeEventListener('keypress', onEnter);
+                }
+                function handler() {
+                    const pin = pinInput.value;
+                    if (!pin || pin.length < 4) { showPinError("لازم 4 خانات على الأقل"); return; }
+                    if (mode !== 'unlock' && pin !== pinConfirmInput.value) { showPinError("كلمتا المرور غير متطابقتين"); return; }
+                    cleanup();
+                    pinModal.classList.add('hidden');
+                    resolve(pin);
+                }
+                function onEnter(e) { if (e.key === 'Enter') handler(); }
+
+                pinSubmitBtn.addEventListener('click', handler);
+                pinInput.addEventListener('keypress', onEnter);
+                pinConfirmInput.addEventListener('keypress', onEnter);
+            });
+        }
+
+        async function unlockOrCreateKeyPair(uid) {
+            const encBlobRaw = localStorage.getItem(`ping_priv_enc_${uid}`);
+
+            // 1) عنده مفتاح محمي بالفعل — نطلب كلمة المرور لفكه
+            if (encBlobRaw) {
+                const blob = JSON.parse(encBlobRaw);
+                let err = null;
+                while (true) {
+                    const pin = await askForPin('unlock', err);
+                    try {
+                        const privJwk = await decryptPrivateKeyWithPin(blob, pin);
+                        const privateKey = await crypto.subtle.importKey("jwk", privJwk, ECDH_ALG, true, ["deriveKey"]);
+                        const publicJwk = JSON.parse(localStorage.getItem(`ping_pub_${uid}`));
+                        return { privateKey, publicJwk };
+                    } catch (e) {
+                        err = "كلمة المرور غير صحيحة، حاول مرة ثانية";
+                    }
+                }
+            }
+
+            // 2) ترحيل: مفتاح من نسخة سابقة كان مخزّن بدون حماية
+            const oldPlainPriv = localStorage.getItem(`ping_priv_${uid}`);
+            if (oldPlainPriv) {
+                const privJwk = JSON.parse(oldPlainPriv);
+                const pin = await askForPin('migrate');
+                const blob = await encryptPrivateKeyWithPin(privJwk, pin);
+                localStorage.setItem(`ping_priv_enc_${uid}`, JSON.stringify(blob));
+                localStorage.removeItem(`ping_priv_${uid}`);
+                const privateKey = await crypto.subtle.importKey("jwk", privJwk, ECDH_ALG, true, ["deriveKey"]);
+                const publicJwk = JSON.parse(localStorage.getItem(`ping_pub_${uid}`));
+                return { privateKey, publicJwk };
+            }
+
+            // 3) ما فيه أي مفتاح — نولّد واحد جديد ونحميه مباشرة
+            const pair = await crypto.subtle.generateKey(ECDH_ALG, true, ["deriveKey"]);
+            const privJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
+            const publicJwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
+            const pin = await askForPin('set');
+            const blob = await encryptPrivateKeyWithPin(privJwk, pin);
+            localStorage.setItem(`ping_priv_enc_${uid}`, JSON.stringify(blob));
+            localStorage.setItem(`ping_pub_${uid}`, JSON.stringify(publicJwk));
+            return { privateKey: pair.privateKey, publicJwk };
+        }
+
+        async function deriveSharedKey(myPriv, theirPublicJwk) {
+            const theirPublicKey = await crypto.subtle.importKey(
+                "jwk", theirPublicJwk, ECDH_ALG, true, []
+            );
+            return crypto.subtle.deriveKey(
+                { name: "ECDH", public: theirPublicKey },
+                myPriv,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        async function encryptMessage(key, text) {
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const data = textEnc.encode(text);
+            const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
+            return { iv: bufToB64(iv), ciphertext: bufToB64(ciphertext) };
+        }
+
+        async function decryptMessage(key, ivB64, ciphertextB64) {
+            if (!key || !ivB64 || !ciphertextB64) return "[تعذّر فك التشفير]";
+            try {
+                const plainBuf = await crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: b64ToBuf(ivB64) }, key, b64ToBuf(ciphertextB64)
+                );
+                return textDec.decode(plainBuf);
+            } catch (e) {
+                return "[تعذّر فك التشفير]";
             }
         }
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                loginScreen.classList.add('hidden');
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
+
+                // مفتاحي الخاص يُفكّ أو يُولَّد ويُحمى بكلمة مرور الآن — قبل أي شيء آخر
+                const { privateKey, publicJwk } = await unlockOrCreateKeyPair(user.uid);
+                myPrivateKey = privateKey;
 
                 let defaultUsername = user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
 
                 if (!userSnap.exists()) {
                     currentUserProfile = {
                         uid: user.uid,
-                        name: user.displayName || "Instagram User",
+                        name: user.displayName || "مستخدم Ping",
                         username: defaultUsername,
+                        bio: "متاح...",
                         photoURL: user.photoURL || 'https://via.placeholder.com/40',
                         friends: [],
-                        blocked: [],
-                        note: "",
+                        publicKeyJwk: publicJwk,
                         lastSeen: serverTimestamp()
                     };
                     await setDoc(userRef, currentUserProfile);
                 } else {
                     currentUserProfile = userSnap.data();
-                    if (!currentUserProfile.blocked) currentUserProfile.blocked = [];
+                    // إذا المفتاح العام المخزّن ما يطابق مفتاح هذا الجهاز، حدّثه
+                    // (يحصل أول مرة، أو عند فتح التطبيق من جهاز/متصفح جديد)
+                    if (JSON.stringify(currentUserProfile.publicKeyJwk) !== JSON.stringify(publicJwk)) {
+                        await updateDoc(userRef, { publicKeyJwk: publicJwk });
+                        currentUserProfile.publicKeyJwk = publicJwk;
+                    }
                 }
 
-                myAvatar.src = currentUserProfile.photoURL;
-                myUserHandle.textContent = `@${currentUserProfile.username}`;
-                if (currentUserProfile.note) myNoteBadge.textContent = currentUserProfile.note;
+                settingsAvatar.src = safePhotoUrl(currentUserProfile.photoURL);
+                settingsName.textContent = currentUserProfile.name;
+                settingsHandle.textContent = `@${currentUserProfile.username}`;
 
                 loginScreen.classList.add('hidden');
                 mainApp.classList.remove('hidden');
 
+                startPresenceHeartbeat();
                 loadFriendsList();
+
+                // فتح التطبيق برابط مشاركة (?u=username) يبحث عن الشخص ويفتح شاشة الإضافة تلقائيًا
+                const sharedUsername = new URLSearchParams(location.search).get('u');
+                if (sharedUsername) {
+                    newChatUsernameInput.value = sharedUsername;
+                    newChatModal.classList.remove('hidden');
+                    searchUserByUsername();
+                    history.replaceState({}, '', location.pathname);
+                }
+            } else {
+                // تسجيل الخروج: نرجّع كل شي لحالته الأولى ونوقف كل الاستماعات المرتبطة بالجلسة القديمة
+                if (heartbeatInterval) clearInterval(heartbeatInterval);
+                if (unsubscribeMessages) unsubscribeMessages();
+                if (unsubscribeFriendStatus) unsubscribeFriendStatus();
+                if (unsubscribeTyping) unsubscribeTyping();
+                Object.values(lastMessageUnsubs).forEach(unsub => unsub());
+                lastMessageUnsubs = {};
+                lastMessageCache = {};
+                currentUser = null;
+                currentUserProfile = null;
+                selectedUser = null;
+                currentChatId = null;
+                myPrivateKey = null;
+                sharedKey = null;
+                cachedFriends = [];
+                usersList.innerHTML = '';
+                chatMessages.innerHTML = '';
+                chatHeaderName.textContent = 'اختر محادثة';
+                chatPanel.classList.add('hidden');
+                chatPanel.classList.remove('flex');
+                sidebarPanel.classList.remove('hidden');
+                inputContainer.classList.add('hidden');
+                settingsModal.classList.add('hidden');
+                mainApp.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
             }
         });
 
         loginBtn.addEventListener('click', () => signInWithPopup(auth, provider));
+        logoutBtnModal.addEventListener('click', () => signOut(auth));
 
-        openNewChatBtn.addEventListener('click', () => newChatModal.classList.remove('hidden'));
+        openSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            searchResultsList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">اكتب كلمة أو اسم شخص وابدأ البحث</p>`;
+            searchModal.classList.remove('hidden');
+            searchInput.focus();
+        });
+        closeSearchBtn.addEventListener('click', () => searchModal.classList.add('hidden'));
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') runGlobalSearch(); });
+
+        openNewChatBtn.addEventListener('click', () => {
+            newChatUsernameInput.value = '';
+            newChatError.classList.add('hidden');
+            newChatResults.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">اكتب اسم المستخدم بالضبط واضغط بحث</p>`;
+            newChatModal.classList.remove('hidden');
+            newChatUsernameInput.focus();
+        });
         closeNewChatBtn.addEventListener('click', () => newChatModal.classList.add('hidden'));
+        newChatSearchBtn.addEventListener('click', searchUserByUsername);
+        newChatUsernameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchUserByUsername(); });
 
-        openChatInfoBtn.addEventListener('click', () => {
-            if (!selectedUser) return;
-            infoUserAvatar.src = selectedUser.photoURL || 'https://via.placeholder.com/96';
-            infoUserName.textContent = selectedUser.name;
-            infoUserHandle.textContent = `@${selectedUser.username}`;
-            chatInfoModal.classList.remove('hidden');
+        openMenuBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+        // ===== ملفي الشخصي: تعديل الاسم/النبذة + رابط مشاركة يفتح إضافة صديق مباشرة =====
+        openMyProfileBtn.addEventListener('click', () => {
+            myProfileAvatar.src = safePhotoUrl(currentUserProfile.photoURL);
+            myProfileUsername.textContent = currentUserProfile.username || '';
+            myProfileNameInput.value = currentUserProfile.name || '';
+            myProfileBioInput.value = currentUserProfile.bio || '';
+            myShareLinkInput.value = `${location.origin}${location.pathname}?u=${encodeURIComponent(currentUserProfile.username || '')}`;
+            settingsModal.classList.add('hidden');
+            myProfileModal.classList.remove('hidden');
         });
-        closeChatInfoBtn.addEventListener('click', () => chatInfoModal.classList.add('hidden'));
+        closeMyProfileBtn.addEventListener('click', () => myProfileModal.classList.add('hidden'));
 
-        openNoteModalBtn.addEventListener('click', () => noteModal.classList.remove('hidden'));
-        closeNoteBtn.addEventListener('click', () => noteModal.classList.add('hidden'));
-
-        saveNoteBtn.addEventListener('click', async () => {
-            const noteText = noteInput.value.trim();
-            if (!noteText) return;
-
-            currentUserProfile.note = noteText;
-            myNoteBadge.textContent = noteText;
-            await updateDoc(doc(db, "users", currentUser.uid), { note: noteText });
-            noteModal.classList.add('hidden');
-        });
-
-        blockUserBtn.addEventListener('click', async () => {
-            if (!selectedUser) return;
-            if (confirm(`هل أنت تأكد من حظر @${selectedUser.username}؟`)) {
-                await updateDoc(doc(db, "users", currentUser.uid), {
-                    blocked: arrayUnion(selectedUser.uid)
-                });
-                alert("تم حظر المستخدم.");
-                chatInfoModal.classList.add('hidden');
-                inputContainer.classList.add('hidden');
+        saveMyProfileBtn.addEventListener('click', async () => {
+            const name = myProfileNameInput.value.trim();
+            const bio = myProfileBioInput.value.trim();
+            if (!name) { alert('لازم اسم'); return; }
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), { name, bio }, { merge: true });
+                currentUserProfile.name = name;
+                currentUserProfile.bio = bio;
+                settingsName.textContent = name;
+                myProfileModal.classList.add('hidden');
+            } catch (e) {
+                alert('ما قدرت أحفظ — تأكد من صلاحيات Firestore');
             }
         });
 
-        reportUserBtn.addEventListener('click', () => {
-            const reason = prompt("يرجى كتابة سبب الإبلاغ عن هذا الحساب:");
-            if (reason) {
-                alert("تم استلام بلاغك وسيقوم الفريق بمراجعته فوراً. شكراً لحرصك على أمان المنصة.");
-            }
+        copyShareLinkBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(myShareLinkInput.value);
+                copyShareLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => { copyShareLinkBtn.innerHTML = '<i class="fas fa-copy"></i>'; }, 1500);
+            } catch (e) { /* ignore */ }
         });
 
-        deleteChatBtn.addEventListener('click', async () => {
+        toggleAttachmentBtn.addEventListener('click', () => attachmentMenu.classList.toggle('hidden'));
+
+        // تبويبات تصفية القائمة الجانبية
+        function setActiveTab(tab, el) {
+            activeSidebarTab = tab;
+            [tabAll, tabUnread, tabFavorites, tabGroups].forEach(t => t.classList.remove('tab-active'));
+            el.classList.add('tab-active');
+            renderFriendsList();
+        }
+        tabAll.addEventListener('click', () => setActiveTab('all', tabAll));
+        tabUnread.addEventListener('click', () => setActiveTab('unread', tabUnread));
+        tabFavorites.addEventListener('click', () => setActiveTab('favorites', tabFavorites));
+        tabGroups.addEventListener('click', () => setActiveTab('groups', tabGroups));
+
+        // الشريط السفلي: الدردشات شغالة، الحالات والمكالمات لسا ما بنيت
+        function highlightNav(activeBtn) {
+            [navChats, navStatus, navCalls].forEach(b => b.classList.remove('text-[#00a884]'));
+            activeBtn.classList.add('text-[#00a884]');
+        }
+        navChats.addEventListener('click', () => { highlightNav(navChats); renderFriendsList(); });
+        navStatus.addEventListener('click', () => {
+            highlightNav(navStatus);
+            usersList.innerHTML = `<div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3 py-16"><i class="fas fa-circle-notch text-3xl"></i><p>ميزة الحالات قريبًا</p></div>`;
+        });
+        navCalls.addEventListener('click', () => {
+            highlightNav(navCalls);
+            usersList.innerHTML = `<div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3 py-16"><i class="fas fa-phone text-3xl"></i><p>ميزة المكالمات قريبًا</p></div>`;
+        });
+
+        // "المزيد" بهيدر المحادثة: حذف المحادثة
+        moreOptionsBtn.addEventListener('click', () => moreOptionsMenu.classList.toggle('hidden'));
+        clearChatBtn.addEventListener('click', async () => {
+            moreOptionsMenu.classList.add('hidden');
             if (!currentChatId) return;
-            if (confirm("هل تريد حذف كافة الرسائل في هذه المحادثة لدى الطرفين؟")) {
+            if (!confirm("حذف كل رسائل هذي المحادثة؟ الإجراء ما يترجع.")) return;
+            try {
                 const snap = await getDocs(collection(db, "chats", currentChatId, "messages"));
-                snap.forEach(async (d) => await deleteDoc(d.ref));
-                chatInfoModal.classList.add('hidden');
-                alert("تم حذف المحادثة بالكامل.");
+                await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+            } catch (e) {
+                alert("ما قدرت أحذف المحادثة — تأكد من صلاحيات Firestore (Security Rules)");
             }
         });
 
-        backToUsersBtn.addEventListener('click', () => {
+        // مشاركة الموقع كرسالة نصية مشفّرة عادية (رابط خرائط جوجل)
+        attachLocationBtn.addEventListener('click', () => {
+            attachmentMenu.classList.add('hidden');
+            if (!sharedKey || !currentChatId) return;
+            if (!navigator.geolocation) { alert("المتصفح ما يدعم تحديد الموقع"); return; }
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const text = `📍 موقعي: https://maps.google.com/?q=${latitude},${longitude}`;
+                const { iv, ciphertext } = await encryptMessage(sharedKey, text);
+                await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                    senderUid: currentUser.uid, iv, ciphertext, timestamp: serverTimestamp()
+                }));
+                updateLastMessagePreview('📍 موقع');
+            }, () => alert("ما قدرت أوصل للموقع — تأكد من إعطاء المتصفح الإذن"));
+        });
+
+        // ===== استطلاعات رأي: سؤال وخيارات مشفّرة، والأصوات نفسها بحقل عادي (زي التفاعلات بالضبط) =====
+        attachPollBtn.addEventListener('click', () => {
+            attachmentMenu.classList.add('hidden');
+            pollQuestionInput.value = '';
+            pollOptionsContainer.innerHTML = `
+                <input class="poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5" placeholder="خيار 1">
+                <input class="poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5" placeholder="خيار 2">
+            `;
+            pollModal.classList.remove('hidden');
+        });
+        cancelPollBtn.addEventListener('click', () => pollModal.classList.add('hidden'));
+        addPollOptionBtn.addEventListener('click', () => {
+            if (pollOptionsContainer.querySelectorAll('.poll-option-input').length >= 5) return;
+            const input = document.createElement('input');
+            input.className = 'poll-option-input w-full app-bg-input text-white rounded-xl px-4 py-2 text-sm focus:outline-none border border-white/5';
+            input.placeholder = `خيار ${pollOptionsContainer.children.length + 1}`;
+            pollOptionsContainer.appendChild(input);
+        });
+        sendPollBtn.addEventListener('click', async () => {
+            if (!sharedKey || !currentChatId) return;
+            const question = pollQuestionInput.value.trim();
+            const options = [...pollOptionsContainer.querySelectorAll('.poll-option-input')].map(i => i.value.trim()).filter(Boolean);
+            if (!question || options.length < 2) { alert('لازم سؤال وخيارين على الأقل'); return; }
+            const { iv, ciphertext } = await encryptMessage(sharedKey, JSON.stringify({ question, options }));
+            await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                senderUid: currentUser.uid, type: 'poll', iv, ciphertext, votes: {}, timestamp: serverTimestamp()
+            }));
+            updateLastMessagePreview(`📊 ${question}`);
+            pollModal.classList.add('hidden');
+        });
+
+        // أي زر ثاني لسا ما بنيناه — على الأقل يرد بدل ما يكون ميت بالكامل
+        document.querySelectorAll('.coming-soon-btn').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                alert('هذي الميزة لسا ما بنيت — قريبًا إن شاء الله');
+            });
+        });
+
+        // إغلاق القوائم المنسدلة عند الضغط خارجها
+        document.addEventListener('click', (e) => {
+            if (!attachmentMenu.classList.contains('hidden') && !attachmentMenu.contains(e.target) && !toggleAttachmentBtn.contains(e.target)) {
+                attachmentMenu.classList.add('hidden');
+            }
+            if (!moreOptionsMenu.classList.contains('hidden') && !moreOptionsMenu.contains(e.target) && !moreOptionsBtn.contains(e.target)) {
+                moreOptionsMenu.classList.add('hidden');
+            }
+        });
+        closeContextBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
+
+        reactionPicks.forEach(pick => {
+            pick.addEventListener('click', async () => {
+                if (!selectedMessageId) return;
+                try {
+                    await updateDoc(doc(db, "chats", currentChatId, "messages", selectedMessageId), {
+                        [`reactions.${currentUser.uid}`]: pick.dataset.emoji
+                    });
+                } catch (e) { /* ignore */ }
+                messageContextMenu.classList.add('hidden');
+            });
+        });
+
+        copyMsgBtn.addEventListener('click', async () => {
+            if (selectedMessageText) {
+                try { await navigator.clipboard.writeText(selectedMessageText); } catch (e) { /* ignore */ }
+            }
+            messageContextMenu.classList.add('hidden');
+        });
+
+        deleteMsgBtn.addEventListener('click', async () => {
+            if (selectedMessageId && selectedMessageSenderUid === currentUser.uid) {
+                try { await deleteDoc(doc(db, "chats", currentChatId, "messages", selectedMessageId)); } catch (e) { /* ignore */ }
+            }
+            messageContextMenu.classList.add('hidden');
+        });
+
+        const REPLY_TYPE_LABELS = { audio: '🎤 رسالة صوتية', image: '📷 صورة', file: '📄 ملف', poll: '📊 استطلاع' };
+        replyMsgBtn.addEventListener('click', () => {
+            if (selectedMessageId) {
+                const text = selectedMessageType === 'text' || selectedMessageType === undefined
+                    ? (selectedMessageText || 'رسالة')
+                    : (REPLY_TYPE_LABELS[selectedMessageType] || 'رسالة');
+                activeReply = { text, senderUid: selectedMessageSenderUid };
+                replyBannerText.textContent = (activeReply.senderUid === currentUser.uid ? 'أنت: ' : '') + activeReply.text;
+                replyBanner.style.display = 'flex';
+                messageInput.focus();
+            }
+            messageContextMenu.classList.add('hidden');
+        });
+        cancelReplyBtn.addEventListener('click', () => {
+            activeReply = null;
+            replyBanner.style.display = 'none';
+        });
+
+        // إعادة التوجيه لسا ما جهزت — نسكر القائمة بدل ما تكون معلّقة بدون رد
+        forwardMsgBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
+
+        backToUsersBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             chatPanel.classList.add('hidden');
             sidebarPanel.classList.remove('hidden');
         });
 
-        closeContextBtn.addEventListener('click', () => messageContextMenu.classList.add('hidden'));
+        // ===== سحب تفاعلي للخروج من المحادثة — يتبع إصبعك لحظيًا مع شفافية وعمق، زي iOS بالضبط =====
+        // يشتغل من أي مكان بالهيدر، أو بالسحب من حافة الشاشة اليسرى بأي مكان بالمحادثة
+        let swipeStartX = null, swipeStartY = null, swipeActive = false, swipeDragging = false, swipeScrimEl = null;
+        const SWIPE_EDGE_ZONE = 30;
+        const SWIPE_THRESHOLD = 90;
+        const isMobileLayout = () => window.innerWidth < 768;
 
-        deleteMsgBtn.addEventListener('click', async () => {
-            if (selectedMessageId && currentChatId) {
-                await updateDoc(doc(db, "chats", currentChatId, "messages", selectedMessageId), { deleted: true });
-                messageContextMenu.classList.add('hidden');
+        function beginSwipeVisual() {
+            sidebarPanel.classList.remove('hidden');
+            sidebarPanel.style.position = 'relative';
+            chatPanel.style.position = 'absolute';
+            chatPanel.style.inset = '0';
+            chatPanel.style.zIndex = '30';
+            chatPanel.style.boxShadow = '-14px 0 40px rgba(0,0,0,0.4)';
+            chatPanel.style.willChange = 'transform, opacity';
+            swipeScrimEl = document.createElement('div');
+            swipeScrimEl.style.cssText = 'position:absolute;inset:0;background:#000;pointer-events:none;z-index:29;opacity:0.35;';
+            sidebarPanel.appendChild(swipeScrimEl);
+        }
+        function applySwipeVisual(dx) {
+            const width = chatPanel.offsetWidth || window.innerWidth;
+            const pct = Math.min(1, dx / width);
+            chatPanel.style.transform = `translateX(${dx}px) scale(${1 - pct * 0.04})`;
+            chatPanel.style.opacity = String(1 - pct * 0.55);
+            if (swipeScrimEl) swipeScrimEl.style.opacity = String(0.35 * (1 - pct));
+        }
+        function resetSwipeStyles() {
+            chatPanel.style.position = '';
+            chatPanel.style.inset = '';
+            chatPanel.style.zIndex = '';
+            chatPanel.style.boxShadow = '';
+            chatPanel.style.transform = '';
+            chatPanel.style.opacity = '';
+            chatPanel.style.transition = '';
+            chatPanel.style.willChange = '';
+            if (swipeScrimEl) { swipeScrimEl.remove(); swipeScrimEl = null; }
+        }
+        function completeSwipeExit() {
+            const width = chatPanel.offsetWidth || window.innerWidth;
+            chatPanel.style.transform = `translateX(${width}px) scale(0.96)`;
+            chatPanel.style.opacity = '0';
+            if (swipeScrimEl) swipeScrimEl.style.opacity = '0';
+            setTimeout(() => { chatPanel.classList.add('hidden'); resetSwipeStyles(); }, 280);
+        }
+        function cancelSwipeExit() {
+            chatPanel.style.transform = 'translateX(0) scale(1)';
+            chatPanel.style.opacity = '1';
+            if (swipeScrimEl) swipeScrimEl.style.opacity = '0';
+            setTimeout(() => { resetSwipeStyles(); if (isMobileLayout()) sidebarPanel.classList.add('hidden'); }, 280);
+        }
+
+        chatPanel.addEventListener('pointerdown', (e) => {
+            if (!isMobileLayout() || chatPanel.classList.contains('hidden')) return;
+            if (!chatHeader.contains(e.target) && e.clientX > SWIPE_EDGE_ZONE) return;
+            swipeStartX = e.clientX; swipeStartY = e.clientY;
+            swipeActive = true; swipeDragging = false;
+            chatPanel.style.transition = 'none';
+        });
+        window.addEventListener('pointermove', (e) => {
+            if (!swipeActive) return;
+            const dx = e.clientX - swipeStartX, dy = e.clientY - swipeStartY;
+            if (!swipeDragging) {
+                if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+                if (Math.abs(dy) > Math.abs(dx) || dx <= 0) { swipeActive = false; return; }
+                swipeDragging = true;
+                beginSwipeVisual();
             }
+            e.preventDefault();
+            applySwipeVisual(Math.max(0, dx));
+        }, { passive: false });
+        window.addEventListener('pointerup', (e) => {
+            if (!swipeActive) return;
+            swipeActive = false;
+            if (!swipeDragging) { chatPanel.style.transition = ''; return; }
+            const dx = Math.max(0, e.clientX - swipeStartX);
+            chatPanel.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease';
+            if (dx > SWIPE_THRESHOLD) completeSwipeExit(); else cancelSwipeExit();
+        });
+        window.addEventListener('pointercancel', () => {
+            if (!swipeActive || !swipeDragging) { swipeActive = false; return; }
+            swipeActive = false;
+            chatPanel.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease';
+            cancelSwipeExit();
         });
 
+        // تحويل الميكروفون إلى أزرار إرسال عند الكتابة
         messageInput.addEventListener('input', () => {
             if (messageInput.value.trim().length > 0) {
-                sendBtn.classList.remove('hidden');
-                recordAudioBtn.classList.add('hidden');
+                actionIcon.className = "fas fa-paper-plane -rotate-45 translate-x-0.5 text-sm";
+                const now = Date.now();
+                if (currentChatId && now - lastTypingWriteAt > 2000) {
+                    lastTypingWriteAt = now;
+                    setDoc(doc(db, "chats", currentChatId), { [`typing.${currentUser.uid}`]: serverTimestamp() }, { merge: true });
+                }
             } else {
-                sendBtn.classList.add('hidden');
-                recordAudioBtn.classList.remove('hidden');
+                actionIcon.className = "fas fa-microphone text-sm";
             }
         });
+
+        async function searchUserByUsername() {
+            const term = newChatUsernameInput.value.trim().replace(/^@/, '');
+            newChatError.classList.add('hidden');
+            if (!term) return;
+            newChatResults.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">جاري البحث...</p>`;
+
+            try {
+                const q = query(collection(db, "users"), where("username", "==", term));
+                const snap = await getDocs(q);
+
+                const matches = [];
+                snap.forEach(docSnap => {
+                    if (docSnap.id !== currentUser.uid) matches.push({ uid: docSnap.id, ...docSnap.data() });
+                });
+
+                if (matches.length === 0) {
+                    newChatResults.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">ما فيه مستخدم بهذا الاسم</p>`;
+                    return;
+                }
+
+                newChatResults.innerHTML = '';
+                matches.forEach(userData => {
+                    const el = document.createElement('div');
+                    el.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition rounded-xl";
+                    el.innerHTML = `
+                        <img src="${safePhotoUrl(userData.photoURL)}" class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-sm text-white truncate">${escapeHtml(userData.name)}</h3>
+                            <p class="text-xs text-[#00a884] font-mono">@${escapeHtml(userData.username)}</p>
+                        </div>
+                    `;
+                    el.addEventListener('click', () => startChatWith(userData));
+                    newChatResults.appendChild(el);
+                });
+            } catch (e) {
+                newChatResults.innerHTML = '';
+                newChatError.textContent = "صار خطأ بالبحث، حاول مرة ثانية";
+                newChatError.classList.remove('hidden');
+            }
+        }
+
+        async function startChatWith(userData) {
+            newChatModal.classList.add('hidden');
+
+            const alreadyFriend = (currentUserProfile.friends || []).includes(userData.uid);
+            if (!alreadyFriend) {
+                try {
+                    await updateDoc(doc(db, "users", currentUser.uid), { friends: arrayUnion(userData.uid) });
+                } catch (e) {
+                    newChatModal.classList.remove('hidden');
+                    newChatError.textContent = "ما قدرت أبدأ المحادثة — تأكد من صلاحيات Firestore (Security Rules)";
+                    newChatError.classList.remove('hidden');
+                    return;
+                }
+                try {
+                    await updateDoc(doc(db, "users", userData.uid), { friends: arrayUnion(currentUser.uid) });
+                    currentUserProfile.friends = [...(currentUserProfile.friends || []), userData.uid];
+                } catch (e) {
+                    // فشل تحديث حساب الطرف الثاني — نرجع نلغي الإضافة عندي حتى ما تصير صداقة باتجاه واحد بس
+                    try { await updateDoc(doc(db, "users", currentUser.uid), { friends: arrayRemove(userData.uid) }); } catch (e2) { /* ignore */ }
+                    newChatModal.classList.remove('hidden');
+                    newChatError.textContent = "ما قدرت أبدأ المحادثة من طرف الآخر — تأكد من صلاحيات Firestore (Security Rules)";
+                    newChatError.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            openChat(userData);
+        }
+
+        let cachedFriends = [];
+        let activeSidebarTab = 'all';
+        let lastMessageCache = {};   // chatId -> { text, senderUid, millis }
+        let lastMessageUnsubs = {};  // chatId -> unsubscribe fn
+
+        function subscribeLastMessage(friend) {
+            if (!friend.publicKeyJwk) return;
+            const chatId = [currentUser.uid, friend.uid].sort().join("_");
+            if (lastMessageUnsubs[chatId]) return; // مشترك فيه أصلًا
+            lastMessageUnsubs[chatId] = onSnapshot(doc(db, "chats", chatId), async (snap) => {
+                const data = snap.data();
+                if (!data?.lastMessage) return;
+                try {
+                    const key = await deriveSharedKey(myPrivateKey, friend.publicKeyJwk);
+                    const text = await decryptMessage(key, data.lastMessage.iv, data.lastMessage.ciphertext);
+                    lastMessageCache[chatId] = {
+                        text: text === "[تعذّر فك التشفير]" ? '' : text,
+                        senderUid: data.lastMessage.senderUid,
+                        millis: data.lastMessage.timestamp?.toMillis ? data.lastMessage.timestamp.toMillis() : Date.now()
+                    };
+                    renderFriendsList();
+                } catch (e) { /* ignore */ }
+            });
+        }
 
         function loadFriendsList() {
             onSnapshot(doc(db, "users", currentUser.uid), async (userSnap) => {
                 if (!userSnap.exists()) return;
-                const friendsArray = userSnap.data().friends || [];
+                currentUserProfile = userSnap.data();
+                const friendsArray = currentUserProfile.friends || [];
 
-                usersList.innerHTML = '';
-                if (friendsArray.length === 0) {
-                    usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">لا توجد محادثات نشطة</p>`;
-                    return;
-                }
-
+                const friends = [];
                 for (let friendUid of friendsArray) {
                     const friendDoc = await getDoc(doc(db, "users", friendUid));
-                    if (friendDoc.exists()) {
-                        const userData = friendDoc.data();
-                        const userEl = document.createElement('div');
-                        userEl.className = "p-3.5 flex items-center gap-3 hover:bg-[#121212] cursor-pointer transition border-b border-white/5";
-                        userEl.innerHTML = `
-                            <div class="relative">
-                                <img src="${userData.photoURL || 'https://via.placeholder.com/40'}" class="w-14 h-14 rounded-full object-cover p-0.5 ig-story-ring">
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-bold text-sm text-white truncate">${userData.name}</h3>
-                                <p class="text-xs text-gray-400 font-mono truncate">@${userData.username} • نشط الآن</p>
-                            </div>
-                        `;
-                        userEl.addEventListener('click', () => openChat(userData));
-                        usersList.appendChild(userEl);
-                    }
+                    if (friendDoc.exists()) friends.push({ uid: friendUid, ...friendDoc.data() });
                 }
+                cachedFriends = friends;
+                friends.forEach(subscribeLastMessage);
+                renderFriendsList();
             });
         }
 
-        function openChat(targetUser) {
+        function renderFriendsList() {
+            if (activeSidebarTab === 'groups') {
+                usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">لا توجد مجموعات بعد<br>ميزة المجموعات قريبًا</p>`;
+                return;
+            }
+            if (activeSidebarTab === 'unread') {
+                usersList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">تتبّع الرسائل غير المقروءة قريبًا</p>`;
+                return;
+            }
+
+            let list = cachedFriends;
+            if (activeSidebarTab === 'favorites') {
+                const favs = currentUserProfile.favorites || [];
+                list = cachedFriends.filter(f => favs.includes(f.uid));
+            }
+
+            // ترتيب حسب آخر نشاط (الأحدث فوق) — نفس منطق أي تطبيق محادثات حقيقي
+            const chatIdOf = (f) => [currentUser.uid, f.uid].sort().join("_");
+            list = [...list].sort((a, b) => {
+                const am = lastMessageCache[chatIdOf(a)]?.millis || 0;
+                const bm = lastMessageCache[chatIdOf(b)]?.millis || 0;
+                return bm - am;
+            });
+
+            usersList.innerHTML = '';
+            if (list.length === 0) {
+                usersList.innerHTML = activeSidebarTab === 'favorites'
+                    ? `<p class="text-xs text-gray-500 text-center py-8">ما فيه محادثات مفضّلة بعد<br>اضغط ⭐ على أي محادثة لإضافتها</p>`
+                    : `<p class="text-xs text-gray-500 text-center py-8">لا توجد محادثات نشطة<br>اضغط <i class="fas fa-user-plus"></i> لبدء محادثة جديدة</p>`;
+                return;
+            }
+
+            list.forEach(userData => {
+                const hue = contactHue(userData.uid);
+                const isFav = (currentUserProfile.favorites || []).includes(userData.uid);
+                const chatId = chatIdOf(userData);
+                const preview = lastMessageCache[chatId];
+                const previewLine = preview
+                    ? `${preview.senderUid === currentUser.uid ? 'أنت: ' : ''}${escapeHtml(preview.text)}`
+                    : `@${escapeHtml(userData.username || '')}`;
+                const timeLabel = preview
+                    ? new Date(preview.millis).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+                    : '';
+                const userEl = document.createElement('div');
+                userEl.className = "p-3.5 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5";
+                userEl.innerHTML = `
+                    <img src="${safePhotoUrl(userData.photoURL)}" class="w-12 h-12 rounded-full object-cover" style="box-shadow: 0 0 0 2px hsl(${hue} 70% 55%);">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-bold text-sm truncate" style="color: hsl(${hue} 70% 72%);">${escapeHtml(userData.name)}</h3>
+                            ${timeLabel ? `<span class="text-[10px] text-gray-500 shrink-0">${timeLabel}</span>` : ''}
+                        </div>
+                        <p class="text-xs text-gray-400 truncate">${previewLine}</p>
+                    </div>
+                    <button class="fav-star-btn text-base ${isFav ? 'text-amber-400' : 'text-gray-600'} shrink-0 px-1" title="${isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}">
+                        <i class="fas fa-star"></i>
+                    </button>
+                `;
+                userEl.addEventListener('click', () => openChat(userData));
+                userEl.querySelector('.fav-star-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(userData.uid);
+                });
+                usersList.appendChild(userEl);
+            });
+        }
+
+        async function toggleFavorite(uid) {
+            const favs = currentUserProfile.favorites || [];
+            const next = favs.includes(uid) ? favs.filter(u => u !== uid) : [...favs, uid];
+            currentUserProfile.favorites = next;
+            renderFriendsList();
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), { favorites: next }, { merge: true });
+            } catch (e) { /* ignore */ }
+        }
+
+        // ===== البحث: ما يقدر يصير Firestore query عادي لأن الرسائل مشفّرة =====
+        // نطلع كل رسائل كل محادثة، نفك تشفيرها محليًا بنفس مفتاح كل محادثة، ونقارن بالنص
+        async function runGlobalSearch() {
+            const term = searchInput.value.trim();
+            if (!term) {
+                searchResultsList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">اكتب كلمة أو اسم شخص وابدأ البحث</p>`;
+                return;
+            }
+            searchResultsList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">جاري البحث بكل محادثاتك...</p>`;
+
+            const lowerTerm = term.toLowerCase();
+            const results = [];
+
+            for (const friend of cachedFriends) {
+                if ((friend.name || '').toLowerCase().includes(lowerTerm) || (friend.username || '').toLowerCase().includes(lowerTerm)) {
+                    results.push({ friend, matchType: 'person' });
+                }
+
+                if (!friend.publicKeyJwk) continue; // ما نقدر نشتق مفتاح مشترك بدون مفتاحه العام
+                try {
+                    const chatId = [currentUser.uid, friend.uid].sort().join("_");
+                    const key = await deriveSharedKey(myPrivateKey, friend.publicKeyJwk);
+                    const snap = await getDocs(collection(db, "chats", chatId, "messages"));
+                    for (const docSnap of snap.docs) {
+                        const msg = docSnap.data();
+                        if (msg.type && msg.type !== 'text') continue; // نبحث بالنصوص فقط حاليًا
+                        if (!msg.iv || !msg.ciphertext) continue;
+                        const text = await decryptMessage(key, msg.iv, msg.ciphertext);
+                        if (text && text !== "[تعذّر فك التشفير]" && text.toLowerCase().includes(lowerTerm)) {
+                            results.push({ friend, matchType: 'message', snippet: text, timestamp: msg.timestamp });
+                        }
+                    }
+                } catch (e) { /* نتجاهل أي محادثة تفشل ونكمل الباقي */ }
+            }
+
+            results.sort((a, b) => {
+                if (a.matchType !== b.matchType) return a.matchType === 'person' ? -1 : 1;
+                const at = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+                const bt = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+                return bt - at;
+            });
+
+            renderSearchResults(results.slice(0, 50), term);
+        }
+
+        function renderSearchResults(results, term) {
+            if (results.length === 0) {
+                searchResultsList.innerHTML = `<p class="text-xs text-gray-500 text-center py-8">ما فيه نتائج لـ "${escapeHtml(term)}"</p>`;
+                return;
+            }
+            searchResultsList.innerHTML = '';
+            results.forEach(r => {
+                const hue = contactHue(r.friend.uid);
+                const el = document.createElement('div');
+                el.className = "p-3 flex items-center gap-3 hover:bg-white/5 cursor-pointer rounded-xl";
+                const subtitle = r.matchType === 'person'
+                    ? `شخص · @${escapeHtml(r.friend.username || '')}`
+                    : escapeHtml(r.snippet);
+                el.innerHTML = `
+                    <img src="${safePhotoUrl(r.friend.photoURL)}" class="w-10 h-10 rounded-full object-cover shrink-0" style="box-shadow: 0 0 0 2px hsl(${hue} 70% 55%);">
+                    <div class="min-w-0 flex-1 text-right">
+                        <p class="text-sm font-bold truncate" style="color: hsl(${hue} 70% 72%);">${escapeHtml(r.friend.name)}</p>
+                        <p class="text-[11px] text-gray-400 truncate">${subtitle}</p>
+                    </div>`;
+                el.addEventListener('click', () => {
+                    searchModal.classList.add('hidden');
+                    openChat(r.friend);
+                });
+                searchResultsList.appendChild(el);
+            });
+        }
+
+        async function openChat(targetUser) {
             selectedUser = targetUser;
-            inputContainer.classList.remove('hidden');
+
+            if (unsubscribeFriendStatus) { unsubscribeFriendStatus(); unsubscribeFriendStatus = null; }
+            if (unsubscribeTyping) { unsubscribeTyping(); unsubscribeTyping = null; }
+            friendIsTyping = false;
+            friendLastSeenMillis = null;
+            currentVanishDuration = 0;
+            updateVanishButton();
+            activeReply = null;
+            replyBanner.style.display = 'none';
 
             if (window.innerWidth < 768) { sidebarPanel.classList.add('hidden'); }
             chatPanel.classList.remove('hidden');
             chatPanel.classList.add('flex');
-            
-            currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
 
-            chatHeaderAvatarContainer.innerHTML = `<img src="${targetUser.photoURL || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover">`;
+            currentChatId = [currentUser.uid, targetUser.uid].sort().join("_");
+            sharedKey = null;
+
+            chatHeaderAvatarContainer.innerHTML = `<img src="${safePhotoUrl(targetUser.photoURL)}" class="w-10 h-10 rounded-full object-cover" style="box-shadow: 0 0 0 2px hsl(${contactHue(targetUser.uid)} 70% 55%);">`;
             chatHeaderName.textContent = targetUser.name;
-            chatHeaderStatus.textContent = "نشط الآن";
+            chatHeaderName.style.color = `hsl(${contactHue(targetUser.uid)} 70% 78%)`;
+
+            if (!targetUser.publicKeyJwk) {
+                // الطرف الآخر ما دخل التطبيق بعد بالنسخة الجديدة، فما عنده مفتاح عام منشور
+                chatHeaderStatus.textContent = "بانتظار تفعيل التشفير من الطرف الآخر";
+                inputContainer.classList.add('hidden');
+                chatMessages.innerHTML = `
+                    <div class="flex flex-col h-full items-center justify-center text-gray-500 text-sm gap-3 text-center px-6">
+                        <div class="w-16 h-16 rounded-full app-bg-header flex items-center justify-center text-3xl text-amber-400">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <p>ما تقدر تبدأ المحادثة إلا بعد ما ${escapeHtml(targetUser.name)} يفتح التطبيق مرة، حتى يتولّد مفتاحه الخاص بالتشفير</p>
+                    </div>`;
+                return;
+            }
+
+            chatHeaderStatus.textContent = "🔒 جاري تأمين المحادثة...";
+            sharedKey = await deriveSharedKey(myPrivateKey, targetUser.publicKeyJwk);
+            chatHeaderStatus.textContent = "🔒 مشفّرة تمامًا (E2EE)";
+            inputContainer.classList.remove('hidden');
+
+            unsubscribeFriendStatus = onSnapshot(doc(db, "users", targetUser.uid), (snap) => {
+                const data = snap.data();
+                friendLastSeenMillis = data?.lastSeen?.toMillis ? data.lastSeen.toMillis() : null;
+                updateChatHeaderStatus();
+            });
+            unsubscribeTyping = onSnapshot(doc(db, "chats", currentChatId), (snap) => {
+                const data = snap.data();
+                const t = data?.typing?.[targetUser.uid];
+                const millis = t?.toMillis ? t.toMillis() : 0;
+                friendIsTyping = (Date.now() - millis) < 4000;
+                updateChatHeaderStatus();
+
+                currentVanishDuration = data?.vanishDuration || 0;
+                updateVanishButton();
+            });
 
             loadMessages();
         }
 
-        async function sendMessage(encryptedImageUrl = null, isViewOnce = false) {
-            const text = messageInput.value.trim();
-            if (!text && !encryptedImageUrl) return;
+        // ===== رسائل صوتية: تسجيل بالمايك، تُشفَّر مثل أي رسالة نصية بالضبط =====
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingStartTime = 0;
+        let recordingTimerInterval = null;
+        let recordingAutoStopTimeout = null;
+        let recordingMimeType = '';
 
-            messageInput.value = '';
-            sendBtn.classList.add('hidden');
-            recordAudioBtn.classList.remove('hidden');
+        async function startRecording() {
+            if (mediaRecorder || !sharedKey) return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                recordingMimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus'
+                    : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream, recordingMimeType ? { mimeType: recordingMimeType } : undefined);
+                mediaRecorder.addEventListener('dataavailable', (e) => { if (e.data.size > 0) audioChunks.push(e.data); });
+                mediaRecorder.start();
+                recordingStartTime = Date.now();
+                recordingBanner.style.display = 'flex';
+                actionBtn.style.backgroundColor = '#e11d48';
+                actionBtn.classList.add('animate-pulse');
+                actionIcon.className = "fas fa-check text-sm";
+                recordingTimerInterval = setInterval(() => {
+                    const secs = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    recordingTimer.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+                }, 200);
+                // حد أقصى دقيقتين حتى ما تتخطى الرسالة حجم مستند Firestore المسموح (1MB)
+                recordingAutoStopTimeout = setTimeout(() => finishRecording(true), 120000);
+            } catch (e) {
+                recordingBanner.style.display = 'none';
+                alert("ما قدرت أوصل المايك — تأكد من إعطاء المتصفح صلاحية الوصول له");
+            }
+        }
 
-            const secretKey = `PingSecret_${currentChatId}_2026`;
-            const encryptedText = text ? encryptData(text, secretKey) : "";
+        function finishRecording(send) {
+            if (!mediaRecorder) return;
+            clearInterval(recordingTimerInterval);
+            clearTimeout(recordingAutoStopTimeout);
+            recordingBanner.style.display = 'none';
+            actionBtn.style.backgroundColor = '';
+            actionBtn.classList.remove('animate-pulse');
+            actionIcon.className = "fas fa-microphone text-sm";
 
-            await addDoc(collection(db, "chats", currentChatId, "messages"), {
-                senderUid: currentUser.uid,
-                text: encryptedText,
-                imageUrl: encryptedImageUrl || "",
-                isViewOnce: isViewOnce,
-                viewed: false,
-                deleted: false,
-                timestamp: serverTimestamp()
+            const rec = mediaRecorder;
+            const elapsedMs = Date.now() - recordingStartTime;
+            mediaRecorder = null;
+
+            rec.addEventListener('stop', () => {
+                rec.stream.getTracks().forEach(t => t.stop());
+                if (send && elapsedMs >= 600) {
+                    const blob = new Blob(audioChunks, { type: recordingMimeType || 'audio/webm' });
+                    sendVoiceMessage(blob, Math.round(elapsedMs / 1000));
+                }
+            }, { once: true });
+
+            if (rec.state !== 'inactive') rec.stop();
+        }
+
+        function withVanish(payload) {
+            if (currentVanishDuration > 0) payload.expiresAt = Date.now() + currentVanishDuration * 1000;
+            return payload;
+        }
+
+        // ===== معاينة آخر رسالة بالقائمة الجانبية — نص قصير مشفّر بنفس مفتاح المحادثة =====
+        // نخزّنه بمستند chats/{chatId} نفسه (جنب typing/vanishDuration) عشان القائمة
+        // الجانبية تقدر تفك تشفيره بدون ما تفتح المحادثة كاملة
+        async function updateLastMessagePreview(previewText) {
+            if (!sharedKey || !currentChatId) return;
+            try {
+                const { iv, ciphertext } = await encryptMessage(sharedKey, previewText.slice(0, 80));
+                await setDoc(doc(db, "chats", currentChatId), {
+                    lastMessage: { iv, ciphertext, senderUid: currentUser.uid, timestamp: serverTimestamp() }
+                }, { merge: true });
+            } catch (e) { /* لا نوقف الإرسال إذا فشل تحديث المعاينة فقط */ }
+        }
+
+        // ===== صور مشفّرة: نفس فكرة الرسائل الصوتية بالضبط — بس نضغطها أول عشان تدخل حد Firestore (1MB) =====
+        function resizeAndCompressImage(file, maxDim = 1280, startQuality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = (e) => { img.src = e.target.result; };
+                reader.onerror = () => reject(new Error("ما قدرت أقرأ الصورة"));
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+                    else if (height >= width && height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+                    let quality = startQuality;
+                    const tryExport = () => {
+                        canvas.toBlob((blob) => {
+                            if (!blob) { reject(new Error("فشل ضغط الصورة")); return; }
+                            if (blob.size > 500 * 1024 && quality > 0.25) {
+                                quality -= 0.15;
+                                tryExport();
+                            } else if (blob.size > 700 * 1024) {
+                                reject(new Error("الصورة كبيرة جدًا حتى بعد الضغط — جرب صورة ثانية"));
+                            } else {
+                                resolve(blob);
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+                    tryExport();
+                };
+                img.onerror = () => reject(new Error("ملف الصورة تالف أو غير مدعوم"));
+                reader.readAsDataURL(file);
             });
         }
 
-        // إرسال صورة المشاهدة لمرة واحدة عند الالتقاط بالكاميرا
-        cameraInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file || !currentChatId) return;
-
-            const formData = new FormData();
-            formData.append("image", file);
-
+        async function sendImageMessage(file) {
+            if (!sharedKey || !currentChatId) return;
             try {
-                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
-                const result = await response.json();
-                if (result.success) {
-                    const secretKey = `PingSecret_${currentChatId}_2026`;
-                    const encryptedUrl = encryptData(result.data.url, secretKey);
-                    await sendMessage(encryptedUrl, true);
-                }
-            } catch (error) {
-                console.error(error);
-            } finally {
-                cameraInput.value = '';
+                const blob = await resizeAndCompressImage(file);
+                const base64Image = await blobToBase64(blob);
+                const { iv, ciphertext } = await encryptMessage(sharedKey, base64Image);
+                await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                    senderUid: currentUser.uid,
+                    type: 'image',
+                    imageMime: 'image/jpeg',
+                    iv, ciphertext,
+                    timestamp: serverTimestamp()
+                }));
+                updateLastMessagePreview('📷 صورة');
+            } catch (e) {
+                alert(e.message || "ما قدرت أرسل الصورة");
             }
+        }
+
+        function handleImageInputChange(e) {
+            const file = e.target.files[0];
+            e.target.value = '';
+            if (file) sendImageMessage(file);
+        }
+        attachCameraBtn.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); cameraInput.click(); });
+        attachGalleryBtn.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); galleryInput.click(); });
+
+        // ===== مستندات مشفّرة: نفس فكرة الصور بالضبط، بدون ضغط (نقدر نضغط صورة، ما نقدر نضغط PDF) =====
+        // اسم الملف نفسه يدخل ضمن المشفّر عشان ما يتسرب حتى لو Firestore تعرّض للاختراق
+        const MAX_DOC_SIZE = 450 * 1024; // خام — بعد base64+تشفير+base64 يقترب من حد Firestore (1MB)
+
+        attachDocsBtn.addEventListener('click', () => { attachmentMenu.classList.add('hidden'); docInput.click(); });
+        docInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            e.target.value = '';
+            if (file) sendDocumentMessage(file);
         });
 
-        closeViewOnceBtn.addEventListener('click', async () => {
-            viewOnceModal.classList.add('hidden');
-            if (activeViewOnceMsgId) {
-                await updateDoc(doc(db, "chats", currentChatId, "messages", activeViewOnceMsgId), {
-                    viewed: true,
-                    imageUrl: "",
-                    deleted: true
-                });
-                activeViewOnceMsgId = null;
+        async function sendDocumentMessage(file) {
+            if (!sharedKey || !currentChatId) return;
+            if (file.size > MAX_DOC_SIZE) {
+                alert(`الملف كبير (${Math.round(file.size / 1024)} كيلوبايت) — الحد الأقصى حاليًا ${MAX_DOC_SIZE / 1024} كيلوبايت بسبب حد حجم مستند Firestore بعد التشفير`);
+                return;
             }
-        });
+            try {
+                const base64File = await blobToBase64(file);
+                const payloadJson = JSON.stringify({ name: file.name, data: base64File });
+                const { iv, ciphertext } = await encryptMessage(sharedKey, payloadJson);
+                await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                    senderUid: currentUser.uid,
+                    type: 'file',
+                    fileMime: file.type || 'application/octet-stream',
+                    fileSize: file.size,
+                    iv, ciphertext,
+                    timestamp: serverTimestamp()
+                }));
+                updateLastMessagePreview(`📄 ${file.name}`);
+            } catch (e) {
+                alert("ما قدرت أرسل الملف");
+            }
+        }
+        cameraInput.addEventListener('change', handleImageInputChange);
+        galleryInput.addEventListener('change', handleImageInputChange);
+
+        async function sendVoiceMessage(blob, durationSec) {
+            if (!sharedKey) return;
+            const base64Audio = await blobToBase64(blob);
+            const { iv, ciphertext } = await encryptMessage(sharedKey, base64Audio);
+            await addDoc(collection(db, "chats", currentChatId, "messages"), withVanish({
+                senderUid: currentUser.uid,
+                type: 'audio',
+                audioMime: recordingMimeType || 'audio/webm',
+                durationSec,
+                iv, ciphertext,
+                timestamp: serverTimestamp()
+            }));
+            updateLastMessagePreview('🎤 رسالة صوتية');
+        }
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || !sharedKey) return;
+
+            messageInput.value = '';
+            actionIcon.className = "fas fa-microphone text-sm";
+
+            const { iv, ciphertext } = await encryptMessage(sharedKey, text);
+            const payload = withVanish({
+                senderUid: currentUser.uid,
+                iv,
+                ciphertext,
+                timestamp: serverTimestamp()
+            });
+
+            if (activeReply) {
+                const replyEnc = await encryptMessage(sharedKey, activeReply.text.slice(0, 80));
+                payload.replyPreview = { iv: replyEnc.iv, ciphertext: replyEnc.ciphertext, senderUid: activeReply.senderUid };
+                activeReply = null;
+                replyBanner.style.display = 'none';
+            }
+
+            await addDoc(collection(db, "chats", currentChatId, "messages"), payload);
+            updateLastMessagePreview(text);
+        }
+
+        // ===== عرض تدريجي بدل إعادة بناء القائمة كاملة كل تحديث =====
+        // قبل هذا التعديل، أي تغيير بسيط (رسالة جديدة، تفاعل، صوت وصل) كان يمسح كل
+        // الفقاعات ويعيد بناءها من الصفر — فتحس إنها "تحمّل من سيرفر" كل مرة بدل ما
+        // تكون ثابتة زي واتساب. الحين نلمس بس الرسالة اللي فعليًا تغيّرت.
+        let messageElements = {};    // msgId -> عنصر DOM
+        let messageBlobUrls = {};    // msgId -> روابط blob تخصّها (صوت/صورة/ملف)
+        let messageVanishTimers = {}; // msgId -> مؤقّت حذفها التلقائي
+
+        function cleanupMessageNode(msgId) {
+            if (messageElements[msgId]) { messageElements[msgId].remove(); delete messageElements[msgId]; }
+            if (messageBlobUrls[msgId]) { messageBlobUrls[msgId].forEach(u => URL.revokeObjectURL(u)); delete messageBlobUrls[msgId]; }
+            if (messageVanishTimers[msgId]) { clearTimeout(messageVanishTimers[msgId]); delete messageVanishTimers[msgId]; }
+        }
+
+        async function buildMessageWrapper(docSnap, isNew) {
+            const msg = docSnap.data();
+            const msgId = docSnap.id;
+            const localBlobUrls = [];
+            const isMine = msg.senderUid === currentUser.uid;
+
+            const containerWrapper = document.createElement('div');
+            containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'}${isNew ? ' message-pop' : ''}`;
+
+            const bubble = document.createElement('div');
+            bubble.setAttribute('dir', 'rtl');
+            bubble.className = `${isMine ? 'bubble-mine rounded-2xl rounded-br-xs ml-auto' : 'bubble-other rounded-2xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3 shadow-md relative cursor-pointer`;
+            if (!isMine) bubble.style.backgroundColor = `hsl(${contactHue(msg.senderUid)} 32% 19%)`;
+
+            let contentHtml;
+            let plainTextForCopy = '';
+
+            if (msg.type === 'audio') {
+                const base64Audio = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                if (base64Audio === "[تعذّر فك التشفير]") {
+                    contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الرسالة الصوتية]</p>`;
+                } else {
+                    const audioBlob = base64ToBlob(base64Audio, msg.audioMime || 'audio/webm');
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    localBlobUrls.push(audioUrl);
+                    const bars = await computeWaveformBars(await audioBlob.arrayBuffer());
+                    contentHtml = buildVoicePlayerHtml(audioUrl, bars, msg.durationSec || 0);
+                }
+            } else if (msg.type === 'image') {
+                const base64Image = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                if (base64Image === "[تعذّر فك التشفير]") {
+                    contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الصورة]</p>`;
+                } else {
+                    const imageUrl = URL.createObjectURL(base64ToBlob(base64Image, msg.imageMime || 'image/jpeg'));
+                    localBlobUrls.push(imageUrl);
+                    contentHtml = `<img src="${imageUrl}" class="msg-image rounded-xl max-w-[220px] max-h-[280px] w-full object-cover cursor-zoom-in">`;
+                }
+            } else if (msg.type === 'file') {
+                const decryptedJson = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                if (decryptedJson === "[تعذّر فك التشفير]") {
+                    contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الملف]</p>`;
+                } else {
+                    try {
+                        const { name, data } = JSON.parse(decryptedJson);
+                        const fileUrl = URL.createObjectURL(base64ToBlob(data, msg.fileMime || 'application/octet-stream'));
+                        localBlobUrls.push(fileUrl);
+                        const sizeLabel = msg.fileSize ? `${Math.round(msg.fileSize / 1024)} كيلوبايت` : '';
+                        contentHtml = `
+                            <a href="${fileUrl}" download="${escapeHtml(name)}" class="flex items-center gap-3 bg-black/20 rounded-xl p-2.5 hover:bg-black/30 transition max-w-[220px]">
+                                <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-lg shrink-0"><i class="fas fa-file-lines"></i></div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold truncate">${escapeHtml(name)}</p>
+                                    <p class="text-[10px] opacity-70">${sizeLabel} · تنزيل</p>
+                                </div>
+                            </a>`;
+                    } catch (e) {
+                        contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[ملف تالف]</p>`;
+                    }
+                }
+            } else if (msg.type === 'poll') {
+                const decryptedJson = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                if (decryptedJson === "[تعذّر فك التشفير]") {
+                    contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[تعذّر فك تشفير الاستطلاع]</p>`;
+                } else {
+                    try {
+                        const { question, options } = JSON.parse(decryptedJson);
+                        const votes = msg.votes || {};
+                        const totalVotes = Object.keys(votes).length;
+                        const myVote = votes[currentUser.uid];
+                        const optionsHtml = options.map((opt, idx) => {
+                            const count = Object.values(votes).filter(v => v === idx).length;
+                            const pct = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
+                            const isMyChoice = myVote === idx;
+                            return `
+                                <div class="poll-option-row cursor-pointer rounded-lg p-2 mb-1.5 relative overflow-hidden ${isMyChoice ? 'ring-1 ring-[#00a884]' : ''}" data-msg-id="${msgId}" data-option-idx="${idx}" style="background: rgba(255,255,255,0.08);">
+                                    <div class="absolute inset-y-0 right-0 bg-[#00a884]/25" style="width:${pct}%;"></div>
+                                    <div class="relative flex items-center justify-between text-xs gap-2">
+                                        <span class="truncate">${isMyChoice ? '✓ ' : ''}${escapeHtml(opt)}</span>
+                                        <span class="opacity-70 shrink-0">${pct}%</span>
+                                    </div>
+                                </div>`;
+                        }).join('');
+                        contentHtml = `
+                            <div style="min-width:200px;">
+                                <p class="text-sm font-bold mb-2 flex items-center gap-1.5"><i class="fas fa-square-poll-vertical"></i> ${escapeHtml(question)}</p>
+                                ${optionsHtml}
+                                <p class="text-[10px] opacity-60 mt-1">${totalVotes} صوت</p>
+                            </div>`;
+                    } catch (e) {
+                        contentHtml = `<p class="text-sm leading-relaxed text-rose-300">[استطلاع تالف]</p>`;
+                    }
+                }
+            } else {
+                const decryptedText = await decryptMessage(sharedKey, msg.iv, msg.ciphertext);
+                plainTextForCopy = decryptedText;
+                contentHtml = `<p class="text-sm leading-relaxed">${linkify(escapeHtml(decryptedText))}</p>`;
+            }
+
+            let replyHtml = '';
+            if (msg.replyPreview) {
+                const replyText = await decryptMessage(sharedKey, msg.replyPreview.iv, msg.replyPreview.ciphertext);
+                const isReplyMine = msg.replyPreview.senderUid === currentUser.uid;
+                replyHtml = `<div class="mb-1.5 pr-2 border-r-2 border-white/30 text-[11px] opacity-80 truncate">${isReplyMine ? 'أنت: ' : ''}${escapeHtml(replyText)}</div>`;
+            }
+
+            const reactionEmojis = msg.reactions ? [...new Set(Object.values(msg.reactions))].join('') : '';
+            const reactionBadge = reactionEmojis
+                ? `<div class="absolute -bottom-3 ${isMine ? 'left-1' : 'right-1'} bg-[#2a3942] rounded-full px-1.5 py-0.5 text-[11px] shadow-md border border-black/20">${escapeHtml(reactionEmojis)}</div>`
+                : '';
+
+            bubble.innerHTML = `
+                ${replyHtml}
+                ${contentHtml}
+                <div class="flex items-center justify-end gap-1 text-[10px] opacity-75 mt-1">
+                    ${msg.expiresAt ? '<i class="fas fa-clock opacity-70" style="font-size:9px;"></i>' : ''}
+                    <span>${formatMsgTime(msg.timestamp)}</span>
+                    ${isMine ? '<span class="text-gray-300">✓</span>' : ''}
+                </div>
+                ${reactionBadge}
+            `;
+
+            const imgEl = bubble.querySelector('.msg-image');
+            if (imgEl) {
+                imgEl.addEventListener('click', (e) => { e.stopPropagation(); window.open(imgEl.src, '_blank'); });
+            }
+            wireVoicePlayer(bubble, msg.durationSec || 0);
+
+            bubble.querySelectorAll('.poll-option-row').forEach(row => {
+                row.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(row.dataset.optionIdx, 10);
+                    try {
+                        await updateDoc(doc(db, "chats", currentChatId, "messages", row.dataset.msgId), {
+                            [`votes.${currentUser.uid}`]: idx
+                        });
+                    } catch (err) { /* ignore */ }
+                });
+            });
+
+            messageBlobUrls[msgId] = localBlobUrls;
+
+            if (messageVanishTimers[msgId]) clearTimeout(messageVanishTimers[msgId]);
+            if (msg.expiresAt) {
+                const msRemaining = msg.expiresAt - Date.now();
+                messageVanishTimers[msgId] = setTimeout(() => {
+                    deleteDoc(doc(db, "chats", currentChatId, "messages", msgId)).catch(() => {});
+                }, Math.max(0, msRemaining));
+            }
+
+            let pressTimer;
+            const openContext = () => {
+                selectedMessageId = msgId;
+                selectedMessageSenderUid = msg.senderUid;
+                selectedMessageText = plainTextForCopy;
+                selectedMessageType = msg.type || 'text';
+                deleteMsgBtn.style.display = (msg.senderUid === currentUser.uid) ? 'flex' : 'none';
+                copyMsgBtn.style.display = (msg.type === 'audio' || msg.type === 'image' || msg.type === 'file' || msg.type === 'poll') ? 'none' : 'flex';
+                highlightedMessageBubble.innerHTML = bubble.outerHTML;
+                messageContextMenu.classList.remove('hidden');
+            };
+            bubble.addEventListener('pointerdown', () => { pressTimer = setTimeout(openContext, 400); });
+            bubble.addEventListener('pointerup', () => clearTimeout(pressTimer));
+            bubble.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+            bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); openContext(); });
+
+            containerWrapper.appendChild(bubble);
+            return containerWrapper;
+        }
+
+        const MESSAGES_LIMIT = 60;
 
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
+            Object.keys(messageElements).forEach(cleanupMessageNode);
+            messageElements = {}; messageBlobUrls = {}; messageVanishTimers = {};
+            chatMessages.innerHTML = '';
 
+            // نجيب أحدث 60 رسالة (الأجدد أول) بدل كل التاريخ، حتى ما نعيد فك تشفير محادثة كاملة
+            // كل ما يصير تغيير بسيط. نعكس الترتيب بعدين للعرض الطبيعي بالتحميل الأول.
             const q = query(
                 collection(db, "chats", currentChatId, "messages"),
-                orderBy("timestamp", "asc")
+                orderBy("timestamp", "desc"),
+                limit(MESSAGES_LIMIT)
             );
 
-            unsubscribeMessages = onSnapshot(q, (snapshot) => {
-                chatMessages.innerHTML = '';
-                snapshot.forEach((docSnap) => {
-                    const msg = docSnap.data();
-                    const msgId = docSnap.id;
-                    const isMine = msg.senderUid === currentUser.uid;
-                    const secretKey = `PingSecret_${currentChatId}_2026`;
+            let firstLoad = true;
 
-                    const containerWrapper = document.createElement('div');
-                    containerWrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} message-pop`;
-
-                    let content = '';
-
-                    if (msg.deleted) {
-                        content = `<p class="text-xs italic text-gray-400"><i class="fas fa-ban ml-1"></i> تم إلغاء إرسال هذه الرسالة</p>`;
-                    } else if (msg.isViewOnce) {
-                        if (msg.viewed) {
-                            content = `<p class="text-xs italic text-pink-400/70 flex items-center gap-1"><i class="fas fa-eye-slash"></i> تم الفتح</p>`;
-                        } else {
-                            content = `
-                                <button class="view-once-trigger bg-pink-600/20 hover:bg-pink-600/30 text-pink-400 border border-pink-500/30 px-4 py-2 rounded-full text-xs font-bold transition flex items-center gap-2">
-                                    <i class="fas fa-camera text-sm"></i> View Photo
-                                </button>
-                            `;
+            unsubscribeMessages = onSnapshot(q, async (snapshot) => {
+                if (firstLoad) {
+                    firstLoad = false;
+                    const orderedDocs = [...snapshot.docs].reverse();
+                    for (const docSnap of orderedDocs) {
+                        const msg = docSnap.data();
+                        if (msg.expiresAt && msg.expiresAt <= Date.now()) {
+                            deleteDoc(doc(db, "chats", currentChatId, "messages", docSnap.id)).catch(() => {});
+                            continue;
                         }
-                    } else {
-                        const decryptedText = msg.text ? decryptData(msg.text, secretKey) : "";
-                        const decryptedImageUrl = msg.imageUrl ? decryptData(msg.imageUrl, secretKey) : "";
-
-                        if (decryptedImageUrl) {
-                            content += `<img src="${decryptedImageUrl}" class="rounded-2xl max-w-xs max-h-60 object-cover border border-white/10 mb-1 cursor-pointer" onclick="window.open('${decryptedImageUrl}', '_blank')">`;
-                        }
-                        if (decryptedText) {
-                            content += `<p class="text-sm leading-relaxed">${decryptedText}</p>`;
-                        }
+                        const wrapper = await buildMessageWrapper(docSnap, false);
+                        messageElements[docSnap.id] = wrapper;
+                        chatMessages.appendChild(wrapper);
                     }
+                    updateTypingBubble();
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    return;
+                }
 
-                    const bubble = document.createElement('div');
-                    bubble.setAttribute('dir', 'rtl');
-                    bubble.className = `${isMine ? 'ig-bubble-mine rounded-3xl rounded-br-xs ml-auto' : 'ig-bubble-other rounded-3xl rounded-bl-xs mr-auto'} max-w-xs md:max-w-md p-3.5 shadow-md relative cursor-pointer`;
-                    bubble.innerHTML = content;
+                const changes = snapshot.docChanges();
+                const addedChanges = changes.filter(c => c.type === 'added');
+                const otherChanges = changes.filter(c => c.type !== 'added');
 
-                    const viewOnceBtn = bubble.querySelector('.view-once-trigger');
-                    if (viewOnceBtn) {
-                        viewOnceBtn.addEventListener('click', () => {
-                            const decryptedImageUrl = decryptData(msg.imageUrl, secretKey);
-                            viewOnceImg.src = decryptedImageUrl;
-                            activeViewOnceMsgId = msgId;
-                            viewOnceModal.classList.remove('hidden');
-                        });
+                for (const change of otherChanges) {
+                    const msgId = change.doc.id;
+                    if (change.type === 'removed') { cleanupMessageNode(msgId); continue; }
+                    const msg = change.doc.data();
+                    if (msg.expiresAt && msg.expiresAt <= Date.now()) {
+                        deleteDoc(doc(db, "chats", currentChatId, "messages", msgId)).catch(() => {});
+                        cleanupMessageNode(msgId);
+                        continue;
                     }
+                    const oldWrapper = messageElements[msgId];
+                    const oldBlobUrls = messageBlobUrls[msgId];
+                    const newWrapper = await buildMessageWrapper(change.doc, false);
+                    if (oldWrapper) oldWrapper.replaceWith(newWrapper); else chatMessages.appendChild(newWrapper);
+                    messageElements[msgId] = newWrapper;
+                    if (oldBlobUrls) oldBlobUrls.forEach(u => URL.revokeObjectURL(u));
+                }
 
-                    // التفاعل بالنقر المزدوج (Double Tap to Heart React)
-                    let lastClick = 0;
-                    bubble.addEventListener('click', () => {
-                        const now = new Date().getTime();
-                        if (now - lastClick < 300) {
-                            bubble.innerHTML += `<span class="absolute -bottom-2 -left-2 text-base heart-pop">❤️</span>`;
-                        }
-                        lastClick = now;
-                    });
+                // الاستعلام تنازلي، فنعكس ترتيب أي دفعة إضافات وصلت مرة وحدة حتى ترتّب زمنيًا صح
+                addedChanges.reverse();
+                for (const change of addedChanges) {
+                    const msgId = change.doc.id;
+                    const msg = change.doc.data();
+                    if (msg.expiresAt && msg.expiresAt <= Date.now()) {
+                        deleteDoc(doc(db, "chats", currentChatId, "messages", msgId)).catch(() => {});
+                        continue;
+                    }
+                    const wrapper = await buildMessageWrapper(change.doc, true);
+                    messageElements[msgId] = wrapper;
+                    chatMessages.appendChild(wrapper);
+                }
 
-                    // الضغط المطول للخيارات
-                    let pressTimer;
-                    bubble.addEventListener('touchstart', () => {
-                        pressTimer = setTimeout(() => {
-                            selectedMessageId = msgId;
-                            highlightedMessageBubble.innerHTML = bubble.outerHTML;
-                            messageContextMenu.classList.remove('hidden');
-                        }, 400);
-                    }, {passive: true});
-                    bubble.addEventListener('touchend', () => clearTimeout(pressTimer));
-
-                    containerWrapper.appendChild(bubble);
-                    chatMessages.appendChild(containerWrapper);
-                });
+                updateTypingBubble();
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
         }
 
-        sendBtn.addEventListener('click', () => sendMessage());
+        // تسجيل صوتي بالضغط (مو بالإمساك) — أوثق بكثير: بداية ونهاية واضحتين، بدون
+        // اعتماد على استمرار إصبعك على الزر (اللي كان يفشل أحيانًا لو تأخر إذن المايك)
+        actionBtn.addEventListener('click', () => {
+            if (messageInput.value.trim().length > 0) {
+                sendMessage();
+            } else if (mediaRecorder) {
+                finishRecording(true);
+            } else {
+                startRecording();
+            }
+        });
+        sendRecordingBtn.addEventListener('click', () => finishRecording(true));
+        cancelRecordingBtn.addEventListener('click', () => finishRecording(false));
+
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
